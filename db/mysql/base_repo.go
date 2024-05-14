@@ -26,8 +26,7 @@ type IBaseRepo interface {
 func NewBaseRepo() *BaseRepo {
 	dbOrm := GetOrmInstance()
 	if dbOrm == nil {
-		InitConnection()
-		dbOrm = GetOrmInstance()
+		panic("BaseRepo err : 请检查mysql是否正确建立了链接并进行了初始化")
 	}
 	return &BaseRepo{dbOrm}
 }
