@@ -65,7 +65,7 @@ func (l *Locker) cleanUp(threshold int64, minExistTime int64) {
 	)
 }
 
-func SetCleanUp(threshold int64, minExistTime int64) {
+func SetLockerAutoCleanup(threshold int64, minExistTime int64) {
 	ticker := time.NewTicker(180 * time.Second)
 	go func() {
 		defer ticker.Stop()
