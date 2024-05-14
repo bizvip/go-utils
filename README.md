@@ -2,6 +2,34 @@
 
 ---
 
+Add common Golang utility classes or self-developed components, and then make some simple encapsulations according to the usage methods.
+
+Below are some of the included components or self-developed components:
+
+```
+- Gorm database-related utilities
+- String/crypt handling methods
+- Number/decimal handling methods
+- Video processing program
+- Date handling
+- Google Translate (including batch translation interface)
+- HTTP helpers
+- Console helpers
+- Atomic locks
+- Image processing
+- Logging
+- Snowflake ID
+- Cryptocurrency
+- Cloud service interfaces
+- File processing
+```
+
+
+
+# go-utils
+
+---
+
 添加常用的golang 工具类或自行开发的组件，然后根据使用方法做了一些简单封装
 
 以下是包含的部分组件或自行开发的组件：
