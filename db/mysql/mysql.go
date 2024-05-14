@@ -35,47 +35,50 @@ type DbConfig struct {
 	DbMaxIdleTime int    `toml:"dbMaxIdleTime"` // 最大空闲时间（秒）
 }
 
+type myConf struct {
+	Mysql DbConfig `toml:"mysql"`
+}
+
 func InitConnection(configFile string) {
 	once.Do(func() {
 		var err error
-
+		var conf myConf
 		file, err := os.Open(configFile)
 		if err != nil {
-			fmt.Println(fmt.Errorf("failed to open TOML file: %v", err))
+			panic(err)
 		}
 		defer func(file *os.File) { _ = file.Close() }(file)
 
-		var dbConfig DbConfig
 		decoder := toml.NewDecoder(file)
-		if _, err = decoder.Decode(&dbConfig); err != nil {
-			fmt.Println(fmt.Errorf("failed to decode TOML file: %v", err))
+		if _, err = decoder.Decode(&conf); err != nil {
+			panic(err)
 		}
 
 		dsn := fmt.Sprintf(
 			"%s:%s@tcp(%s:%d)/%s?charset=%s&parseTime=True&loc=Local",
-			dbConfig.DbUsername,
-			dbConfig.DbPassword,
-			dbConfig.DbHost,
-			dbConfig.DbPort,
-			dbConfig.DbDatabase,
-			dbConfig.DbCharset,
+			conf.Mysql.DbUsername,
+			conf.Mysql.DbPassword,
+			conf.Mysql.DbHost,
+			conf.Mysql.DbPort,
+			conf.Mysql.DbDatabase,
+			conf.Mysql.DbCharset,
 		)
 
 		newLogger := gormlogger.Default.LogMode(gormlogger.Silent)
 		ormInstance, err = gorm.Open(mysql.Open(dsn), &gorm.Config{Logger: newLogger})
 		if err != nil {
-			panic(fmt.Errorf("failed to connect to MySQL database: %v", err))
+			panic(err)
 		}
 
 		sqlDB, err := ormInstance.DB()
 		if err != nil {
-			panic(fmt.Errorf("failed to get database object: %v", err))
+			panic(err)
 		}
 
 		// 设置连接池参数
-		sqlDB.SetMaxIdleConns(dbConfig.DbMaxIdleConn)
-		sqlDB.SetMaxOpenConns(dbConfig.DbMaxOpenConn)
-		sqlDB.SetConnMaxLifetime(time.Duration(dbConfig.DbMaxIdleTime) * time.Second)
+		sqlDB.SetMaxIdleConns(conf.Mysql.DbMaxIdleConn)
+		sqlDB.SetMaxOpenConns(conf.Mysql.DbMaxOpenConn)
+		sqlDB.SetConnMaxLifetime(time.Duration(conf.Mysql.DbMaxIdleTime) * time.Second)
 	})
 }
 
