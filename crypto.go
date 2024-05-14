@@ -2,7 +2,7 @@
  * Copyright (c) Archer++ 2024.                                               *
  ******************************************************************************/
 
-package crypt
+package goutils
 
 import (
 	"crypto/aes"
@@ -14,7 +14,11 @@ import (
 	"io"
 )
 
-func EncryptStr(text string, pass string) (string, error) {
+type CryptoUtils struct{}
+
+func NewCryptoUtils() *CryptoUtils { return &CryptoUtils{} }
+
+func (u *CryptoUtils) EncryptStr(text string, pass string) (string, error) {
 	// 使用 SHA-256 散列函数将密码转换为 AES-256 密钥
 	hash := sha256.Sum256([]byte(pass))
 	key := hash[:]
@@ -40,7 +44,7 @@ func EncryptStr(text string, pass string) (string, error) {
 	return base64.StdEncoding.EncodeToString(ciphertext), nil
 }
 
-func DecryptStr(text string, pass string) (string, error) {
+func (u *CryptoUtils) DecryptStr(text string, pass string) (string, error) {
 	// 使用 SHA-256 散列函数将密码转换为 AES-256 密钥
 	hash := sha256.Sum256([]byte(pass))
 	key := hash[:]

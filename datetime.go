@@ -1,8 +1,16 @@
+/******************************************************************************
+ * Copyright (c) Archer++ 2024.                                               *
+ ******************************************************************************/
+
 package goutils
 
 import "time"
 
-func SetTimezone(tz ...string) {
+type TimeUtils struct{}
+
+func NewTimeUtils() *TimeUtils { return &TimeUtils{} }
+
+func (t *TimeUtils) SetTimezone(tz ...string) {
 	defaultTimezone := "Asia/Shanghai"
 
 	var timezone string

@@ -1,3 +1,7 @@
+/******************************************************************************
+ * Copyright (c) Archer++ 2024.                                               *
+ ******************************************************************************/
+
 package goutils
 
 import (
@@ -9,6 +13,12 @@ import (
 	url2 "net/url"
 	"strings"
 )
+
+type GoogleTranslationUtils struct{}
+
+func NewGoogleTranslationUtils() *GoogleTranslationUtils {
+	return &GoogleTranslationUtils{}
+}
 
 // "af","ak","am","ar","as","ay","az","be","bg","bho","bm","bn","bs","ca","ceb","ckb","zh","zh-CN","zh-TW",
 // "co","cs","cy","da","de","doi","dv","ee","el","en","eo","es","et","eu","fa","fi","fr","fy","ga","gd",
@@ -26,7 +36,7 @@ type ResultData struct {
 	} `json:"data"`
 }
 
-func GoogleTranslateToEn(text string, source string) (string, error) {
+func (g *GoogleTranslationUtils) GoogleTranslateToEn(text string, source string) (string, error) {
 	text = url2.QueryEscape(text)
 	url := "https://google-translate1.p.rapidapi.com/language/translate/v2"
 	payload := strings.NewReader(fmt.Sprintf("q=%s&target=en&source=%s", text, source))
@@ -55,7 +65,7 @@ func GoogleTranslateToEn(text string, source string) (string, error) {
 	return result.Data.Translations[0].TranslatedText, nil
 }
 
-func GoogleTranslateToCN(text string, source string) (string, error) {
+func (g *GoogleTranslationUtils) GoogleTranslateToCN(text string, source string) (string, error) {
 	text = url2.QueryEscape(text)
 	url := "https://google-translate1.p.rapidapi.com/language/translate/v2"
 	payload := strings.NewReader(fmt.Sprintf("q=%s&target=zh-CN&source=%s", text, source))
@@ -84,7 +94,7 @@ func GoogleTranslateToCN(text string, source string) (string, error) {
 	return result.Data.Translations[0].TranslatedText, nil
 }
 
-func GoogleDetectLang(text string) {
+func (g *GoogleTranslationUtils) GoogleDetectLang(text string) {
 	url := "https://google-translate1.p.rapidapi.com/language/translate/v2/detect"
 	payload := strings.NewReader("q=English%20is%20hard%2C%20but%20detectably%20so")
 

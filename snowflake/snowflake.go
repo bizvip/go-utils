@@ -1,3 +1,4 @@
+// Package snowflake provides a very simple Twitter snowflake generator and parser.
 package snowflake
 
 import (
@@ -97,8 +98,9 @@ type ID int64
 // NewNode returns a new snowflake node that can be used to generate snowflake
 // IDs
 func NewNode(node int64) (*Node, error) {
+
 	if NodeBits+StepBits > 22 {
-		return nil, errors.New("remember, you have a total 22 bits to share between Node/Step")
+		return nil, errors.New("Remember, you have a total 22 bits to share between Node/Step")
 	}
 	// re-calc in case custom NodeBits or StepBits were set
 	// DEPRECATED: the below block will be removed in a future release.

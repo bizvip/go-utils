@@ -1,3 +1,7 @@
+/******************************************************************************
+ * Copyright (c) Archer++ 2024.                                               *
+ ******************************************************************************/
+
 package goutils
 
 import (
@@ -6,13 +10,25 @@ import (
 	"github.com/longbridgeapp/opencc"
 )
 
+type LangTranslatorUtils struct {
+	T2s  *opencc.OpenCC
+	S2t  *opencc.OpenCC
+	once sync.Once
+}
+
+func NewLangTranslatorUtils() *LangTranslatorUtils {
+	t := &LangTranslatorUtils{}
+	t.Init()
+	return t
+}
+
 type Translator struct {
 	T2s  *opencc.OpenCC
 	S2t  *opencc.OpenCC
 	once sync.Once
 }
 
-func (t *Translator) Init() {
+func (t *LangTranslatorUtils) Init() {
 	t.once.Do(
 		func() {
 			var err error
@@ -23,10 +39,4 @@ func (t *Translator) Init() {
 			}
 		},
 	)
-}
-
-func NewTranslator() *Translator {
-	t := &Translator{}
-	t.Init()
-	return t
 }

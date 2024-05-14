@@ -1,3 +1,7 @@
+/******************************************************************************
+ * Copyright (c) Archer++ 2024.                                               *
+ ******************************************************************************/
+
 package goutils
 
 import (
@@ -10,6 +14,10 @@ import (
 	"regexp"
 	"strings"
 )
+
+type HttpUtils struct{}
+
+func NewHttpUtils() *HttpUtils { return &HttpUtils{} }
 
 func DownImage(url, name, savePath string) (string, error) {
 	// 创建一个跳过证书验证的http.Client

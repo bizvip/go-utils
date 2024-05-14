@@ -13,7 +13,14 @@ import (
 	"time"
 )
 
-func GetFileCreationTime(filePath string) (string, time.Time, error) {
+// FileSystemUtils 定义文件系统工具类
+type FileSystemUtils struct{}
+
+func NewFileSysUtils() *FileSystemUtils {
+	return &FileSystemUtils{}
+}
+
+func (fsu *FileSystemUtils) GetFileCreationTime(filePath string) (string, time.Time, error) {
 	fileInfo, err := os.Stat(filePath)
 	if err != nil {
 		return "", time.Time{}, err
@@ -31,11 +38,11 @@ func GetFileCreationTime(filePath string) (string, time.Time, error) {
 }
 
 // StartsWithDot 检查文件名是否以 '.' 开头
-func StartsWithDot(fileName string) bool {
+func (fsu *FileSystemUtils) StartsWithDot(fileName string) bool {
 	return len(fileName) > 0 && fileName[0] == '.'
 }
 
-func GetFileNameMd5(filename string) (string, error) {
+func (fsu *FileSystemUtils) GetFileNameMd5(filename string) (string, error) {
 	fileInfo, err := os.Stat(filename)
 	if err != nil {
 		fmt.Println("Error getting file info:", err)
@@ -49,7 +56,7 @@ func GetFileNameMd5(filename string) (string, error) {
 	return md5Value, nil
 }
 
-func GetFileMd5(filePath string) (string, error) {
+func (fsu *FileSystemUtils) GetFileMd5(filePath string) (string, error) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return "", err
@@ -58,7 +65,7 @@ func GetFileMd5(filePath string) (string, error) {
 	return hex.EncodeToString(hash[:]), nil
 }
 
-func GetFileMd5Stream(filePath string) (string, error) {
+func (fsu *FileSystemUtils) GetFileMd5Stream(filePath string) (string, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return "", err
@@ -75,7 +82,7 @@ func GetFileMd5Stream(filePath string) (string, error) {
 	return hashString, nil
 }
 
-func GetCurExeDir() string {
+func (fsu *FileSystemUtils) GetCurExeDir() string {
 	ex, err := os.Executable()
 	if err != nil {
 		panic(err)
@@ -83,7 +90,7 @@ func GetCurExeDir() string {
 	return filepath.Dir(ex)
 }
 
-func GetAllFilesByExt(dir string, ext string) ([]string, error) {
+func (fsu *FileSystemUtils) GetAllFilesByExt(dir string, ext string) ([]string, error) {
 	var files []string
 	err := filepath.Walk(
 		dir, func(path string, info os.FileInfo, err error) error {
@@ -102,7 +109,7 @@ func GetAllFilesByExt(dir string, ext string) ([]string, error) {
 	return files, nil
 }
 
-func IsDirAndHasFiles(dirPath string) (bool, bool, error) {
+func (fsu *FileSystemUtils) IsDirAndHasFiles(dirPath string) (bool, bool, error) {
 	info, err := os.Stat(dirPath)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -123,9 +130,30 @@ func IsDirAndHasFiles(dirPath string) (bool, bool, error) {
 	return true, len(files) > 0, nil
 }
 
-func DelFile(path string) {
+// Delete 删除指定路径的文件或目录
+func (fsu *FileSystemUtils) Delete(path string) error {
 	err := os.Remove(path)
 	if err != nil {
-		logs.Logger().Error("无法删除文件: %v", err)
+		return err
 	}
+	return nil
+}
+
+// CreateDirIfNotExist 在当前执行文件所在目录下创建指定的目录，如果目录不存在
+func (fsu *FileSystemUtils) CreateDirIfNotExist(relativePath string) error {
+	// 获取当前执行文件所在目录
+	curDir := fsu.GetCurExeDir()
+
+	// 拼接完整的目录路径
+	fullPath := filepath.Join(curDir, relativePath)
+
+	// 检查目录是否已经存在
+	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
+		err := os.MkdirAll(fullPath, 0755)
+		if err != nil {
+			return fmt.Errorf("failed to create directory: %v", err)
+		}
+	}
+
+	return nil
 }

@@ -1,3 +1,7 @@
+/******************************************************************************
+ * Copyright (c) Archer++ 2024.                                               *
+ ******************************************************************************/
+
 package img
 
 import (
@@ -24,7 +28,7 @@ type ResizeOptions struct {
 }
 
 // Resize 根据提供的 ResizeOptions 调整图像大小
-func Resize(ro ResizeOptions) error {
+func (i *ImageUtils) Resize(ro ResizeOptions) error {
 	if ro.Src == "" {
 		return fmt.Errorf("要resize的图片源地址必须提供")
 	}

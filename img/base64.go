@@ -1,3 +1,7 @@
+/******************************************************************************
+ * Copyright (c) Archer++ 2024.                                               *
+ ******************************************************************************/
+
 package img
 
 import (
@@ -8,7 +12,7 @@ import (
 	"path/filepath"
 )
 
-func ToBase64(imgPath string) (string, error) {
+func (i *ImageUtils) ToBase64(imgPath string) (string, error) {
 	// 打开图片文件
 	imgFile, err := os.Open(imgPath)
 	if err != nil {
@@ -35,7 +39,7 @@ func ToBase64(imgPath string) (string, error) {
 }
 
 // WriteBase64ToFile 将Base64编码的图片字符串写入文件
-func WriteBase64ToFile(base64Str, fullPath string, overwrite bool) error {
+func (i *ImageUtils) WriteBase64ToFile(base64Str, fullPath string, overwrite bool) error {
 	// 获取文件所在的目录路径
 	dir := filepath.Dir(fullPath)
 

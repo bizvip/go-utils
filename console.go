@@ -1,3 +1,7 @@
+/******************************************************************************
+ * Copyright (c) Archer++ 2024.                                               *
+ ******************************************************************************/
+
 package goutils
 
 import (
@@ -6,26 +10,26 @@ import (
 	"github.com/fatih/color"
 )
 
-type C struct{}
+type ConsoleUtils struct{}
 
-func Console() *C { return &C{} }
+func NewConsoleUtils() *ConsoleUtils { return &ConsoleUtils{} }
 
-func (c *C) BlackBold(txt string) {
+func (c *ConsoleUtils) BlackBold(txt string) {
 	bold := color.New(color.FgHiWhite, color.BgBlack).SprintFunc()
 	fmt.Printf("%s", bold(txt))
 }
 
-func (c *C) Black(txt string) {
+func (c *ConsoleUtils) Black(txt string) {
 	bold := color.New(color.FgHiBlack).SprintFunc()
 	fmt.Printf("%s", bold(txt))
 }
 
-func (c *C) Red(txt string) {
+func (c *ConsoleUtils) Red(txt string) {
 	bold := color.New(color.FgHiRed).SprintFunc()
 	fmt.Printf("%s", bold(txt))
 }
 
-func (c *C) Green(txt string) {
+func (c *ConsoleUtils) Green(txt string) {
 	bold := color.New(color.FgHiGreen).SprintFunc()
 	fmt.Printf("%s", bold(txt))
 }

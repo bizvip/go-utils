@@ -1,3 +1,7 @@
+/******************************************************************************
+ * Copyright (c) Archer++ 2024.                                               *
+ ******************************************************************************/
+
 package lock
 
 import (
@@ -8,11 +12,11 @@ import (
 	"github.com/bizvip/go-utils/logs"
 )
 
-// GlobalHandle 全局锁变量掌控，不使用注入方式，只要调用包立刻初始化
-var GlobalHandle *Manager
+// GlobalLocker 全局锁变量掌控，不使用注入方式，只要调用包立刻初始化
+var GlobalLocker *Locker
 
 func init() {
-	GlobalHandle = NewLocker()
+	GlobalLocker = NewGlobalLocker()
 }
 
 type timedMutex struct {
@@ -21,15 +25,15 @@ type timedMutex struct {
 	createdAt int64 // 记录锁创建的时间 增加一个多少时间无用的锁，才进行内存清理
 }
 
-type Manager struct {
+type Locker struct {
 	mu sync.Map
 }
 
-func NewLocker() *Manager {
-	return &Manager{}
+func NewGlobalLocker() *Locker {
+	return &Locker{}
 }
 
-func (l *Manager) Lock(name string) *sync.Mutex {
+func (l *Locker) Lock(name string) *sync.Mutex {
 	now := time.Now().Unix()
 	tm, _ := l.mu.LoadOrStore(
 		name, &timedMutex{
@@ -43,11 +47,11 @@ func (l *Manager) Lock(name string) *sync.Mutex {
 	return &t.mutex
 }
 
-func (l *Manager) Unlock(lock *sync.Mutex) {
+func (l *Locker) Unlock(lock *sync.Mutex) {
 	lock.Unlock()
 }
 
-func (l *Manager) cleanUp(threshold int64, minExistTime int64) {
+func (l *Locker) cleanUp(threshold int64, minExistTime int64) {
 	now := time.Now().Unix()
 	l.mu.Range(
 		func(key, value interface{}) bool {
@@ -65,7 +69,7 @@ func SetCleanUp(threshold int64, minExistTime int64) {
 	go func() {
 		defer ticker.Stop()
 		for range ticker.C {
-			GlobalHandle.cleanUp(threshold, minExistTime)
+			GlobalLocker.cleanUp(threshold, minExistTime)
 			logs.Logger().Infoln("cleanUp expired locks")
 		}
 	}()

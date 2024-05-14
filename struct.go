@@ -1,10 +1,20 @@
+/******************************************************************************
+ * Copyright (c) Archer++ 2024.                                               *
+ ******************************************************************************/
+
 package goutils
 
 import (
 	"reflect"
 )
 
-// MergeStructData 使用反射来合并两个struct 反射不能提供高性能 不过一般问题不大
+type StructUtils struct{}
+
+func NewStructUtils() *StructUtils {
+	return &StructUtils{}
+}
+
+// MergeStructData 使用反射来合并两个struct 反射影响高性能
 func MergeStructData(existing, newData interface{}) interface{} {
 	valExisting := reflect.ValueOf(existing).Elem()
 	valNewData := reflect.ValueOf(newData).Elem()

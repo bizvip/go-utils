@@ -1,3 +1,7 @@
+/******************************************************************************
+ * Copyright (c) Archer++ 2024.                                               *
+ ******************************************************************************/
+
 package img
 
 import (
@@ -21,7 +25,7 @@ type Info struct {
 	FileMD5  string `json:"file_md5"`
 }
 
-func GetInfo(path string, withMd5 bool) (*Info, error) {
+func (i *ImageUtils) GetInfo(path string, withMd5 bool) (*Info, error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, err
@@ -56,7 +60,7 @@ func GetInfo(path string, withMd5 bool) (*Info, error) {
 
 	fileMd5 := ""
 	if withMd5 {
-		fileMd5, err = fs.FileSysUtils().GetFileMd5Stream(path)
+		fileMd5, err = fs.NewFileSysUtils().GetFileMd5Stream(path)
 		if err != nil {
 			return nil, err
 		}

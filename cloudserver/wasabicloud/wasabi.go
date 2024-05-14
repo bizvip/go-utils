@@ -1,4 +1,8 @@
-package cloudserver
+/******************************************************************************
+ * Copyright (c) Archer++ 2024.                                               *
+ ******************************************************************************/
+
+package wasabicloud
 
 type WasabiStorageHandler struct{ s3Conf }
 

@@ -1,3 +1,7 @@
+/******************************************************************************
+ * Copyright (c) Archer++ 2024.                                               *
+ ******************************************************************************/
+
 package goutils
 
 import (
@@ -19,12 +23,14 @@ import (
 	"github.com/bizvip/go-utils/logs"
 )
 
-type S struct{}
+type StrUtils struct{}
 
-func Str() *S {
-	return &S{}
+func NewStrUtils() *StrUtils {
+	return &StrUtils{}
 }
-func (s *S) PadCnSpaceChar(label string, spaces int) string {
+
+// PadCnSpaceChar 使用中文空格为字符串填充
+func (s *StrUtils) PadCnSpaceChar(label string, spaces int) string {
 	for i := 0; i < spaces; i++ {
 		label += string('\u3000')
 	}
@@ -32,7 +38,7 @@ func (s *S) PadCnSpaceChar(label string, spaces int) string {
 }
 
 // UniqueStrings 返回一个新的切片，其中包含原切片中的唯一字符串
-func (s *S) UniqueStrings(input []string) []string {
+func (s *StrUtils) UniqueStrings(input []string) []string {
 	seen := make(map[string]struct{})
 	var result []string
 
@@ -46,7 +52,7 @@ func (s *S) UniqueStrings(input []string) []string {
 	return result
 }
 
-func (s *S) RegexpMatch(text string, pattern string) bool {
+func (s *StrUtils) RegexpMatch(text string, pattern string) bool {
 	regex, err := regexp.Compile(pattern)
 	if err != nil {
 		logs.Logger().Error("Regex compile error:", err)
@@ -55,13 +61,13 @@ func (s *S) RegexpMatch(text string, pattern string) bool {
 	return regex.MatchString(text)
 }
 
-func (s *S) UUIDNoDash() string {
+func (s *StrUtils) UUIDNoDash() string {
 	u := uuid.New()
 	uNoDashes := strings.Replace(u.String(), "-", "", -1)
 	return uNoDashes
 }
 
-func (s *S) RandomId() string {
+func (s *StrUtils) RandomId() string {
 	randomData := make([]byte, 12)
 	_, err := rand.Read(randomData)
 	if err != nil {
@@ -82,7 +88,7 @@ func (s *S) RandomId() string {
 	return cleaned
 }
 
-func (s *S) StrToInt64(intStr string) (int64, error) {
+func (s *StrUtils) StrToInt64(intStr string) (int64, error) {
 	if strings.Contains(intStr, ".") {
 		return 0, fmt.Errorf("this method only accepts number without dots")
 	}
@@ -93,12 +99,12 @@ func (s *S) StrToInt64(intStr string) (int64, error) {
 	return i, nil
 }
 
-func (s *S) Md5(str string) string {
+func (s *StrUtils) Md5(str string) string {
 	hash := md5.Sum([]byte(str))
 	return hex.EncodeToString(hash[:])
 }
 
-func (s *S) FilterEmptyChar(str string) string {
+func (s *StrUtils) FilterEmptyChar(str string) string {
 	newStr := strings.ReplaceAll(strings.TrimSpace(str), "&nbsp;", "")
 	newStr = strings.ReplaceAll(newStr, " ", "")
 	newStr = strings.Map(
@@ -114,19 +120,19 @@ func (s *S) FilterEmptyChar(str string) string {
 	return newStr
 }
 
-func (s *S) NanoTimestampStr() string {
+func (s *StrUtils) NanoTimestampStr() string {
 	now := time.Now()
 	nano := fmt.Sprintf("%06d", now.Nanosecond()/1000)
 	return now.Format("20060102150405") + "-" + nano
 }
 
-func (s *S) GetDirNameFromSnowflakeID(snowflakeID int64) string {
+func (s *StrUtils) GetDirNameFromSnowflakeID(snowflakeID int64) string {
 	transformedID := snowflakeID >> 10
 	dirName := strconv.FormatInt(transformedID%10000, 10)
 	return fmt.Sprintf("%04s", dirName)
 }
 
-func (s *S) IsAlphaNum(str string) bool {
+func (s *StrUtils) IsAlphaNum(str string) bool {
 	//	isAlphanumeric := regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString(str)
 	for _, r := range str {
 		if !unicode.IsLetter(r) && !unicode.IsDigit(r) {
@@ -136,11 +142,11 @@ func (s *S) IsAlphaNum(str string) bool {
 	return true
 }
 
-func (s *S) Length(str string) int {
+func (s *StrUtils) Length(str string) int {
 	return len([]rune(str))
 }
 
-func (s *S) ProtoMessageToJson(msg proto.Message) (string, error) {
+func (s *StrUtils) ProtoMessageToJson(msg proto.Message) (string, error) {
 	marshaller := protojson.MarshalOptions{
 		Multiline:     true,
 		Indent:        "  ",

@@ -1,3 +1,7 @@
+/******************************************************************************
+ * Copyright (c) Archer++ 2024.                                               *
+ ******************************************************************************/
+
 package goutils
 
 import (
@@ -8,13 +12,13 @@ import (
 	"github.com/bizvip/go-utils/logs"
 )
 
-type FFMpegService struct{}
+type FFMpegUtils struct{}
 
-func NewFFMpegService() *FFMpegService {
-	return &FFMpegService{}
+func NewFFMpegUtils() *FFMpegUtils {
+	return &FFMpegUtils{}
 }
 
-func (f *FFMpegService) ffMpeg(shellCmd string) error {
+func (f *FFMpegUtils) ffMpeg(shellCmd string) error {
 	cmdStr := "ffmpeg " + shellCmd
 	cmd := exec.Command("bash", "-c", cmdStr)
 
@@ -45,7 +49,7 @@ func (f *FFMpegService) ffMpeg(shellCmd string) error {
 	return nil
 }
 
-func (f *FFMpegService) H264ToHls(filePath string, tsDir string, idxFilePath string, tsSeconds uint8) error {
+func (f *FFMpegUtils) H264ToHls(filePath string, tsDir string, idxFilePath string, tsSeconds uint8) error {
 	str := fmt.Sprintf(
 		"-y -i '%s' -codec copy -map 0 -f segment -segment_list '%s' -segment_time %d ",
 		filePath,
@@ -56,7 +60,7 @@ func (f *FFMpegService) H264ToHls(filePath string, tsDir string, idxFilePath str
 	return f.ffMpeg(str)
 }
 
-func (f *FFMpegService) ToHlsNonH264(filePath string, tsDir string, idxFilePath string, tsSeconds uint8) error {
+func (f *FFMpegUtils) ToHlsNonH264(filePath string, tsDir string, idxFilePath string, tsSeconds uint8) error {
 	cmd := fmt.Sprintf(
 		"-y -i '%s' -c:v libx264 -c:a aac -map 0 -f segment -segment_list '%s' -segment_time %d ",
 		filePath,
