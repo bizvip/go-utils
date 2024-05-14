@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/shopspring/decimal"
+
 	"github.com/bizvip/go-utils/logs"
 )
 
@@ -19,7 +21,7 @@ func NewOkxService() *OKX {
 	return &OKX{Client: &http.Client{}}
 }
 
-func (o *OKX) GetTop10Exchanges(baseCurrency string, quoteCurrency string) ([]Exchange, error) {
+func (o *OKX) GetTop10Exchanges(baseCurrency string, quoteCurrency string) ([]*Exchange, error) {
 	url := fmt.Sprintf("https://www.okx.com/v3/c2c/tradingOrders/books?quoteCurrency=%s&baseCurrency=%s&side=sell&paymentMethod=all&userType=all&receivingAds=false&limit=10&t=%d", quoteCurrency, baseCurrency, time.Now().UnixMilli())
 	result, err := o.doRequest(url)
 	if err != nil {
@@ -34,9 +36,9 @@ func (o *OKX) GetTop10Exchanges(baseCurrency string, quoteCurrency string) ([]Ex
 		return nil, err
 	}
 
-	var exchanges []Exchange
+	var exchanges []*Exchange
 	for _, v := range data.Data.Sell {
-		exchange := Exchange{
+		exchange := &Exchange{
 			Currency: v.BaseCurrency,
 			ShopName: v.NickName,
 			Price:    v.Price,
@@ -78,4 +80,32 @@ func (o *OKX) doRequest(url string) (string, error) {
 	}
 
 	return string(body), nil
+}
+func (o *OKX) GetUsdtCnyExchangeList() ([]*Exchange, error) {
+	r, e := o.GetTop10Exchanges("USDT", "CNY")
+	if e != nil {
+		logs.Logger().Error(e)
+		return nil, e
+	}
+	return r, nil
+}
+
+func (o *OKX) GetRealtimeCnyToUsdtRate() decimal.Decimal {
+	usdtRates, err := o.GetUsdtCnyExchangeList()
+	if err != nil {
+		logs.Logger().Error(err)
+		return decimal.Zero
+	}
+	var total decimal.Decimal
+	var i int32
+	for _, usdtRate := range usdtRates {
+		price, err := decimal.NewFromString(usdtRate.Price)
+		if err != nil {
+			logs.Logger().Error(err)
+			continue
+		}
+		total = total.Add(price)
+		i += 1
+	}
+	return total.Mul(decimal.NewFromInt32(i)).DivRound(decimal.NewFromInt32(100), 2)
 }
