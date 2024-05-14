@@ -1,11 +1,11 @@
-package utils
+package goutils
 
 import (
 	"fmt"
 	"io"
 	"os/exec"
 
-	"tab/pkg/utils/logs"
+	"github.com/bizvip/go-utils/logs"
 )
 
 type FFMpegService struct{}

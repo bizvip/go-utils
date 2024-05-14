@@ -1,4 +1,4 @@
-package utils
+package goutils
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"tab/pkg/utils/logs"
+	"github.com/bizvip/go-utils/logs"
 )
 
 type FFProbeService struct{}

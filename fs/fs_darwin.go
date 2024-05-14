@@ -16,8 +16,12 @@ import (
 // FileSystemUtils 定义文件系统工具类
 type FileSystemUtils struct{}
 
+func FileSysUtils() *FileSystemUtils {
+	return &FileSystemUtils{}
+}
+
 // GetFileCreationTime 获取文件创建时间
-func (fsu FileSystemUtils) GetFileCreationTime(filePath string) (string, time.Time, error) {
+func (fsu *FileSystemUtils) GetFileCreationTime(filePath string) (string, time.Time, error) {
 	fileInfo, err := os.Stat(filePath)
 	if err != nil {
 		return "", time.Time{}, err
@@ -28,19 +32,19 @@ func (fsu FileSystemUtils) GetFileCreationTime(filePath string) (string, time.Ti
 		return "", time.Time{}, fmt.Errorf("failed to get raw syscall.Stat_t data")
 	}
 
-	unixTime := time.Unix(int64(stat.Ctimespec.Sec), int64(stat.Ctimespec.Nsec))
+	unixTime := time.Unix(stat.Ctimespec.Sec, stat.Ctimespec.Nsec)
 	formattedTime := unixTime.Format("2006-01-02 15:04:05")
 
 	return formattedTime, unixTime, nil
 }
 
 // StartsWithDot 检查文件名是否以 '.' 开头
-func (fsu FileSystemUtils) StartsWithDot(fileName string) bool {
+func (fsu *FileSystemUtils) StartsWithDot(fileName string) bool {
 	return len(fileName) > 0 && fileName[0] == '.'
 }
 
 // GetFileNameMd5 计算文件名的 MD5 值
-func (fsu FileSystemUtils) GetFileNameMd5(filename string) (string, error) {
+func (fsu *FileSystemUtils) GetFileNameMd5(filename string) (string, error) {
 	fileInfo, err := os.Stat(filename)
 	if err != nil {
 		fmt.Println("Error getting file info:", err)
@@ -54,7 +58,7 @@ func (fsu FileSystemUtils) GetFileNameMd5(filename string) (string, error) {
 }
 
 // GetFileMd5 计算文件的 MD5 值
-func (fsu FileSystemUtils) GetFileMd5(filePath string) (string, error) {
+func (fsu *FileSystemUtils) GetFileMd5(filePath string) (string, error) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return "", err
@@ -64,7 +68,7 @@ func (fsu FileSystemUtils) GetFileMd5(filePath string) (string, error) {
 }
 
 // GetFileMd5Stream 通过流的方式计算文件的 MD5 值
-func (fsu FileSystemUtils) GetFileMd5Stream(filePath string) (string, error) {
+func (fsu *FileSystemUtils) GetFileMd5Stream(filePath string) (string, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return "", err
@@ -82,7 +86,7 @@ func (fsu FileSystemUtils) GetFileMd5Stream(filePath string) (string, error) {
 }
 
 // GetCurExeDir 获取当前执行文件所在目录
-func (fsu FileSystemUtils) GetCurExeDir() string {
+func (fsu *FileSystemUtils) GetCurExeDir() string {
 	ex, err := os.Executable()
 	if err != nil {
 		panic(err)
@@ -91,7 +95,7 @@ func (fsu FileSystemUtils) GetCurExeDir() string {
 }
 
 // GetAllFilesByExt 根据文件扩展名获取所有文件
-func (fsu FileSystemUtils) GetAllFilesByExt(dir string, ext string) ([]string, error) {
+func (fsu *FileSystemUtils) GetAllFilesByExt(dir string, ext string) ([]string, error) {
 	var files []string
 	err := filepath.Walk(
 		dir, func(path string, info os.FileInfo, err error) error {
@@ -111,7 +115,7 @@ func (fsu FileSystemUtils) GetAllFilesByExt(dir string, ext string) ([]string, e
 }
 
 // IsDirAndHasFiles 检查目录是否存在并且包含文件
-func (fsu FileSystemUtils) IsDirAndHasFiles(dirPath string) (bool, bool, error) {
+func (fsu *FileSystemUtils) IsDirAndHasFiles(dirPath string) (bool, bool, error) {
 	info, err := os.Stat(dirPath)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -133,7 +137,7 @@ func (fsu FileSystemUtils) IsDirAndHasFiles(dirPath string) (bool, bool, error) 
 }
 
 // Delete 删除指定路径的文件或目录
-func (fsu FileSystemUtils) Delete(path string) error {
+func (fsu *FileSystemUtils) Delete(path string) error {
 	err := os.Remove(path)
 	if err != nil {
 		return err
@@ -142,7 +146,7 @@ func (fsu FileSystemUtils) Delete(path string) error {
 }
 
 // CreateDirIfNotExist 在当前执行文件所在目录下创建指定的目录，如果目录不存在
-func (fsu FileSystemUtils) CreateDirIfNotExist(relativePath string) error {
+func (fsu *FileSystemUtils) CreateDirIfNotExist(relativePath string) error {
 	// 获取当前执行文件所在目录
 	curDir := fsu.GetCurExeDir()
 

@@ -1,4 +1,4 @@
-package utils
+package goutils
 
 import (
 	"errors"
@@ -10,7 +10,7 @@ import (
 	"github.com/shopspring/decimal"
 	"github.com/sqids/sqids-go"
 
-	"tab/pkg/utils/logs"
+	"github.com/bizvip/go-utils/logs"
 )
 
 type N struct {

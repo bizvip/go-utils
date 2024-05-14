@@ -5,7 +5,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"tab/pkg/utils/logs"
+	"github.com/bizvip/go-utils/logs"
 )
 
 // GlobalHandle 全局锁变量掌控，不使用注入方式，只要调用包立刻初始化

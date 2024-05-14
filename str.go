@@ -1,4 +1,4 @@
-package utils
+package goutils
 
 import (
 	"crypto/md5"
@@ -16,7 +16,7 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 
-	"tab/pkg/utils/logs"
+	"github.com/bizvip/go-utils/logs"
 )
 
 type S struct{}

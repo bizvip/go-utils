@@ -8,7 +8,7 @@ import (
 
 	"github.com/davidbyttow/govips/v2/vips"
 
-	"tab/pkg/utils/fs"
+	"github.com/bizvip/go-utils/fs"
 )
 
 type Info struct {
@@ -56,7 +56,7 @@ func GetInfo(path string, withMd5 bool) (*Info, error) {
 
 	fileMd5 := ""
 	if withMd5 {
-		fileMd5, err = fs.GetFileMd5Stream(path)
+		fileMd5, err = fs.FileSysUtils().GetFileMd5Stream(path)
 		if err != nil {
 			return nil, err
 		}

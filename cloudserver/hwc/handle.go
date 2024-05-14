@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"tab/base/config"
-	"tab/pkg/utils/hwc/obs"
+	"github.com/bizvip/go-utils/cloudserver/hwc/obs"
 )
 
 // HWC_USR=hid_sn0f9rjvmjulkp2
@@ -29,9 +28,9 @@ var (
 )
 
 func getObsClient() *obs.ObsClient {
-	endpoint = config.All.Hwc.Endpoint
-	ak = config.All.Hwc.Ak
-	sk = config.All.Hwc.Sk
+	// endpoint = config.All.Hwc.Endpoint
+	// ak = config.All.Hwc.Ak
+	// sk = config.All.Hwc.Sk
 
 	var err error
 	if obsClient == nil {
@@ -58,7 +57,7 @@ func init() {
 
 func getBucketName() string {
 	if bucketName == "" {
-		bucketName = config.All.Hwc.BucketName
+		bucketName = ""
 	}
 	return bucketName
 }
