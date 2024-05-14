@@ -6,11 +6,9 @@ package mysql
 
 import (
 	"fmt"
-	"os"
 	"sync"
 	"time"
 
-	"github.com/BurntSushi/toml"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	gormlogger "gorm.io/gorm/logger"
@@ -21,7 +19,7 @@ var (
 	once        sync.Once
 )
 
-type mysqlConf struct {
+type DbConfig struct {
 	DbHost        string `toml:"dbHost"`
 	DbPort        int    `toml:"dbPort"`
 	DbUsername    string `toml:"dbUsername"`
@@ -35,51 +33,49 @@ type mysqlConf struct {
 	DbMaxIdleTime int    `toml:"dbMaxIdleTime"` // 最大空闲时间（秒）
 }
 
-type conf struct {
-	MySQL mysqlConf `toml:"mysql"`
-}
-
-func InitConnection() {
+func InitConnection(dbConfig DbConfig) {
 	once.Do(func() {
-		config := conf{}
-		file, err := os.Open("config.toml")
-		if err != nil {
-			fmt.Println(fmt.Errorf("failed to open TOML file: %v", err))
-		}
-		defer func(file *os.File) { _ = file.Close() }(file)
+		// config := conf{}
+		// file, err := os.Open("config.toml")
+		// if err != nil {
+		// 	fmt.Println(fmt.Errorf("failed to open TOML file: %v", err))
+		// }
+		// defer func(file *os.File) { _ = file.Close() }(file)
 
-		decoder := toml.NewDecoder(file)
-		if _, err = decoder.Decode(&config); err != nil {
-			fmt.Println(fmt.Errorf("failed to decode TOML file: %v", err))
-		}
+		// decoder := toml.NewDecoder(file)
+		// if _, err = decoder.Decode(&config); err != nil {
+		// 	fmt.Println(fmt.Errorf("failed to decode TOML file: %v", err))
+		// }
 
 		dsn := fmt.Sprintf(
 			"%s:%s@tcp(%s:%d)/%s?charset=%s&parseTime=True&loc=Local",
-			config.MySQL.DbUsername,
-			config.MySQL.DbPassword,
-			config.MySQL.DbHost,
-			config.MySQL.DbPort,
-			config.MySQL.DbDatabase,
-			config.MySQL.DbCharset,
+			dbConfig.DbUsername,
+			dbConfig.DbPassword,
+			dbConfig.DbHost,
+			dbConfig.DbPort,
+			dbConfig.DbDatabase,
+			dbConfig.DbCharset,
 		)
 
+		var err error
 		newLogger := gormlogger.Default.LogMode(gormlogger.Silent)
 		ormInstance, err = gorm.Open(mysql.Open(dsn), &gorm.Config{Logger: newLogger})
 		if err != nil {
-			fmt.Println(fmt.Errorf("failed to connect to MySQL database: %v", err))
+			panic(fmt.Errorf("failed to connect to MySQL database: %v", err))
 		}
 
 		sqlDB, err := ormInstance.DB()
 		if err != nil {
-			fmt.Println(fmt.Errorf("failed to get database object: %v", err))
+			panic(fmt.Errorf("failed to get database object: %v", err))
 		}
 
 		// 设置连接池参数
-		sqlDB.SetMaxIdleConns(config.MySQL.DbMaxIdleConn)
-		sqlDB.SetMaxOpenConns(config.MySQL.DbMaxOpenConn)
-		sqlDB.SetConnMaxLifetime(time.Duration(config.MySQL.DbMaxIdleTime) * time.Second)
+		sqlDB.SetMaxIdleConns(dbConfig.DbMaxIdleConn)
+		sqlDB.SetMaxOpenConns(dbConfig.DbMaxOpenConn)
+		sqlDB.SetConnMaxLifetime(time.Duration(dbConfig.DbMaxIdleTime) * time.Second)
 	})
 }
+
 func GetOrmInstance() *gorm.DB {
 	return ormInstance
 }
