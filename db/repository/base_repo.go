@@ -2,13 +2,15 @@
  * Copyright (c) Archer++ 2024.                                               *
  ******************************************************************************/
 
-package mysql
+package repository
 
 import (
 	"errors"
 	"reflect"
 
 	"gorm.io/gorm"
+
+	"github.com/bizvip/go-utils/db/mysql"
 )
 
 type BaseRepo struct{ Orm *gorm.DB }
@@ -24,7 +26,7 @@ type IBaseRepo interface {
 }
 
 func NewBaseRepo() *BaseRepo {
-	dbOrm := GetOrmInstance()
+	dbOrm := mysql.GetOrmInstance()
 	if dbOrm == nil {
 		panic("BaseRepo err : 请检查mysql是否正确建立了链接并进行了初始化")
 	}
