@@ -1,8 +1,4 @@
-/******************************************************************************
- * Copyright (c) Archer++ 2024.                                               *
- ******************************************************************************/
-
-package repository
+package repositories
 
 import (
 	"errors"
@@ -13,27 +9,26 @@ import (
 	"github.com/bizvip/go-utils/db/mysql"
 )
 
-type BaseRepo struct{ Orm *gorm.DB }
+type BaseRepo[T any] struct{ Orm *gorm.DB }
 type IBaseRepo interface {
 	Insert(model interface{}) error
 	InsertOrUpdate(model interface{}, condition map[string]interface{}, forUpdateValues interface{}) error
 	UpdateById(model interface{}, id uint64) error
 	DeleteById(model interface{}, id uint64) error
-	DeleteBy(condition map[string]interface{}, model *interface{}, hardDelete bool) error
+	DeleteBy(condition map[string]interface{}, model interface{}, hardDelete bool) error
 	SelectById(model interface{}, id uint64) error
 	SelectBy(condition map[string]interface{}) ([]interface{}, error)
-	SelectOne(condition map[string]interface{}) (interface{}, error)
+	SelectOne(condition map[string]interface{}, model interface{}) error
 }
 
-func NewBaseRepo() *BaseRepo {
-	dbOrm := mysql.GetOrmInstance()
-	if dbOrm == nil {
-		panic("BaseRepo err : 请检查mysql是否正确建立了链接并进行了初始化")
+func NewBaseRepo[T any]() *BaseRepo[T] {
+	orm := mysql.GetOrmInstance()
+	if orm == nil {
+		panic("base repo error : mysql orm instance is nil")
 	}
-	return &BaseRepo{dbOrm}
+	return &BaseRepo[T]{orm}
 }
-
-func (r *BaseRepo) Exec(sql string, values ...interface{}) (*gorm.DB, error) {
+func (r *BaseRepo[T]) Exec(sql string, values ...interface{}) (*gorm.DB, error) {
 	var result *gorm.DB
 	if len(values) == 0 {
 		result = r.Orm.Exec(sql)
@@ -45,7 +40,7 @@ func (r *BaseRepo) Exec(sql string, values ...interface{}) (*gorm.DB, error) {
 	}
 	return result, nil
 }
-func (r *BaseRepo) CountAll(model interface{}) (int64, error) {
+func (r *BaseRepo[T]) CountAll(model interface{}) (int64, error) {
 	var count int64
 	result := r.Orm.Model(model).Count(&count)
 	if result.Error != nil {
@@ -53,11 +48,11 @@ func (r *BaseRepo) CountAll(model interface{}) (int64, error) {
 	}
 	return count, nil
 }
-func (r *BaseRepo) Insert(model interface{}) error {
+func (r *BaseRepo[T]) Insert(model interface{}) error {
 	result := r.Orm.Create(model)
 	return result.Error
 }
-func (r *BaseRepo) UpdateById(model interface{}, id uint64) error {
+func (r *BaseRepo[T]) UpdateById(model interface{}, id uint64) error {
 	result := r.Orm.Model(model).Where("id = ?", id).Updates(model)
 	if result.Error != nil {
 		return result.Error
@@ -67,7 +62,7 @@ func (r *BaseRepo) UpdateById(model interface{}, id uint64) error {
 	}
 	return nil
 }
-func (r *BaseRepo) DeleteById(model interface{}, id uint64) error {
+func (r *BaseRepo[T]) DeleteById(model interface{}, id uint64) error {
 	result := r.Orm.Where("id = ?", id).Delete(model)
 	if result.Error != nil {
 		return result.Error
@@ -77,27 +72,24 @@ func (r *BaseRepo) DeleteById(model interface{}, id uint64) error {
 	}
 	return nil
 }
-func (r *BaseRepo) DeleteBy(condition map[string]interface{}, model *interface{}, hardDelete bool) error {
+func (r *BaseRepo[T]) DeleteBy(condition map[string]interface{}, model interface{}, hardDelete bool) error {
 	var result *gorm.DB
-
 	if hardDelete {
 		result = r.Orm.Unscoped().Where(condition).Delete(model)
 	} else {
 		result = r.Orm.Where(condition).Delete(model)
 	}
-
 	if result.Error != nil {
 		return result.Error
 	}
-
 	return nil
 }
-func (r *BaseRepo) SelectById(model interface{}, id uint64) error {
+func (r *BaseRepo[T]) SelectById(model interface{}, id uint64) error {
 	result := r.Orm.First(model, "id = ?", id)
 	return result.Error
 }
 
-func (r *BaseRepo) InsertOrIgnore(model interface{}, condition map[string]interface{}) (int64, error) {
+func (r *BaseRepo[T]) InsertOrIgnore(model interface{}, condition map[string]interface{}) (int64, error) {
 	tx := r.Orm.Begin()
 	if tx.Error != nil {
 		return 0, tx.Error
@@ -133,7 +125,7 @@ func (r *BaseRepo) InsertOrIgnore(model interface{}, condition map[string]interf
 	return result.RowsAffected, nil
 }
 
-func (r *BaseRepo) InsertOrUpdate(model interface{}, condition map[string]interface{}, updateValues interface{}) error {
+func (r *BaseRepo[T]) InsertOrUpdate(model interface{}, condition map[string]interface{}, updateValues interface{}) error {
 	tx := r.Orm.Begin()
 	if tx.Error != nil {
 		return tx.Error
@@ -176,26 +168,39 @@ func (r *BaseRepo) InsertOrUpdate(model interface{}, condition map[string]interf
 
 	return tx.Commit().Error
 }
-func (r *BaseRepo) SelectBy(condition map[string]interface{}) ([]interface{}, error) {
-	var results []interface{}
-	err := r.Orm.Where(condition).Find(&results).Error
-	if err != nil {
-		return nil, err
+
+// FindBy 查找多条
+func (r *BaseRepo[T]) FindBy(condition map[string]interface{}, results *[]*T, limit int) error {
+	orderBy, hasOrderBy := condition["orderBy"].(string)
+	if hasOrderBy {
+		delete(condition, "orderBy")
 	}
-	return results, nil
+	query := r.Orm.Where(condition)
+	if hasOrderBy {
+		query = query.Order(orderBy)
+	}
+	if limit > 0 {
+		query = query.Limit(limit)
+	}
+	err := query.Find(results).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }
-func (r *BaseRepo) SelectOne(condition map[string]interface{}) (interface{}, error) {
-	var result interface{}
-	err := r.Orm.Where(condition).First(&result).Error
+
+// FindOne 查找1条
+func (r *BaseRepo[T]) FindOne(condition map[string]interface{}, model interface{}) error {
+	err := r.Orm.Where(condition).First(model).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("no record found")
+			return errors.New("no record found")
 		}
-		return nil, err
+		return err
 	}
-	return result, nil
+	return nil
 }
-func (r *BaseRepo) GetByPage(model interface{}, page int, pageSize int) (interface{}, error) {
+func (r *BaseRepo[T]) GetByPage(model interface{}, page int, pageSize int) (interface{}, error) {
 	if page < 1 || pageSize < 1 {
 		return nil, errors.New("page 和 pageSize 必须大于 0")
 	}
