@@ -6,9 +6,11 @@ package mysql
 
 import (
 	"fmt"
+	"os"
 	"sync"
 	"time"
 
+	"github.com/BurntSushi/toml"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	gormlogger "gorm.io/gorm/logger"
@@ -33,19 +35,21 @@ type DbConfig struct {
 	DbMaxIdleTime int    `toml:"dbMaxIdleTime"` // 最大空闲时间（秒）
 }
 
-func InitConnection(dbConfig DbConfig) {
+func InitConnection(configFile string) {
 	once.Do(func() {
-		// config := conf{}
-		// file, err := os.Open("config.toml")
-		// if err != nil {
-		// 	fmt.Println(fmt.Errorf("failed to open TOML file: %v", err))
-		// }
-		// defer func(file *os.File) { _ = file.Close() }(file)
+		var err error
 
-		// decoder := toml.NewDecoder(file)
-		// if _, err = decoder.Decode(&config); err != nil {
-		// 	fmt.Println(fmt.Errorf("failed to decode TOML file: %v", err))
-		// }
+		file, err := os.Open(configFile)
+		if err != nil {
+			fmt.Println(fmt.Errorf("failed to open TOML file: %v", err))
+		}
+		defer func(file *os.File) { _ = file.Close() }(file)
+
+		var dbConfig DbConfig
+		decoder := toml.NewDecoder(file)
+		if _, err = decoder.Decode(&dbConfig); err != nil {
+			fmt.Println(fmt.Errorf("failed to decode TOML file: %v", err))
+		}
 
 		dsn := fmt.Sprintf(
 			"%s:%s@tcp(%s:%d)/%s?charset=%s&parseTime=True&loc=Local",
@@ -57,7 +61,6 @@ func InitConnection(dbConfig DbConfig) {
 			dbConfig.DbCharset,
 		)
 
-		var err error
 		newLogger := gormlogger.Default.LogMode(gormlogger.Silent)
 		ormInstance, err = gorm.Open(mysql.Open(dsn), &gorm.Config{Logger: newLogger})
 		if err != nil {
