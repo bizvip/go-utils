@@ -16,7 +16,7 @@ import (
 var GlobalLocker *Locker
 
 func init() {
-	GlobalLocker = NewGlobalLocker()
+	GlobalLocker = newGlobalLocker()
 }
 
 type timedMutex struct {
@@ -29,7 +29,8 @@ type Locker struct {
 	mu sync.Map
 }
 
-func NewGlobalLocker() *Locker {
+// 不允许外部使用  只允许通过package调用的方法
+func newGlobalLocker() *Locker {
 	return &Locker{}
 }
 
