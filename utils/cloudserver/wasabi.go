@@ -1,4 +1,4 @@
-package cloud
+package cloudserver
 
 type WasabiStorageHandler struct{ s3Conf }
 
