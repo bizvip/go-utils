@@ -173,5 +173,5 @@ func (s *StrUtils) GenSha1(input string) string {
 	h := sha1.New()
 	h.Write([]byte(input))
 	r := h.Sum(nil)
-	return string(r)
+	return fmt.Sprintf("%x", r)
 }
