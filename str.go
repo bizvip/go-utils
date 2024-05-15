@@ -159,15 +159,11 @@ func (s *StrUtils) ProtoMessageToJson(msg proto.Message) (string, error) {
 	return string(jsonBytes), nil
 }
 
-// EncryptString 根据给定的字符串和种子生成一个可重现的加密字符串
-func (s *StrUtils) EncryptString(input, seed string) string {
-	// 创建 HMAC 使用 SHA-256 哈希算法
+// GenStrBySeed 根据给定的字符串和种子生成一个可重现的新字符串（不建议用到密码）
+func (s *StrUtils) GenStrBySeed(input, seed string) string {
 	h := hmac.New(sha256.New, []byte(seed))
-	// 写入数据
 	h.Write([]byte(input))
-	// 计算 HMAC 值
 	hash := h.Sum(nil)
-	// 将哈希值编码为 Base64 字符串
 	encoded := base64.StdEncoding.EncodeToString(hash)
 	return encoded
 }
