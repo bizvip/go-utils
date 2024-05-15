@@ -5,8 +5,10 @@
 package goutils
 
 import (
+	"crypto/hmac"
 	"crypto/md5"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
@@ -76,14 +78,12 @@ func (s *StrUtils) RandomId() string {
 	}
 
 	encoded := base64.StdEncoding.EncodeToString(randomData)
-	cleaned := strings.Map(
-		func(r rune) rune {
-			if ('A' <= r && r <= 'Z') || ('a' <= r && r <= 'z') || ('0' <= r && r <= '9') {
-				return r
-			}
-			return -1
-		}, encoded,
-	)
+	cleaned := strings.Map(func(r rune) rune {
+		if ('A' <= r && r <= 'Z') || ('a' <= r && r <= 'z') || ('0' <= r && r <= '9') {
+			return r
+		}
+		return -1
+	}, encoded)
 
 	return cleaned
 }
@@ -157,4 +157,17 @@ func (s *StrUtils) ProtoMessageToJson(msg proto.Message) (string, error) {
 		return "", err
 	}
 	return string(jsonBytes), nil
+}
+
+// EncryptString 根据给定的字符串和种子生成一个可重现的加密字符串
+func (s *StrUtils) EncryptString(input, seed string) string {
+	// 创建 HMAC 使用 SHA-256 哈希算法
+	h := hmac.New(sha256.New, []byte(seed))
+	// 写入数据
+	h.Write([]byte(input))
+	// 计算 HMAC 值
+	hash := h.Sum(nil)
+	// 将哈希值编码为 Base64 字符串
+	encoded := base64.StdEncoding.EncodeToString(hash)
+	return encoded
 }
