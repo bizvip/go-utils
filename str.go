@@ -8,6 +8,7 @@ import (
 	"crypto/hmac"
 	"crypto/md5"
 	"crypto/rand"
+	"crypto/sha1"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
@@ -166,4 +167,11 @@ func (s *StrUtils) GenStrBySeed(input, seed string) string {
 	hash := h.Sum(nil)
 	encoded := base64.StdEncoding.EncodeToString(hash)
 	return encoded
+}
+
+func (s *StrUtils) GenSha1(input string) string {
+	h := sha1.New()
+	h.Write([]byte(input))
+	r := h.Sum(nil)
+	return string(r)
 }
