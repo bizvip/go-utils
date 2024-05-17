@@ -18,6 +18,10 @@ import (
 
 type CryptoUtils struct{}
 
+func NewCryptoUtils() *CryptoUtils {
+	return &CryptoUtils{}
+}
+
 func (u *CryptoUtils) Encrypt(text string, pass string) (string, error) {
 	salt := make([]byte, 16)
 	if _, err := io.ReadFull(rand.Reader, salt); err != nil {
