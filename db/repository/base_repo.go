@@ -89,43 +89,37 @@ func (r *BaseRepo[T]) SelectById(model interface{}, id uint64) error {
 	return result.Error
 }
 
-func (r *BaseRepo[T]) InsertOrIgnore(model interface{}, condition map[string]interface{}) (int64, error) {
+// InsertOrIgnore 事务版本  先查找，存在则忽略，否则插入
+func (r *BaseRepo[T]) InsertOrIgnore(model T, condition map[string]interface{}) (int64, error) {
 	tx := r.Orm.Begin()
 	if tx.Error != nil {
 		return 0, tx.Error
 	}
-
-	// 尝试查找符合条件的记录
 	var count int64
-	err := tx.Model(model).Where(condition).Count(&count).Error
+	err := tx.Model(new(T)).Where(condition).Count(&count).Error
 	if err != nil {
 		tx.Rollback()
 		return 0, err
 	}
-
 	if count > 0 {
-		// 如果记录已存在，则提交事务并返回 0，无错误
 		if err = tx.Commit().Error; err != nil {
 			return 0, err
 		}
 		return 0, nil
 	}
-
-	// 如果未找到记录，则创建新记录
-	result := tx.Create(model)
+	result := tx.Create(&model)
 	if result.Error != nil {
 		tx.Rollback()
 		return 0, result.Error
 	}
-
 	if err = tx.Commit().Error; err != nil {
 		return 0, err
 	}
-
 	return result.RowsAffected, nil
 }
 
-func (r *BaseRepo[T]) InsertOrUpdate(model interface{}, condition map[string]interface{}, updateValues interface{}) error {
+// InsertOrUpdate 事务版本 先查找，不存在则插入，插入则更新
+func (r *BaseRepo[T]) InsertOrUpdate(model T, condition map[string]interface{}, updateValues map[string]interface{}) error {
 	tx := r.Orm.Begin()
 	if tx.Error != nil {
 		return tx.Error
@@ -135,22 +129,11 @@ func (r *BaseRepo[T]) InsertOrUpdate(model interface{}, condition map[string]int
 			tx.Rollback()
 		}
 	}()
-
-	// 使用反射来获取model的类型
-	modelType := reflect.TypeOf(model)
-	if modelType.Kind() == reflect.Ptr {
-		modelType = modelType.Elem()
-	}
-
-	// 创建一个新的model类型的实例
-	resultPtr := reflect.New(modelType).Interface()
-
-	// 先尝试查找
-	err := tx.Where(condition).First(resultPtr).Error
+	var item T
+	err := tx.Where(condition).First(&item).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			// 没找到，创建新记录
-			if err = tx.Create(model).Error; err != nil {
+			if err = tx.Create(&model).Error; err != nil {
 				tx.Rollback()
 				return err
 			}
@@ -159,14 +142,27 @@ func (r *BaseRepo[T]) InsertOrUpdate(model interface{}, condition map[string]int
 			return err
 		}
 	} else {
-		// 找到了，执行更新
-		if err = tx.Model(resultPtr).Where(condition).Updates(updateValues).Error; err != nil {
+		if err = tx.Model(&item).Updates(updateValues).Error; err != nil {
 			tx.Rollback()
 			return err
 		}
 	}
 
 	return tx.Commit().Error
+}
+
+// Upsert 同上方法，无事务，根据条件查找记录，如果存在则更新，如果不存在则创建
+func (r *BaseRepo[T]) Upsert(model *T, condition map[string]interface{}) error {
+	var existingRecord T
+	tx := r.Orm.Where(condition).First(&existingRecord)
+	if tx.Error != nil {
+		if errors.Is(gorm.ErrRecordNotFound, tx.Error) {
+			return r.Orm.Create(model).Error
+		}
+		return tx.Error
+	}
+	// 如果记录存在，更新记录
+	return r.Orm.Model(&existingRecord).Updates(model).Error
 }
 
 // FindBy 查找多条
