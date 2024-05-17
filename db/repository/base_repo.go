@@ -90,7 +90,7 @@ func (r *BaseRepo[T]) SelectById(model interface{}, id uint64) error {
 }
 
 // InsertOrIgnore 事务版本  先查找，存在则忽略，否则插入
-func (r *BaseRepo[T]) InsertOrIgnore(model T, condition map[string]interface{}) (int64, error) {
+func (r *BaseRepo[T]) InsertOrIgnore(model *T, condition map[string]interface{}) (int64, error) {
 	tx := r.Orm.Begin()
 	if tx.Error != nil {
 		return 0, tx.Error
@@ -119,7 +119,7 @@ func (r *BaseRepo[T]) InsertOrIgnore(model T, condition map[string]interface{}) 
 }
 
 // InsertOrUpdate 事务版本 先查找，不存在则插入，插入则更新
-func (r *BaseRepo[T]) InsertOrUpdate(model T, condition map[string]interface{}, updateValues map[string]interface{}) error {
+func (r *BaseRepo[T]) InsertOrUpdate(model *T, condition map[string]interface{}, updateValues map[string]interface{}) error {
 	tx := r.Orm.Begin()
 	if tx.Error != nil {
 		return tx.Error
