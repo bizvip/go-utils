@@ -19,7 +19,7 @@ func (hook *ConsoleHook) Levels() []logrus.Level {
 }
 
 func (hook *ConsoleHook) Fire(entry *logrus.Entry) error {
-	fmt.Println(entry.Message)
+	fmt.Println(time.Now().Format(time.DateTime), " | ", entry.Message)
 	return nil
 }
 
