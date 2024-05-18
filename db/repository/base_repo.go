@@ -1,3 +1,7 @@
+/******************************************************************************
+ * Copyright (c) Archer++ 2024.                                               *
+ ******************************************************************************/
+
 package repository
 
 import (
@@ -28,32 +32,39 @@ func NewBaseRepo[T any]() *BaseRepo[T] {
 	}
 	return &BaseRepo[T]{orm}
 }
+
+// Exec 执行原生sql语句
 func (r *BaseRepo[T]) Exec(sql string, values ...interface{}) (*gorm.DB, error) {
 	var result *gorm.DB
 	if len(values) == 0 {
 		result = r.Orm.Exec(sql)
 	} else {
-		result = r.Orm.Exec(sql, values)
+		result = r.Orm.Exec(sql, values...)
 	}
 	if result.Error != nil {
 		return nil, result.Error
 	}
 	return result, nil
 }
-func (r *BaseRepo[T]) CountAll(model interface{}) (int64, error) {
+
+// CountAll 指定表无条件统计全部数量
+func (r *BaseRepo[T]) CountAll() (int64, error) {
 	var count int64
-	result := r.Orm.Model(model).Count(&count)
+	var model T
+	result := r.Orm.Model(&model).Count(&count)
 	if result.Error != nil {
 		return 0, result.Error
 	}
 	return count, nil
 }
-func (r *BaseRepo[T]) Insert(model interface{}) error {
+
+// Insert 插入一条记录
+func (r *BaseRepo[T]) Insert(model *T) error {
 	result := r.Orm.Create(model)
 	return result.Error
 }
 
-// UpdateById update by primary ID
+// UpdateById 按照ID更新一条
 func (r *BaseRepo[T]) UpdateById(model *T, id uint64) error {
 	result := r.Orm.Model(model).Where("id = ?", id).Updates(model)
 	if result.Error != nil {
@@ -65,7 +76,7 @@ func (r *BaseRepo[T]) UpdateById(model *T, id uint64) error {
 	return nil
 }
 
-// DeleteById deletes a record by its ID.
+// DeleteById 按照ID删除一条
 func (r *BaseRepo[T]) DeleteById(id uint64) error {
 	var model T
 	result := r.Orm.Where("id = ?", id).Delete(&model)
@@ -93,7 +104,7 @@ func (r *BaseRepo[T]) DeleteBy(condition map[string]interface{}, hardDelete bool
 	return nil
 }
 
-// FindByID 按照id读取一条记录
+// FindByID 按照ID读取一条记录
 func (r *BaseRepo[T]) FindByID(id uint64) (*T, error) {
 	var model T
 	result := r.Orm.First(&model, "id = ?", id)
