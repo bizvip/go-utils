@@ -115,17 +115,17 @@ func (r *BaseRepo[T]) FindByID(id uint64) (*T, error) {
 }
 
 // FindOption FindBy 条件配置
-type FindOption[T any] func(*gorm.DB) *gorm.DB
+type FindOption func(*gorm.DB) *gorm.DB
 
-func WithOrderBy[T any](orderBy string) FindOption[T] {
+func WithOrderBy(orderBy string) FindOption {
 	return func(q *gorm.DB) *gorm.DB { return q.Order(orderBy) }
 }
-func WithLimit[T any](limit int) FindOption[T] {
+func WithLimit(limit int) FindOption {
 	return func(q *gorm.DB) *gorm.DB { return q.Limit(limit) }
 }
 
 // FindBy 按照条件查找多条 _order_by 为自定义快捷键 可以添加到条件中无需每次调用都额外写空参数
-func (r *BaseRepo[T]) FindBy(condition map[string]interface{}, results *[]*T, opts ...FindOption[T]) error {
+func (r *BaseRepo[T]) FindBy(condition map[string]interface{}, results *[]*T, opts ...FindOption) error {
 	query := r.Orm.Where(condition)
 	for _, opt := range opts {
 		query = opt(query)
