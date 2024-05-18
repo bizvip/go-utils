@@ -52,7 +52,9 @@ func (r *BaseRepo[T]) Insert(model interface{}) error {
 	result := r.Orm.Create(model)
 	return result.Error
 }
-func (r *BaseRepo[T]) UpdateById(model interface{}, id uint64) error {
+
+// UpdateById update by primary ID
+func (r *BaseRepo[T]) UpdateById(model *T, id uint64) error {
 	result := r.Orm.Model(model).Where("id = ?", id).Updates(model)
 	if result.Error != nil {
 		return result.Error
@@ -62,8 +64,11 @@ func (r *BaseRepo[T]) UpdateById(model interface{}, id uint64) error {
 	}
 	return nil
 }
-func (r *BaseRepo[T]) DeleteById(model interface{}, id uint64) error {
-	result := r.Orm.Where("id = ?", id).Delete(model)
+
+// DeleteById deletes a record by its ID.
+func (r *BaseRepo[T]) DeleteById(id uint64) error {
+	var model T
+	result := r.Orm.Where("id = ?", id).Delete(&model)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -72,21 +77,53 @@ func (r *BaseRepo[T]) DeleteById(model interface{}, id uint64) error {
 	}
 	return nil
 }
-func (r *BaseRepo[T]) DeleteBy(condition map[string]interface{}, model interface{}, hardDelete bool) error {
+
+// DeleteBy 根据给定条件删除记录，可选是否硬删除（仅对于有软删除的表）
+func (r *BaseRepo[T]) DeleteBy(condition map[string]interface{}, hardDelete bool) error {
+	var model T
 	var result *gorm.DB
 	if hardDelete {
-		result = r.Orm.Unscoped().Where(condition).Delete(model)
+		result = r.Orm.Unscoped().Where(condition).Delete(&model)
 	} else {
-		result = r.Orm.Where(condition).Delete(model)
+		result = r.Orm.Where(condition).Delete(&model)
 	}
 	if result.Error != nil {
 		return result.Error
 	}
 	return nil
 }
-func (r *BaseRepo[T]) SelectById(model interface{}, id uint64) error {
-	result := r.Orm.First(model, "id = ?", id)
-	return result.Error
+
+// FindByID 按照id读取一条记录
+func (r *BaseRepo[T]) FindByID(id uint64) (*T, error) {
+	var model T
+	result := r.Orm.First(&model, "id = ?", id)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &model, nil
+}
+
+// FindOption FindBy 条件配置
+type FindOption[T any] func(*gorm.DB) *gorm.DB
+
+func WithOrderBy[T any](orderBy string) FindOption[T] {
+	return func(q *gorm.DB) *gorm.DB { return q.Order(orderBy) }
+}
+func WithLimit[T any](limit int) FindOption[T] {
+	return func(q *gorm.DB) *gorm.DB { return q.Limit(limit) }
+}
+
+// FindBy 按照条件查找多条 _order_by 为自定义快捷键 可以添加到条件中无需每次调用都额外写空参数
+func (r *BaseRepo[T]) FindBy(condition map[string]interface{}, results *[]*T, opts ...FindOption[T]) error {
+	query := r.Orm.Where(condition)
+	for _, opt := range opts {
+		query = opt(query)
+	}
+	err := query.Find(results).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // InsertOrIgnore 事务版本  先查找，存在则忽略，否则插入
@@ -165,37 +202,6 @@ func (r *BaseRepo[T]) Upsert(model *T, condition map[string]interface{}) error {
 	return r.Orm.Model(&existingRecord).Updates(model).Error
 }
 
-// FindBy 查找多条
-func (r *BaseRepo[T]) FindBy(condition map[string]interface{}, results *[]*T, limit int) error {
-	orderBy, hasOrderBy := condition["orderBy"].(string)
-	if hasOrderBy {
-		delete(condition, "orderBy")
-	}
-	query := r.Orm.Where(condition)
-	if hasOrderBy {
-		query = query.Order(orderBy)
-	}
-	if limit > 0 {
-		query = query.Limit(limit)
-	}
-	err := query.Find(results).Error
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// FindOne 查找1条
-func (r *BaseRepo[T]) FindOne(condition map[string]interface{}, model interface{}) error {
-	err := r.Orm.Where(condition).First(model).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errors.New("no record found")
-		}
-		return err
-	}
-	return nil
-}
 func (r *BaseRepo[T]) GetByPage(model interface{}, page int, pageSize int) (interface{}, error) {
 	if page < 1 || pageSize < 1 {
 		return nil, errors.New("page 和 pageSize 必须大于 0")
