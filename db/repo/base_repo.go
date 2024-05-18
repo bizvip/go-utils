@@ -2,7 +2,7 @@
  * Copyright (c) Archer++ 2024.                                               *
  ******************************************************************************/
 
-package repository
+package repo
 
 import (
 	"errors"
