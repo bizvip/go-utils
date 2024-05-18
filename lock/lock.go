@@ -8,8 +8,6 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
-
-	"github.com/bizvip/go-utils/logs"
 )
 
 // GlobalLocker 全局锁变量掌控，不使用注入方式，只要调用包立刻初始化
@@ -71,7 +69,6 @@ func SetLockerAutoCleanup(threshold int64, minExistTime int64) {
 		defer ticker.Stop()
 		for range ticker.C {
 			GlobalLocker.cleanUp(threshold, minExistTime)
-			logs.Logger().Infoln("cleanUp expired locks")
 		}
 	}()
 }
