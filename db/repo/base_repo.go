@@ -12,24 +12,27 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/bizvip/go-utils/db/mysql"
+	"github.com/bizvip/go-utils/logs"
 )
 
 type BaseRepo[T any] struct{ Orm *gorm.DB }
-type IBaseRepo interface {
-	Insert(model interface{}) error
-	InsertOrUpdate(model interface{}, condition map[string]interface{}, forUpdateValues interface{}) error
-	UpdateById(model interface{}, id uint64) error
-	DeleteById(model interface{}, id uint64) error
-	DeleteBy(condition map[string]interface{}, model interface{}, hardDelete bool) error
-	SelectById(model interface{}, id uint64) error
-	SelectBy(condition map[string]interface{}) ([]interface{}, error)
-	SelectOne(condition map[string]interface{}, model interface{}) error
-}
+
+// type IBaseRepo interface {
+// 	Insert(model interface{}) error
+// 	InsertOrUpdate(model interface{}, condition map[string]interface{}, forUpdateValues interface{}) error
+// 	UpdateById(model interface{}, id uint64) error
+// 	DeleteById(model interface{}, id uint64) error
+// 	DeleteBy(condition map[string]interface{}, model interface{}, hardDelete bool) error
+// 	SelectById(model interface{}, id uint64) error
+// 	SelectBy(condition map[string]interface{}) ([]interface{}, error)
+// 	SelectOne(condition map[string]interface{}, model interface{}) error
+// }
 
 func NewBaseRepo[T any]() *BaseRepo[T] {
 	orm := mysql.GetOrmInstance()
 	if orm == nil {
-		panic("base repo error : mysql orm instance is nil")
+		logs.Logger().Error("base repo error : mysql orm instance is nil")
+		return nil
 	}
 	return &BaseRepo[T]{orm}
 }
@@ -66,8 +69,9 @@ func (r *BaseRepo[T]) Insert(model *T) error {
 }
 
 // UpdateById 按照ID更新一条
-func (r *BaseRepo[T]) UpdateById(model *T, id uint64) error {
-	result := r.Orm.Model(model).Where("id = ?", id).Updates(model)
+func (r *BaseRepo[T]) UpdateById(id uint64, updateValues map[string]interface{}) error {
+	var model T
+	result := r.Orm.Model(&model).Where("id = ?", id).Updates(updateValues)
 	if result.Error != nil {
 		return result.Error
 	}
