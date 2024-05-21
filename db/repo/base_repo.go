@@ -115,18 +115,28 @@ func (r *BaseRepo[T]) FindByID(id uint64) (*T, error) {
 	return &model, nil
 }
 
-// FindOption FindBy 条件配置
-type FindOption func(*gorm.DB) *gorm.DB
+// FindBy 根据条件查找一条记录
+func (r *BaseRepo[T]) FindBy(condition map[string]interface{}) (*T, error) {
+	var model T
+	result := r.Orm.Where(condition).First(&model)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &model, nil
+}
 
-func WithOrderBy(orderBy string) FindOption {
+// SelOpt SelectBy 条件配置
+type SelOpt func(*gorm.DB) *gorm.DB
+
+func WithOrderBy(orderBy string) SelOpt {
 	return func(q *gorm.DB) *gorm.DB { return q.Order(orderBy) }
 }
-func WithLimit(limit int) FindOption {
+func WithLimit(limit int) SelOpt {
 	return func(q *gorm.DB) *gorm.DB { return q.Limit(limit) }
 }
 
-// FindBy 按照条件查找多条 _order_by 为自定义快捷键 可以添加到条件中无需每次调用都额外写空参数
-func (r *BaseRepo[T]) FindBy(condition map[string]interface{}, results *[]*T, opts ...FindOption) error {
+// SelectBy 按照条件查找多条 可使用链式方法添加order和limit等参数
+func (r *BaseRepo[T]) SelectBy(condition map[string]interface{}, results *[]*T, opts ...SelOpt) error {
 	query := r.Orm.Where(condition)
 	for _, opt := range opts {
 		query = opt(query)
