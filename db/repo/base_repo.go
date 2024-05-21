@@ -248,3 +248,16 @@ func (r *BaseRepo[T]) GetByPage(model interface{}, page int, pageSize int) (inte
 
 	return values.Interface(), nil
 }
+
+// UpdateBy 根据条件更新记录
+func (r *BaseRepo[T]) UpdateBy(condition map[string]interface{}, updateValues map[string]interface{}) (int64, error) {
+	var model T
+	result := r.Orm.Model(&model).Where(condition).Updates(updateValues)
+	if result.Error != nil {
+		return 0, result.Error
+	}
+	if result.RowsAffected == 0 {
+		return 0, nil
+	}
+	return result.RowsAffected, nil
+}
