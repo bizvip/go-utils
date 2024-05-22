@@ -152,14 +152,13 @@ func (r *BaseRepo[T]) SelectBy(condition *T, results *[]*T, opts ...SelOpt) erro
 	return nil
 }
 
-// InsertOrIgnore 无事务保证 先查找，存在则忽略，否则插入 (并发性也可以由数据库相同的unique key来保证)
-func (r *BaseRepo[T]) InsertOrIgnore(model *T, condition *T) (int64, error) {
-	var existingModel T
-	result := r.Orm.Where(condition).FirstOrCreate(&existingModel, model)
+// InsertOrIgnore 无显式事务 先查找，存在则忽略，否则插入 (并发性也可以由数据库相同的unique key来保证)
+func (r *BaseRepo[T]) InsertOrIgnore(model *T) (int64, error) {
+	// 使用 ON CONFLICT DO NOTHING 确保并发安全
+	result := r.Orm.Clauses(clause.OnConflict{DoNothing: true}).Create(model)
 	if result.Error != nil {
 		return 0, result.Error
 	}
-	// 如果记录已存在，RowsAffected 将为 0
 	return result.RowsAffected, nil
 }
 
