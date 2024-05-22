@@ -366,3 +366,9 @@ func (f *ID) UnmarshalJSON(b []byte) error {
 	*f = ID(i)
 	return nil
 }
+
+// QuickGen 快捷方法直接出uint64方便用到id上
+func QuickGen(nodeId int64) uint64 {
+	node, _ := NewNode(nodeId)
+	return uint64(node.Generate().Int64())
+}
