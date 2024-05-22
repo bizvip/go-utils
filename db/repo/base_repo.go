@@ -182,7 +182,7 @@ func (r *BaseRepo[T]) InsertOrIgnore(model *T, condition map[string]interface{})
 }
 
 // InsertOrUpdate 事务版本 先查找，不存在则插入，存在则更新
-func (r *BaseRepo[T]) InsertOrUpdate(model *T, condition map[string]interface{}, updateValues map[string]interface{}) error {
+func (r *BaseRepo[T]) InsertOrUpdate(insertItem *T, condition *T, updateValues *T) error {
 	tx := r.Orm.Begin()
 	if tx.Error != nil {
 		return tx.Error
@@ -192,11 +192,12 @@ func (r *BaseRepo[T]) InsertOrUpdate(model *T, condition map[string]interface{},
 			tx.Rollback()
 		}
 	}()
+
 	var item T
 	err := tx.Where(condition).First(&item).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			if err = tx.Create(&model).Error; err != nil {
+			if err = tx.Create(insertItem).Error; err != nil {
 				tx.Rollback()
 				return err
 			}
