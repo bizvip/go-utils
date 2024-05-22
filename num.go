@@ -44,7 +44,7 @@ func (n *NumUtils) RandomInt(min, max int) int {
 	return rand.Intn(max-min) + min
 }
 
-// MergeToDecimal 如果输入的number是100000，dec是10，那么：将100000除以10000000000 (即10的10次方) 得到的结果是0.00001
+// MergeToDecimal 如果输入的number是100000，dec是10，那么：将100000的小数点向左移动10位，得到的结果是0.00001
 func (n *NumUtils) MergeToDecimal(number *big.Int, dec int) decimal.Decimal {
 	decimalNumber := decimal.NewFromBigInt(number, 0)
 	divisor := decimal.NewFromFloat(math.Pow(10, float64(dec)))
