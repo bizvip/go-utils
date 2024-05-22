@@ -69,9 +69,8 @@ func (r *BaseRepo[T]) Insert(model *T) error {
 }
 
 // UpdateById 按照ID更新一条
-func (r *BaseRepo[T]) UpdateById(id uint64, updateValues map[string]interface{}) error {
-	var model T
-	result := r.Orm.Model(&model).Where("id = ?", id).Updates(updateValues)
+func (r *BaseRepo[T]) UpdateById(id uint64, updateValues *T) error {
+	result := r.Orm.Model(updateValues).Where("id = ?", id).Updates(updateValues)
 	if result.Error != nil {
 		return result.Error
 	}
