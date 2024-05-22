@@ -95,7 +95,7 @@ func (r *BaseRepo[T]) DeleteById(id uint64) error {
 }
 
 // DeleteBy 根据给定条件删除记录，可选是否硬删除（仅对于有软删除的表）
-func (r *BaseRepo[T]) DeleteBy(condition map[string]interface{}, hardDelete bool) error {
+func (r *BaseRepo[T]) DeleteBy(condition *T, hardDelete bool) error {
 	var model T
 	var result *gorm.DB
 	if hardDelete {
@@ -120,7 +120,7 @@ func (r *BaseRepo[T]) FindByID(id uint64) (*T, error) {
 }
 
 // FindBy 根据条件查找一条记录
-func (r *BaseRepo[T]) FindBy(condition map[string]interface{}) (*T, error) {
+func (r *BaseRepo[T]) FindBy(condition *T) (*T, error) {
 	var model T
 	result := r.Orm.Where(condition).First(&model)
 	if result.Error != nil {
@@ -140,7 +140,7 @@ func WithLimit(limit int) SelOpt {
 }
 
 // SelectBy 按照条件查找多条 可使用链式方法添加order和limit等参数
-func (r *BaseRepo[T]) SelectBy(condition map[string]interface{}, results *[]*T, opts ...SelOpt) error {
+func (r *BaseRepo[T]) SelectBy(condition *T, results *[]*T, opts ...SelOpt) error {
 	query := r.Orm.Where(condition)
 	for _, opt := range opts {
 		query = opt(query)
@@ -152,32 +152,14 @@ func (r *BaseRepo[T]) SelectBy(condition map[string]interface{}, results *[]*T, 
 	return nil
 }
 
-// InsertOrIgnore 事务版本  先查找，存在则忽略，否则插入
-func (r *BaseRepo[T]) InsertOrIgnore(model *T, condition map[string]interface{}) (int64, error) {
-	tx := r.Orm.Begin()
-	if tx.Error != nil {
-		return 0, tx.Error
-	}
-	var count int64
-	err := tx.Model(new(T)).Where(condition).Count(&count).Error
-	if err != nil {
-		tx.Rollback()
-		return 0, err
-	}
-	if count > 0 {
-		if err = tx.Commit().Error; err != nil {
-			return 0, err
-		}
-		return 0, nil
-	}
-	result := tx.Create(&model)
+// InsertOrIgnore 无事务保证 先查找，存在则忽略，否则插入 (并发性也可以由数据库相同的unique key来保证)
+func (r *BaseRepo[T]) InsertOrIgnore(model *T, condition *T) (int64, error) {
+	var existingModel T
+	result := r.Orm.Where(condition).FirstOrCreate(&existingModel, model)
 	if result.Error != nil {
-		tx.Rollback()
 		return 0, result.Error
 	}
-	if err = tx.Commit().Error; err != nil {
-		return 0, err
-	}
+	// 如果记录已存在，RowsAffected 将为 0
 	return result.RowsAffected, nil
 }
 
