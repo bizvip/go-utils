@@ -153,7 +153,15 @@ func (r *BaseRepo[T]) SelectBy(condition *T, results *[]*T, opts ...SelOpt) erro
 }
 
 // InsertOrIgnore 无显式事务 先查找，存在则忽略，否则插入 (并发性也可以由数据库相同的unique key来保证)
-func (r *BaseRepo[T]) InsertOrIgnore(model *T) (int64, error) {
+func (r *BaseRepo[T]) InsertOrIgnore(model *T, condition *T) (int64, error) {
+	var existsT T
+	err := r.Orm.Where(condition).First(&existsT).Error
+	if err == nil {
+		return 0, nil
+	}
+	if !errors.Is(gorm.ErrRecordNotFound, err) {
+		return 0, err
+	}
 	// 使用 ON CONFLICT DO NOTHING 确保并发安全
 	result := r.Orm.Clauses(clause.OnConflict{DoNothing: true}).Create(model)
 	if result.Error != nil {
