@@ -10,6 +10,7 @@ import (
 	"reflect"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	"github.com/bizvip/go-utils/db/mysql"
 	"github.com/bizvip/go-utils/logs"
@@ -180,7 +181,7 @@ func (r *BaseRepo[T]) InsertOrIgnore(model *T, condition map[string]interface{})
 	return result.RowsAffected, nil
 }
 
-// InsertOrUpdate 事务版本 先查找，不存在则插入，插入则更新
+// InsertOrUpdate 事务版本 先查找，不存在则插入，存在则更新
 func (r *BaseRepo[T]) InsertOrUpdate(model *T, condition map[string]interface{}, updateValues map[string]interface{}) error {
 	tx := r.Orm.Begin()
 	if tx.Error != nil {
@@ -213,54 +214,73 @@ func (r *BaseRepo[T]) InsertOrUpdate(model *T, condition map[string]interface{},
 	return tx.Commit().Error
 }
 
-// Upsert 同上方法，无事务，根据条件查找记录，如果存在则更新，如果不存在则创建
-func (r *BaseRepo[T]) Upsert(model *T, condition map[string]interface{}) error {
-	var existingRecord T
-	tx := r.Orm.Where(condition).First(&existingRecord)
-	if tx.Error != nil {
-		if errors.Is(gorm.ErrRecordNotFound, tx.Error) {
-			return r.Orm.Create(model).Error
-		}
-		return tx.Error
-	}
-	// 如果记录存在，更新记录
-	return r.Orm.Model(&existingRecord).Updates(model).Error
+// UpsertByID 非显式事务(onConflict和clauses)，固定根据id查找记录，如果存在则更新，如果不存在则创建
+func (r *BaseRepo[T]) UpsertByID(model *T, updateFields []string) error {
+	// 尝试插入新记录
+	result := r.Orm.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "id"}},          // 固定约束条件为主键id
+		DoUpdates: clause.AssignmentColumns(updateFields), // 需要更新的字段
+	}).Create(model)
+
+	return result.Error
 }
 
-func (r *BaseRepo[T]) GetByPage(model interface{}, page int, pageSize int) (interface{}, error) {
+// Upsert 非显式事务(onConflict和clauses)，根据condition查找记录，如果存在则更新，如果不存在则创建
+func (r *BaseRepo[T]) Upsert(model *T, condition *T) error {
+	// 获取结构体的字段名
+	getStructFields := func(v interface{}) []string {
+		val := reflect.ValueOf(v).Elem()
+		typ := val.Type()
+		fields := make([]string, val.NumField())
+
+		for i := 0; i < val.NumField(); i++ {
+			fields[i] = typ.Field(i).Name
+		}
+		return fields
+	}
+	// 将字段名转换为 clause.Column 类型
+	getColumnClauses := func(fields []string) []clause.Column {
+		columns := make([]clause.Column, len(fields))
+		for i, field := range fields {
+			columns[i] = clause.Column{Name: field}
+		}
+		return columns
+	}
+	// 获取条件字段名和更新字段名
+	conditionFields := getStructFields(condition)
+	updateFields := getStructFields(model)
+	// 创建或更新记录
+	tx := r.Orm.Clauses(clause.OnConflict{Columns: getColumnClauses(conditionFields),
+		DoUpdates: clause.AssignmentColumns(updateFields)}).Create(model)
+
+	return tx.Error
+}
+
+// GetByPage 根据分页获取记录
+func (r *BaseRepo[T]) GetByPage(page int, pageSize int) ([]T, error) {
 	if page < 1 || pageSize < 1 {
 		return nil, errors.New("page 和 pageSize 必须大于 0")
 	}
 
-	// 获取 model 的实际类型，处理指针类型的情况
-	modelType := reflect.TypeOf(model)
-	if modelType.Kind() == reflect.Ptr {
-		modelType = modelType.Elem() // 获取指针指向的元素类型
-	}
-
-	// 创建元素类型为 modelType 的切片的指针
-	valuesPtr := reflect.New(reflect.SliceOf(modelType))
-	values := valuesPtr.Elem() // 获取切片的实际值
+	// 创建一个空的切片，用于保存结果
+	var results []T
 
 	// 计算跳过的记录数
 	offset := (page - 1) * pageSize
-	result := r.Orm.Offset(offset).Limit(pageSize).Find(values.Addr().Interface())
+	result := r.Orm.Offset(offset).Limit(pageSize).Find(&results)
 	if result.Error != nil {
 		return nil, result.Error
 	}
 
-	return values.Interface(), nil
+	return results, nil
 }
 
 // UpdateBy 根据条件更新记录
-func (r *BaseRepo[T]) UpdateBy(condition map[string]interface{}, updateValues map[string]interface{}) (int64, error) {
-	var model T
-	result := r.Orm.Model(&model).Where(condition).Updates(updateValues)
+func (r *BaseRepo[T]) UpdateBy(condition *T, updateValues *T) (int64, error) {
+	// 尝试更新记录
+	result := r.Orm.Model(condition).Where(condition).Updates(updateValues)
 	if result.Error != nil {
 		return 0, result.Error
-	}
-	if result.RowsAffected == 0 {
-		return 0, nil
 	}
 	return result.RowsAffected, nil
 }
