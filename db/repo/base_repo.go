@@ -7,10 +7,7 @@ package repo
 
 import (
 	"errors"
-	"fmt"
-	"math"
 	"reflect"
-	"strings"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -140,53 +137,6 @@ func (r *BaseRepo[T]) FindBy(condition map[string]interface{}) (*T, error) {
 	return &model, nil
 }
 
-// SelOpt 查询可选选项
-type SelOpt func(*gorm.DB) *gorm.DB
-
-func WithOrderBy(orderBy string) SelOpt {
-	return func(q *gorm.DB) *gorm.DB { return q.Order(orderBy) }
-}
-
-func WithLimit(limit int) SelOpt {
-	return func(q *gorm.DB) *gorm.DB { return q.Limit(limit) }
-}
-
-func WithWhere(conditions map[string]interface{}) SelOpt {
-	return func(q *gorm.DB) *gorm.DB {
-		for key, value := range conditions {
-			var field, operator string
-
-			// 分离字段名和操作符
-			if parts := strings.SplitN(key, " ", 2); len(parts) == 2 {
-				field = parts[0]
-				operator = parts[1]
-			} else {
-				field = key
-				operator = "=" // 默认为等于操作
-			}
-
-			// 根据操作符选择适当的查询
-			switch operator {
-			case ">=":
-				q = q.Where(fmt.Sprintf("%s >= ?", field), value)
-			case "<=":
-				q = q.Where(fmt.Sprintf("%s <= ?", field), value)
-			case ">":
-				q = q.Where(fmt.Sprintf("%s > ?", field), value)
-			case "<":
-				q = q.Where(fmt.Sprintf("%s < ?", field), value)
-			case "!=":
-				q = q.Where(fmt.Sprintf("%s != ?", field), value)
-			case "=":
-				fallthrough // 直接到下一个case "="，即默认情况
-			default:
-				q = q.Where(fmt.Sprintf("%s = ?", field), value)
-			}
-		}
-		return q
-	}
-}
-
 // SelectBy 按照条件查找多条 可使用链式方法添加order和limit等参数
 func (r *BaseRepo[T]) SelectBy(condition map[string]interface{}, results *[]*T, opts ...SelOpt) error {
 	query := r.Orm.Where(condition)
@@ -198,67 +148,6 @@ func (r *BaseRepo[T]) SelectBy(condition map[string]interface{}, results *[]*T, 
 		return err
 	}
 	return nil
-}
-
-// Pagination 定义
-type Pagination[T any] struct {
-	TotalRecords int64  `json:"totalRecords"`
-	TotalPages   int64  `json:"totalPages"`
-	CurrentPage  uint32 `json:"currentPage"`
-	PageSize     uint32 `json:"pageSize"`
-	Records      []*T   `json:"records"`
-}
-
-// GetByPage 根据分页获取记录
-func (r *BaseRepo[T]) GetByPage(pageNum uint32, pageSize uint32, opts ...SelOpt) (*Pagination[T], error) {
-	if pageNum < 1 || pageSize < 1 {
-		return nil, errors.New("pageNum 和 pageSize 必须大于 0")
-	}
-
-	var results []*T
-	var totalRecords int64
-
-	// 创建基础查询
-	query := r.Orm.Model(new(T))
-
-	// 应用Where条件
-	for _, opt := range opts {
-		query = opt(query)
-	}
-
-	// 计算总记录数
-	err := query.Count(&totalRecords).Error
-	if err != nil {
-		return nil, err
-	}
-
-	// 计算分页偏移量
-	offset := (pageNum - 1) * pageSize
-
-	// 应用分页和排序
-	query = query.Offset(int(offset)).Limit(int(pageSize))
-	for _, opt := range opts {
-		query = opt(query)
-	}
-
-	// 执行查询
-	err = query.Find(&results).Error
-	if err != nil {
-		return nil, err
-	}
-
-	// 计算总页数
-	totalPages := int64(math.Ceil(float64(totalRecords) / float64(pageSize)))
-
-	paginationResult := &Pagination[T]{
-		TotalRecords: totalRecords,
-		TotalPages:   totalPages,
-		CurrentPage:  pageNum,
-		PageSize:     pageSize,
-		Records:      results,
-	}
-
-	return paginationResult, nil
 }
 
 // InsertOrIgnore 无显式事务 先查找，存在则忽略，否则插入 (并发性也可以由数据库相同的unique key来保证)
