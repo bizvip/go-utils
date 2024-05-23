@@ -147,6 +147,9 @@ func WithOrderBy(orderBy string) SelOpt {
 func WithLimit(limit int) SelOpt {
 	return func(q *gorm.DB) *gorm.DB { return q.Limit(limit) }
 }
+func WithWhere(condition map[string]interface{}) SelOpt {
+	return func(q *gorm.DB) *gorm.DB { return q.Where(condition) }
+}
 
 // SelectBy 按照条件查找多条 可使用链式方法添加order和limit等参数
 func (r *BaseRepo[T]) SelectBy(condition map[string]interface{}, results *[]*T, opts ...SelOpt) error {
