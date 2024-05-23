@@ -7,6 +7,7 @@ package repo
 
 import (
 	"errors"
+	"math"
 	"reflect"
 
 	"gorm.io/gorm"
@@ -117,7 +118,7 @@ func (r *BaseRepo[T]) DeleteBy(condition map[string]interface{}, hardDelete bool
 	return nil
 }
 
-// FindByID 按照ID读取一条记录
+// FindByID 按照ID读取一条记录 本repo的find均代表找1条记录 select均代表多条记录
 func (r *BaseRepo[T]) FindByID(id uint64) (*T, error) {
 	var model T
 	result := r.Orm.First(&model, "id = ?", id)
@@ -160,32 +161,65 @@ func (r *BaseRepo[T]) SelectBy(condition map[string]interface{}, results *[]*T, 
 	return nil
 }
 
+// Pagination 定义
+type Pagination[T any] struct {
+	TotalRecords int64 `json:"totalRecords"`
+	TotalPages   int   `json:"totalPages"`
+	CurrentPage  uint  `json:"currentPage"`
+	PageSize     uint  `json:"pageSize"`
+	Records      []*T  `json:"records"`
+}
+
 // GetByPage 根据分页获取记录
-func (r *BaseRepo[T]) GetByPage(p uint, s uint, opts ...SelOpt) ([]*T, error) {
-	if p < 1 || s < 1 {
-		return nil, errors.New("p 和 s 必须大于 0")
+func (r *BaseRepo[T]) GetByPage(pageNum uint, pageSize uint, opts ...SelOpt) (*Pagination[T], error) {
+	if pageNum < 1 || pageSize < 1 {
+		return nil, errors.New("pageNum 和 pageSize 必须大于 0")
 	}
 
 	var results []*T
+	var totalRecords int64
 
-	// 计算跳过的记录数
-	offset := (p - 1) * s
+	// 创建基础查询
+	query := r.Orm.Model(new(T))
 
-	// 基础查询
-	query := r.Orm.Offset(int(offset)).Limit(int(s))
+	// 应用Where条件
+	for _, opt := range opts {
+		query = opt(query)
+	}
 
-	// 应用SelOpt条件
+	// 计算总记录数
+	err := query.Count(&totalRecords).Error
+	if err != nil {
+		return nil, err
+	}
+
+	// 计算分页偏移量
+	offset := (pageNum - 1) * pageSize
+
+	// 应用分页和排序
+	query = query.Offset(int(offset)).Limit(int(pageSize))
 	for _, opt := range opts {
 		query = opt(query)
 	}
 
 	// 执行查询
-	result := query.Find(&results)
-	if result.Error != nil {
-		return nil, result.Error
+	err = query.Find(&results).Error
+	if err != nil {
+		return nil, err
 	}
 
-	return results, nil
+	// 计算总页数
+	totalPages := int(math.Ceil(float64(totalRecords) / float64(pageSize)))
+
+	paginationResult := &Pagination[T]{
+		TotalRecords: totalRecords,
+		TotalPages:   totalPages,
+		CurrentPage:  pageNum,
+		PageSize:     pageSize,
+		Records:      results,
+	}
+
+	return paginationResult, nil
 }
 
 // InsertOrIgnore 无显式事务 先查找，存在则忽略，否则插入 (并发性也可以由数据库相同的unique key来保证)
