@@ -138,7 +138,7 @@ func (r *BaseRepo[T]) FindBy(condition map[string]interface{}) (*T, error) {
 	return &model, nil
 }
 
-// SelOpt SelectBy 条件配置
+// SelOpt 查询可选选项
 type SelOpt func(*gorm.DB) *gorm.DB
 
 func WithOrderBy(orderBy string) SelOpt {
