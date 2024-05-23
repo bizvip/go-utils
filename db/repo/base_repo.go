@@ -18,17 +18,25 @@ import (
 
 type BaseRepo[T any] struct{ Orm *gorm.DB }
 
-// type IBaseRepo interface {
-// 	Insert(model interface{}) error
-// 	InsertOrUpdate(model interface{}, condition map[string]interface{}, forUpdateValues interface{}) error
-// 	UpdateById(model interface{}, id uint64) error
-// 	DeleteById(model interface{}, id uint64) error
-// 	DeleteBy(condition map[string]interface{}, model interface{}, hardDelete bool) error
-// 	SelectById(model interface{}, id uint64) error
-// 	SelectBy(condition map[string]interface{}) ([]interface{}, error)
-// 	SelectOne(condition map[string]interface{}, model interface{}) error
-// }
+type IBaseRepo[T any] interface {
+	Exec(sql string, values ...interface{}) (*gorm.DB, error)
+	CountAll() (int64, error)
+	Insert(model *T) error
+	UpdateById(id uint64, updateValues *T) error
+	DeleteById(id uint64) error
+	DeleteBy(condition map[string]interface{}, hardDelete bool) error
+	FindByID(id uint64) (*T, error)
+	FindBy(condition map[string]interface{}) (*T, error)
+	SelectBy(condition map[string]interface{}, results *[]T, opts ...SelOpt) error
+	InsertOrIgnore(model *T, condition map[string]interface{}) (int64, error)
+	InsertOrUpdate(insertItem *T, condition map[string]interface{}, updateValues *T) error
+	UpsertByID(model *T, updateFields []string) error
+	Upsert(model *T, condition map[string]interface{}) error
+	GetByPage(page int, pageSize int) ([]T, error)
+	UpdateBy(condition map[string]interface{}, updateValues *T) (int64, error)
+}
 
+// NewBaseRepo 暂未使用接口返回
 func NewBaseRepo[T any]() *BaseRepo[T] {
 	orm := mysql.GetOrmInstance()
 	if orm == nil {
@@ -95,7 +103,7 @@ func (r *BaseRepo[T]) DeleteById(id uint64) error {
 }
 
 // DeleteBy 根据给定条件删除记录，可选是否硬删除（仅对于有软删除的表）
-func (r *BaseRepo[T]) DeleteBy(condition *T, hardDelete bool) error {
+func (r *BaseRepo[T]) DeleteBy(condition map[string]interface{}, hardDelete bool) error {
 	var model T
 	var result *gorm.DB
 	if hardDelete {
@@ -120,7 +128,7 @@ func (r *BaseRepo[T]) FindByID(id uint64) (*T, error) {
 }
 
 // FindBy 根据条件查找一条记录
-func (r *BaseRepo[T]) FindBy(condition *T) (*T, error) {
+func (r *BaseRepo[T]) FindBy(condition map[string]interface{}) (*T, error) {
 	var model T
 	result := r.Orm.Where(condition).First(&model)
 	if result.Error != nil {
@@ -140,7 +148,7 @@ func WithLimit(limit int) SelOpt {
 }
 
 // SelectBy 按照条件查找多条 可使用链式方法添加order和limit等参数
-func (r *BaseRepo[T]) SelectBy(condition *T, results *[]*T, opts ...SelOpt) error {
+func (r *BaseRepo[T]) SelectBy(condition map[string]interface{}, results *[]T, opts ...SelOpt) error {
 	query := r.Orm.Where(condition)
 	for _, opt := range opts {
 		query = opt(query)
@@ -153,7 +161,7 @@ func (r *BaseRepo[T]) SelectBy(condition *T, results *[]*T, opts ...SelOpt) erro
 }
 
 // InsertOrIgnore 无显式事务 先查找，存在则忽略，否则插入 (并发性也可以由数据库相同的unique key来保证)
-func (r *BaseRepo[T]) InsertOrIgnore(model *T, condition *T) (int64, error) {
+func (r *BaseRepo[T]) InsertOrIgnore(model *T, condition map[string]interface{}) (int64, error) {
 	var existsT T
 	err := r.Orm.Where(condition).First(&existsT).Error
 	if err == nil {
@@ -171,7 +179,7 @@ func (r *BaseRepo[T]) InsertOrIgnore(model *T, condition *T) (int64, error) {
 }
 
 // InsertOrUpdate 事务版本 先查找，不存在则插入，存在则更新
-func (r *BaseRepo[T]) InsertOrUpdate(insertItem *T, condition *T, updateValues *T) error {
+func (r *BaseRepo[T]) InsertOrUpdate(insertItem *T, condition map[string]interface{}, updateValues *T) error {
 	tx := r.Orm.Begin()
 	if tx.Error != nil {
 		return tx.Error
@@ -207,43 +215,58 @@ func (r *BaseRepo[T]) InsertOrUpdate(insertItem *T, condition *T, updateValues *
 // UpsertByID 非显式事务(onConflict和clauses)，固定根据id查找记录，如果存在则更新，如果不存在则创建
 func (r *BaseRepo[T]) UpsertByID(model *T, updateFields []string) error {
 	// 尝试插入新记录
-	result := r.Orm.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "id"}},          // 固定约束条件为主键id
-		DoUpdates: clause.AssignmentColumns(updateFields), // 需要更新的字段
-	}).Create(model)
+	result := r.Orm.Clauses(
+		clause.OnConflict{
+			Columns:   []clause.Column{{Name: "id"}},          // 固定约束条件为主键id
+			DoUpdates: clause.AssignmentColumns(updateFields), // 需要更新的字段
+		},
+	).Create(model)
 
 	return result.Error
 }
 
 // Upsert 非显式事务(onConflict和clauses)，根据condition查找记录，如果存在则更新，如果不存在则创建
-func (r *BaseRepo[T]) Upsert(model *T, condition *T) error {
-	// 获取结构体的字段名
-	getStructFields := func(v interface{}) []string {
-		val := reflect.ValueOf(v).Elem()
-		typ := val.Type()
-		fields := make([]string, val.NumField())
-
-		for i := 0; i < val.NumField(); i++ {
-			fields[i] = typ.Field(i).Name
-		}
-		return fields
-	}
-	// 将字段名转换为 clause.Column 类型
-	getColumnClauses := func(fields []string) []clause.Column {
-		columns := make([]clause.Column, len(fields))
-		for i, field := range fields {
-			columns[i] = clause.Column{Name: field}
-		}
-		return columns
-	}
+func (r *BaseRepo[T]) Upsert(model *T, condition map[string]interface{}) error {
 	// 获取条件字段名和更新字段名
-	conditionFields := getStructFields(condition)
+	conditionFields := getMapKeys(condition)
 	updateFields := getStructFields(model)
+
 	// 创建或更新记录
-	tx := r.Orm.Clauses(clause.OnConflict{Columns: getColumnClauses(conditionFields),
-		DoUpdates: clause.AssignmentColumns(updateFields)}).Create(model)
+	tx := r.Orm.Clauses(
+		clause.OnConflict{
+			Columns:   getColumnClauses(conditionFields),
+			DoUpdates: clause.AssignmentColumns(updateFields),
+		},
+	).Create(model)
 
 	return tx.Error
+}
+
+func getStructFields(v interface{}) []string {
+	val := reflect.ValueOf(v).Elem()
+	typ := val.Type()
+	fields := make([]string, val.NumField())
+
+	for i := 0; i < val.NumField(); i++ {
+		fields[i] = typ.Field(i).Name
+	}
+	return fields
+}
+
+func getMapKeys(m map[string]interface{}) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	return keys
+}
+
+func getColumnClauses(fields []string) []clause.Column {
+	columns := make([]clause.Column, len(fields))
+	for i, field := range fields {
+		columns[i] = clause.Column{Name: field}
+	}
+	return columns
 }
 
 // GetByPage 根据分页获取记录
@@ -266,9 +289,9 @@ func (r *BaseRepo[T]) GetByPage(page int, pageSize int) ([]T, error) {
 }
 
 // UpdateBy 根据条件更新记录
-func (r *BaseRepo[T]) UpdateBy(condition *T, updateValues *T) (int64, error) {
+func (r *BaseRepo[T]) UpdateBy(condition map[string]interface{}, updateValues *T) (int64, error) {
 	// 尝试更新记录
-	result := r.Orm.Model(condition).Where(condition).Updates(updateValues)
+	result := r.Orm.Model(updateValues).Where(condition).Updates(updateValues)
 	if result.Error != nil {
 		return 0, result.Error
 	}
