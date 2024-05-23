@@ -27,12 +27,12 @@ type IBaseRepo[T any] interface {
 	DeleteBy(condition map[string]interface{}, hardDelete bool) error
 	FindByID(id uint64) (*T, error)
 	FindBy(condition map[string]interface{}) (*T, error)
-	SelectBy(condition map[string]interface{}, results *[]T, opts ...SelOpt) error
+	SelectBy(condition map[string]interface{}, results *[]*T, opts ...SelOpt) error
 	InsertOrIgnore(model *T, condition map[string]interface{}) (int64, error)
 	InsertOrUpdate(insertItem *T, condition map[string]interface{}, updateValues *T) error
 	UpsertByID(model *T, updateFields []string) error
 	Upsert(model *T, condition map[string]interface{}) error
-	GetByPage(page int, pageSize int) ([]T, error)
+	GetByPage(page int, pageSize int) ([]*T, error)
 	UpdateBy(condition map[string]interface{}, updateValues *T) (int64, error)
 }
 
@@ -148,7 +148,7 @@ func WithLimit(limit int) SelOpt {
 }
 
 // SelectBy 按照条件查找多条 可使用链式方法添加order和limit等参数
-func (r *BaseRepo[T]) SelectBy(condition map[string]interface{}, results *[]T, opts ...SelOpt) error {
+func (r *BaseRepo[T]) SelectBy(condition map[string]interface{}, results *[]*T, opts ...SelOpt) error {
 	query := r.Orm.Where(condition)
 	for _, opt := range opts {
 		query = opt(query)
@@ -270,13 +270,13 @@ func getColumnClauses(fields []string) []clause.Column {
 }
 
 // GetByPage 根据分页获取记录
-func (r *BaseRepo[T]) GetByPage(page int, pageSize int) ([]T, error) {
+func (r *BaseRepo[T]) GetByPage(page int, pageSize int) ([]*T, error) {
 	if page < 1 || pageSize < 1 {
 		return nil, errors.New("page 和 pageSize 必须大于 0")
 	}
 
 	// 创建一个空的切片，用于保存结果
-	var results []T
+	var results []*T
 
 	// 计算跳过的记录数
 	offset := (page - 1) * pageSize
