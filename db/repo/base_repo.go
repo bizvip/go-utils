@@ -161,7 +161,7 @@ func (r *BaseRepo[T]) SelectBy(condition map[string]interface{}, results *[]*T, 
 }
 
 // GetByPage 根据分页获取记录
-func (r *BaseRepo[T]) GetByPage(p int, s int, opts ...SelOpt) ([]*T, error) {
+func (r *BaseRepo[T]) GetByPage(p uint, s uint, opts ...SelOpt) ([]*T, error) {
 	if p < 1 || s < 1 {
 		return nil, errors.New("p 和 s 必须大于 0")
 	}
@@ -172,7 +172,7 @@ func (r *BaseRepo[T]) GetByPage(p int, s int, opts ...SelOpt) ([]*T, error) {
 	offset := (p - 1) * s
 
 	// 基础查询
-	query := r.Orm.Offset(offset).Limit(s)
+	query := r.Orm.Offset(int(offset)).Limit(int(s))
 
 	// 应用SelOpt条件
 	for _, opt := range opts {
