@@ -7,8 +7,10 @@ package repo
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"reflect"
+	"strings"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -19,23 +21,23 @@ import (
 
 type BaseRepo[T any] struct{ Orm *gorm.DB }
 
-type IBaseRepo[T any] interface {
-	Exec(sql string, values ...interface{}) (*gorm.DB, error)
-	CountAll() (int64, error)
-	Insert(model *T) error
-	UpdateById(id uint64, updateValues *T) error
-	DeleteById(id uint64) error
-	DeleteBy(condition map[string]interface{}, hardDelete bool) error
-	FindByID(id uint64) (*T, error)
-	FindBy(condition map[string]interface{}) (*T, error)
-	SelectBy(condition map[string]interface{}, results *[]*T, opts ...SelOpt) error
-	InsertOrIgnore(model *T, condition map[string]interface{}) (int64, error)
-	InsertOrUpdate(insertItem *T, condition map[string]interface{}, updateValues *T) error
-	UpsertByID(model *T, updateFields []string) error
-	Upsert(model *T, condition map[string]interface{}) error
-	GetByPage(page int, pageSize int) ([]*T, error)
-	UpdateBy(condition map[string]interface{}, updateValues *T) (int64, error)
-}
+// type IBaseRepo[T any] interface {
+// 	Exec(sql string, values ...interface{}) (*gorm.DB, error)
+// 	CountAll() (int64, error)
+// 	Insert(model *T) error
+// 	UpdateById(id uint64, updateValues *T) error
+// 	DeleteById(id uint64) error
+// 	DeleteBy(condition map[string]interface{}, hardDelete bool) error
+// 	FindByID(id uint64) (*T, error)
+// 	FindBy(condition map[string]interface{}) (*T, error)
+// 	SelectBy(condition map[string]interface{}, results *[]*T, opts ...SelOpt) error
+// 	InsertOrIgnore(model *T, condition map[string]interface{}) (int64, error)
+// 	InsertOrUpdate(insertItem *T, condition map[string]interface{}, updateValues *T) error
+// 	UpsertByID(model *T, updateFields []string) error
+// 	Upsert(model *T, condition map[string]interface{}) error
+// 	GetByPage(page int, pageSize int) ([]*T, error)
+// 	UpdateBy(condition map[string]interface{}, updateValues *T) (int64, error)
+// }
 
 // NewBaseRepo 暂未使用接口返回
 func NewBaseRepo[T any]() *BaseRepo[T] {
@@ -144,11 +146,45 @@ type SelOpt func(*gorm.DB) *gorm.DB
 func WithOrderBy(orderBy string) SelOpt {
 	return func(q *gorm.DB) *gorm.DB { return q.Order(orderBy) }
 }
+
 func WithLimit(limit int) SelOpt {
 	return func(q *gorm.DB) *gorm.DB { return q.Limit(limit) }
 }
-func WithWhere(condition map[string]interface{}) SelOpt {
-	return func(q *gorm.DB) *gorm.DB { return q.Where(condition) }
+
+func WithWhere(conditions map[string]interface{}) SelOpt {
+	return func(q *gorm.DB) *gorm.DB {
+		for key, value := range conditions {
+			var field, operator string
+
+			// 分离字段名和操作符
+			if parts := strings.SplitN(key, " ", 2); len(parts) == 2 {
+				field = parts[0]
+				operator = parts[1]
+			} else {
+				field = key
+				operator = "=" // 默认为等于操作
+			}
+
+			// 根据操作符选择适当的查询
+			switch operator {
+			case ">=":
+				q = q.Where(fmt.Sprintf("%s >= ?", field), value)
+			case "<=":
+				q = q.Where(fmt.Sprintf("%s <= ?", field), value)
+			case ">":
+				q = q.Where(fmt.Sprintf("%s > ?", field), value)
+			case "<":
+				q = q.Where(fmt.Sprintf("%s < ?", field), value)
+			case "!=":
+				q = q.Where(fmt.Sprintf("%s != ?", field), value)
+			case "=":
+				fallthrough // 直接到下一个case "="，即默认情况
+			default:
+				q = q.Where(fmt.Sprintf("%s = ?", field), value)
+			}
+		}
+		return q
+	}
 }
 
 // SelectBy 按照条件查找多条 可使用链式方法添加order和limit等参数
