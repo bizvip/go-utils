@@ -160,6 +160,34 @@ func (r *BaseRepo[T]) SelectBy(condition map[string]interface{}, results *[]*T, 
 	return nil
 }
 
+// GetByPage 根据分页获取记录
+func (r *BaseRepo[T]) GetByPage(p int, s int, opts ...SelOpt) ([]*T, error) {
+	if p < 1 || s < 1 {
+		return nil, errors.New("p 和 s 必须大于 0")
+	}
+
+	var results []*T
+
+	// 计算跳过的记录数
+	offset := (p - 1) * s
+
+	// 基础查询
+	query := r.Orm.Offset(offset).Limit(s)
+
+	// 应用SelOpt条件
+	for _, opt := range opts {
+		query = opt(query)
+	}
+
+	// 执行查询
+	result := query.Find(&results)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return results, nil
+}
+
 // InsertOrIgnore 无显式事务 先查找，存在则忽略，否则插入 (并发性也可以由数据库相同的unique key来保证)
 func (r *BaseRepo[T]) InsertOrIgnore(model *T, condition map[string]interface{}) (int64, error) {
 	var existsT T
@@ -214,78 +242,52 @@ func (r *BaseRepo[T]) InsertOrUpdate(insertItem *T, condition map[string]interfa
 
 // UpsertByID 非显式事务(onConflict和clauses)，固定根据id查找记录，如果存在则更新，如果不存在则创建
 func (r *BaseRepo[T]) UpsertByID(model *T, updateFields []string) error {
-	// 尝试插入新记录
-	result := r.Orm.Clauses(
-		clause.OnConflict{
-			Columns:   []clause.Column{{Name: "id"}},          // 固定约束条件为主键id
-			DoUpdates: clause.AssignmentColumns(updateFields), // 需要更新的字段
-		},
-	).Create(model)
-
+	result := r.Orm.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "id"}},
+		DoUpdates: clause.AssignmentColumns(updateFields)}).Create(model)
 	return result.Error
 }
 
 // Upsert 非显式事务(onConflict和clauses)，根据condition查找记录，如果存在则更新，如果不存在则创建
 func (r *BaseRepo[T]) Upsert(model *T, condition map[string]interface{}) error {
+	// 内联函数获取结构体字段名
+	getStructFields := func(v interface{}) []string {
+		val := reflect.ValueOf(v).Elem()
+		typ := val.Type()
+		fields := make([]string, val.NumField())
+
+		for i := 0; i < val.NumField(); i++ {
+			fields[i] = typ.Field(i).Name
+		}
+		return fields
+	}
+
+	// 内联函数获取map的键名
+	getMapKeys := func(m map[string]interface{}) []string {
+		keys := make([]string, 0, len(m))
+		for k := range m {
+			keys = append(keys, k)
+		}
+		return keys
+	}
+
+	// 内联函数将字段名转换为clause.Column类型
+	getColumnClauses := func(fields []string) []clause.Column {
+		columns := make([]clause.Column, len(fields))
+		for i, field := range fields {
+			columns[i] = clause.Column{Name: field}
+		}
+		return columns
+	}
+
 	// 获取条件字段名和更新字段名
 	conditionFields := getMapKeys(condition)
 	updateFields := getStructFields(model)
 
 	// 创建或更新记录
-	tx := r.Orm.Clauses(
-		clause.OnConflict{
-			Columns:   getColumnClauses(conditionFields),
-			DoUpdates: clause.AssignmentColumns(updateFields),
-		},
-	).Create(model)
+	tx := r.Orm.Clauses(clause.OnConflict{Columns: getColumnClauses(conditionFields),
+		DoUpdates: clause.AssignmentColumns(updateFields)}).Create(model)
 
 	return tx.Error
-}
-
-func getStructFields(v interface{}) []string {
-	val := reflect.ValueOf(v).Elem()
-	typ := val.Type()
-	fields := make([]string, val.NumField())
-
-	for i := 0; i < val.NumField(); i++ {
-		fields[i] = typ.Field(i).Name
-	}
-	return fields
-}
-
-func getMapKeys(m map[string]interface{}) []string {
-	keys := make([]string, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
-	}
-	return keys
-}
-
-func getColumnClauses(fields []string) []clause.Column {
-	columns := make([]clause.Column, len(fields))
-	for i, field := range fields {
-		columns[i] = clause.Column{Name: field}
-	}
-	return columns
-}
-
-// GetByPage 根据分页获取记录
-func (r *BaseRepo[T]) GetByPage(page int, pageSize int) ([]*T, error) {
-	if page < 1 || pageSize < 1 {
-		return nil, errors.New("page 和 pageSize 必须大于 0")
-	}
-
-	// 创建一个空的切片，用于保存结果
-	var results []*T
-
-	// 计算跳过的记录数
-	offset := (page - 1) * pageSize
-	result := r.Orm.Offset(offset).Limit(pageSize).Find(&results)
-	if result.Error != nil {
-		return nil, result.Error
-	}
-
-	return results, nil
 }
 
 // UpdateBy 根据条件更新记录
