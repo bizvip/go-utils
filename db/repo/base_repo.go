@@ -202,15 +202,15 @@ func (r *BaseRepo[T]) SelectBy(condition map[string]interface{}, results *[]*T, 
 
 // Pagination 定义
 type Pagination[T any] struct {
-	TotalRecords int64 `json:"totalRecords"`
-	TotalPages   int   `json:"totalPages"`
-	CurrentPage  uint  `json:"currentPage"`
-	PageSize     uint  `json:"pageSize"`
-	Records      []*T  `json:"records"`
+	TotalRecords int64  `json:"totalRecords"`
+	TotalPages   int64  `json:"totalPages"`
+	CurrentPage  uint32 `json:"currentPage"`
+	PageSize     uint32 `json:"pageSize"`
+	Records      []*T   `json:"records"`
 }
 
 // GetByPage 根据分页获取记录
-func (r *BaseRepo[T]) GetByPage(pageNum uint, pageSize uint, opts ...SelOpt) (*Pagination[T], error) {
+func (r *BaseRepo[T]) GetByPage(pageNum uint32, pageSize uint32, opts ...SelOpt) (*Pagination[T], error) {
 	if pageNum < 1 || pageSize < 1 {
 		return nil, errors.New("pageNum 和 pageSize 必须大于 0")
 	}
@@ -248,7 +248,7 @@ func (r *BaseRepo[T]) GetByPage(pageNum uint, pageSize uint, opts ...SelOpt) (*P
 	}
 
 	// 计算总页数
-	totalPages := int(math.Ceil(float64(totalRecords) / float64(pageSize)))
+	totalPages := int64(math.Ceil(float64(totalRecords) / float64(pageSize)))
 
 	paginationResult := &Pagination[T]{
 		TotalRecords: totalRecords,
