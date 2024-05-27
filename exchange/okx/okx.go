@@ -16,13 +16,24 @@ import (
 type OKX struct {
 	Client *http.Client
 }
+type PayMethod string
 
-func NewOkxService() *OKX {
+const (
+	PayMethodWxPay  PayMethod = "wxPay"
+	PayMethodAlipay PayMethod = "alipay"
+	PayMethodBank   PayMethod = "bank"
+	PayMethodAll    PayMethod = "all"
+)
+
+func NewOkxExchangeService() *OKX {
 	return &OKX{Client: &http.Client{}}
 }
 
-func (o *OKX) GetTop10Exchanges(baseCurrency string, quoteCurrency string) ([]*Exchange, error) {
-	url := fmt.Sprintf("https://www.okx.com/v3/c2c/tradingOrders/books?quoteCurrency=%s&baseCurrency=%s&side=sell&paymentMethod=all&userType=all&receivingAds=false&limit=10&t=%d", quoteCurrency, baseCurrency, time.Now().UnixMilli())
+// GetTop10Exchanges 获取前10交易商家的 C2C 汇率 可指定不同的货币和支付方式
+func (o *OKX) GetTop10Exchanges(baseCurrency, quoteCurrency string, okxPayMethod PayMethod) ([]*Exchange, error) {
+	url := fmt.Sprintf(
+		"https://www.okx.com/v3/c2c/tradingOrders/books?quoteCurrency=%s&baseCurrency=%s&side=sell&paymentMethod=%s&userType=all&receivingAds=false&limit=10&t=%d",
+		quoteCurrency, baseCurrency, string(okxPayMethod), time.Now().UnixMilli())
 	result, err := o.doRequest(url)
 	if err != nil {
 		logs.Logger().Error(err)
@@ -38,15 +49,38 @@ func (o *OKX) GetTop10Exchanges(baseCurrency string, quoteCurrency string) ([]*E
 
 	var exchanges []*Exchange
 	for _, v := range data.Data.Sell {
-		exchange := &Exchange{
+		exchanges = append(exchanges, &Exchange{
 			Currency: v.BaseCurrency,
 			ShopName: v.NickName,
 			Price:    v.Price,
-		}
-		exchanges = append(exchanges, exchange)
+		})
 	}
 
 	return exchanges, nil
+}
+
+// GetUsdtCnyExchangeList 获取usdt到cny的前10个实时汇率结果列表
+func (o *OKX) GetUsdtCnyExchangeList(okxPayMethod PayMethod) ([]*Exchange, error) {
+	return o.GetTop10Exchanges("USDT", "CNY", okxPayMethod)
+}
+
+// GetUsdtCnyRateOnly 获取实时人民币到USDT的汇率
+func (o *OKX) GetUsdtCnyRateOnly(okxPayMethod PayMethod) decimal.Decimal {
+	usdtRates, err := o.GetUsdtCnyExchangeList(okxPayMethod)
+	if err != nil {
+		logs.Logger().Error(err)
+		return decimal.Zero
+	}
+	var total decimal.Decimal
+	for _, usdtRate := range usdtRates {
+		price, err := decimal.NewFromString(usdtRate.Price)
+		if err != nil {
+			logs.Logger().Error(err)
+			continue
+		}
+		total = total.Add(price)
+	}
+	return total.DivRound(decimal.NewFromInt(int64(len(usdtRates))), 2)
 }
 
 func (o *OKX) doRequest(url string) (string, error) {
@@ -56,9 +90,9 @@ func (o *OKX) doRequest(url string) (string, error) {
 		return "", err
 	}
 
-	// 设置User-Agent头部
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
+	req.Header.Set("User-Agent",
+		"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
 	req.Header.Set("App-Type", "web")
 
 	res, err := o.Client.Do(req)
@@ -80,32 +114,4 @@ func (o *OKX) doRequest(url string) (string, error) {
 	}
 
 	return string(body), nil
-}
-func (o *OKX) GetUsdtCnyExchangeList() ([]*Exchange, error) {
-	r, e := o.GetTop10Exchanges("USDT", "CNY")
-	if e != nil {
-		logs.Logger().Error(e)
-		return nil, e
-	}
-	return r, nil
-}
-
-func (o *OKX) GetRealtimeCnyToUsdtRate() decimal.Decimal {
-	usdtRates, err := o.GetUsdtCnyExchangeList()
-	if err != nil {
-		logs.Logger().Error(err)
-		return decimal.Zero
-	}
-	var total decimal.Decimal
-	var i int32
-	for _, usdtRate := range usdtRates {
-		price, err := decimal.NewFromString(usdtRate.Price)
-		if err != nil {
-			logs.Logger().Error(err)
-			continue
-		}
-		total = total.Add(price)
-		i += 1
-	}
-	return total.Mul(decimal.NewFromInt32(i)).DivRound(decimal.NewFromInt32(100), 2)
 }

@@ -7,12 +7,14 @@ require (
 	github.com/aws/aws-sdk-go v1.53.1
 	github.com/davidbyttow/govips/v2 v2.14.0
 	github.com/fatih/color v1.17.0
+	github.com/goccy/go-json v0.10.3
 	github.com/google/uuid v1.6.0
 	github.com/kolesa-team/go-webp v1.0.4
 	github.com/longbridgeapp/opencc v0.3.11
 	github.com/shopspring/decimal v1.4.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/sqids/sqids-go v0.4.1
+	golang.org/x/crypto v0.23.0
 	golang.org/x/image v0.16.0
 	golang.org/x/net v0.25.0
 	google.golang.org/protobuf v1.34.1
