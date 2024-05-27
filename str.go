@@ -13,6 +13,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"math"
 	"regexp"
 	"strconv"
 	"strings"
@@ -20,6 +21,7 @@ import (
 	"unicode"
 
 	"github.com/google/uuid"
+	"github.com/shopspring/decimal"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 
@@ -79,12 +81,14 @@ func (s *StrUtils) RandomId() string {
 	}
 
 	encoded := base64.StdEncoding.EncodeToString(randomData)
-	cleaned := strings.Map(func(r rune) rune {
-		if ('A' <= r && r <= 'Z') || ('a' <= r && r <= 'z') || ('0' <= r && r <= '9') {
-			return r
-		}
-		return -1
-	}, encoded)
+	cleaned := strings.Map(
+		func(r rune) rune {
+			if ('A' <= r && r <= 'Z') || ('a' <= r && r <= 'z') || ('0' <= r && r <= '9') {
+				return r
+			}
+			return -1
+		}, encoded,
+	)
 
 	return cleaned
 }
@@ -174,4 +178,67 @@ func (s *StrUtils) GenSha1(input string) string {
 	h.Write([]byte(input))
 	r := h.Sum(nil)
 	return fmt.Sprintf("%x", r)
+}
+
+// Calculator 输入字符串数学表达式，将计算出结果
+func (s *StrUtils) Calculator(exp string) (string, error) {
+	// 去除空格
+	exp = strings.ReplaceAll(exp, " ", "")
+
+	// 定义正则表达式匹配 + - * / ^ sqrt %
+	re := regexp.MustCompile(`^([\d.]+)([\+\-\*/\^%]|sqrt)([\d.]*)$`)
+	matches := re.FindStringSubmatch(exp)
+
+	if len(matches) < 3 {
+		return "", fmt.Errorf("无效的表达式")
+	}
+
+	// 解析数字和操作符
+	num1, err := decimal.NewFromString(matches[1])
+	if err != nil {
+		return "", fmt.Errorf("无效的数字: %s", matches[1])
+	}
+
+	var num2 decimal.Decimal
+	if matches[3] != "" {
+		num2, err = decimal.NewFromString(matches[3])
+		if err != nil {
+			return "", fmt.Errorf("无效的数字: %s", matches[3])
+		}
+	}
+
+	operator := matches[2]
+
+	// 计算结果
+	var result decimal.Decimal
+	switch operator {
+	case "+":
+		result = num1.Add(num2)
+	case "-":
+		result = num1.Sub(num2)
+	case "*":
+		result = num1.Mul(num2)
+	case "/":
+		if num2.IsZero() {
+			return "", fmt.Errorf("除数不能为零")
+		}
+		result = num1.Div(num2)
+	case "^":
+		// decimal 没有直接的幂运算方法，需转换为 float64
+		exp, _ := num2.Float64()
+		result = num1.Pow(decimal.NewFromFloat(exp))
+	case "sqrt":
+		if num1.LessThan(decimal.Zero) {
+			return "", fmt.Errorf("负数不能开根号")
+		}
+		// decimal 没有直接的开根号方法，需转换为 float64
+		floatVal, _ := num1.Float64()
+		result = decimal.NewFromFloat(math.Sqrt(floatVal))
+	case "%":
+		result = num1.Mul(num2).Div(decimal.NewFromInt(100))
+	default:
+		return "", fmt.Errorf("无效的操作符: %s", operator)
+	}
+
+	return result.String(), nil
 }
