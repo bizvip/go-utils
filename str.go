@@ -185,8 +185,8 @@ func (s *StrUtils) Calculator(exp string) (string, error) {
 	// 去除空格
 	exp = strings.ReplaceAll(exp, " ", "")
 
-	// 定义正则表达式匹配 + - * / ^ sqrt %
-	re := regexp.MustCompile(`^([\d.]+)([\+\-\*/\^%]|sqrt)([\d.]*)$`)
+	// 定义正则表达式匹配 + - * / ^ sqrt % mod
+	re := regexp.MustCompile(`^([\d.]+)([\+\-\*/\^%]|sqrt|mod)([\d.]*)$`)
 	matches := re.FindStringSubmatch(exp)
 
 	if len(matches) < 3 {
@@ -235,7 +235,10 @@ func (s *StrUtils) Calculator(exp string) (string, error) {
 		floatVal, _ := num1.Float64()
 		result = decimal.NewFromFloat(math.Sqrt(floatVal))
 	case "%":
-		result = num1.Mul(num2).Div(decimal.NewFromInt(100))
+		result = num1.Div(num2).Mul(decimal.NewFromInt(100))
+		return result.String() + "%", nil
+	case "mod":
+		result = num1.Mod(num2)
 	default:
 		return "", fmt.Errorf("无效的操作符: %s", operator)
 	}
