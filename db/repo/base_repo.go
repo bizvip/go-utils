@@ -253,9 +253,9 @@ func (r *BaseRepo[T]) Upsert(model *T, condition map[string]interface{}) error {
 }
 
 // UpdateBy 根据条件更新记录
-func (r *BaseRepo[T]) UpdateBy(condition map[string]interface{}, updateValues *T) (int64, error) {
+func (r *BaseRepo[T]) UpdateBy(condition map[string]interface{}, updateValues map[string]interface{}) (int64, error) {
 	// 尝试更新记录
-	result := r.Orm.Model(updateValues).Where(condition).Updates(updateValues)
+	result := r.Orm.Model(new(T)).Where(condition).Updates(updateValues)
 	if result.Error != nil {
 		return 0, result.Error
 	}
