@@ -72,10 +72,7 @@ func (r *BaseRepo[T]) CountAll() (int64, error) {
 }
 
 // Insert 插入一条记录
-func (r *BaseRepo[T]) Insert(model *T) error {
-	result := r.Orm.Create(model)
-	return result.Error
-}
+func (r *BaseRepo[T]) Insert(model *T) error { return r.Orm.Create(model).Error }
 
 // UpdateById 按照ID更新一条
 func (r *BaseRepo[T]) UpdateById(id uint64, updateValues map[string]interface{}) error {
