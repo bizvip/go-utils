@@ -1,11 +1,8 @@
-/******************************************************************************
- * Copyright (c) Archer++ 2024.                                               *
- ******************************************************************************/
-
 package mysql
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"sync"
 	"time"
@@ -30,8 +27,8 @@ type DbConfig struct {
 	DbCharset     string `toml:"dbCharset"`
 	DbCollation   string `toml:"dbCollation"`
 	DbPrefix      string `toml:"dbPrefix"`
-	DbMaxIdleConn int    `toml:"dbMaxIdleConn"` // 添加最大空闲连接数设置
-	DbMaxOpenConn int    `toml:"dbMaxOpenConn"` // 添加最大打开连接数设置
+	DbMaxIdleConn int    `toml:"dbMaxIdleConn"` // 最大空闲连接数
+	DbMaxOpenConn int    `toml:"dbMaxOpenConn"` // 最大打开连接数
 	DbMaxIdleTime int    `toml:"dbMaxIdleTime"` // 最大空闲时间（秒）
 }
 
@@ -39,19 +36,27 @@ type myConf struct {
 	Mysql DbConfig `toml:"mysql"`
 }
 
+func readConfig(configFile string) (*myConf, error) {
+	var conf myConf
+	file, err := os.Open(configFile)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open config file: %w", err)
+	}
+	defer file.Close()
+
+	decoder := toml.NewDecoder(file)
+	if _, err = decoder.Decode(&conf); err != nil {
+		return nil, fmt.Errorf("failed to decode config file: %w", err)
+	}
+
+	return &conf, nil
+}
+
 func InitConnection(configFile string) {
 	once.Do(func() {
-		var err error
-		var conf myConf
-		file, err := os.Open(configFile)
+		conf, err := readConfig(configFile)
 		if err != nil {
-			panic(err)
-		}
-		defer func(file *os.File) { _ = file.Close() }(file)
-
-		decoder := toml.NewDecoder(file)
-		if _, err = decoder.Decode(&conf); err != nil {
-			panic(err)
+			log.Fatalf("Failed to read configuration: %v", err)
 		}
 
 		dsn := fmt.Sprintf(
@@ -67,18 +72,20 @@ func InitConnection(configFile string) {
 		newLogger := gormlogger.Default.LogMode(gormlogger.Silent)
 		ormInstance, err = gorm.Open(mysql.Open(dsn), &gorm.Config{Logger: newLogger})
 		if err != nil {
-			panic(err)
+			log.Fatalf("Failed to connect to database: %v", err)
 		}
 
 		sqlDB, err := ormInstance.DB()
 		if err != nil {
-			panic(err)
+			log.Fatalf("Failed to get database instance: %v", err)
 		}
 
 		// 设置连接池参数
 		sqlDB.SetMaxIdleConns(conf.Mysql.DbMaxIdleConn)
 		sqlDB.SetMaxOpenConns(conf.Mysql.DbMaxOpenConn)
 		sqlDB.SetConnMaxLifetime(time.Duration(conf.Mysql.DbMaxIdleTime) * time.Second)
+
+		log.Println("Database connection successfully initialized")
 	})
 }
 
