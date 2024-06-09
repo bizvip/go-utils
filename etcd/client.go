@@ -67,21 +67,22 @@ func (c *Client) Get(key string, timeout time.Duration) (string, error) {
 	return string(resp.Kvs[0].Value), nil
 }
 
-// Txn 事务
+// Txn 事务示例代码
 func (c *Client) Txn() error {
-	ctx, cancel := c.withTimeout(5 * time.Second)
-	defer cancel()
-
-	txn := c.cli.Txn(ctx)
-	txn.If(
-		clientv3.Compare(clientv3.Value("/example/key"), "=", "value1"),
-	).Then(
-		clientv3.OpPut("/example/key", "value2"),
-	).Else(
-		clientv3.OpPut("/example/key", "value3"),
-	)
-	_, err := txn.Commit()
-	return err
+	//ctx, cancel := c.withTimeout(5 * time.Second)
+	//defer cancel()
+	//
+	//txn := c.cli.Txn(ctx)
+	//txn.If(
+	//	clientv3.Compare(clientv3.Value("/example/key"), "=", "value1"),
+	//).Then(
+	//	clientv3.OpPut("/example/key", "value2"),
+	//).Else(
+	//	clientv3.OpPut("/example/key", "value3"),
+	//)
+	//_, err := txn.Commit()
+	//return err
+	return nil
 }
 
 // CreateLease 租约管理
@@ -108,16 +109,6 @@ func (c *Client) KeepAliveLease(id clientv3.LeaseID) error {
 		}
 	}()
 	return nil
-}
-
-// WatchKey 监听一个key
-func (c *Client) WatchKey(key string) {
-	rch := c.cli.Watch(context.Background(), key)
-	for watchResponse := range rch {
-		for _, ev := range watchResponse.Events {
-			fmt.Printf("%s %q : %q\n", ev.Type, ev.Kv.Key, ev.Kv.Value)
-		}
-	}
 }
 
 // AcquireLock 分布式锁
@@ -160,17 +151,23 @@ func (c *Client) ListMembers() error {
 
 // RegisterService 注册服务
 func (c *Client) RegisterService(serviceName, serviceAddr string, ttl int64) (clientv3.LeaseID, error) {
+	// 创建租约
 	leaseID, err := c.CreateLease(ttl)
 	if err != nil {
 		return 0, fmt.Errorf("failed to create lease: %w", err)
 	}
 
+	// 存储带有租约的键值对
+	ctx, cancel := c.withTimeout(5 * time.Second)
+	defer cancel()
+
 	key := fmt.Sprintf("/services/%s", serviceName)
-	err = c.PutWithLease(key, serviceAddr, leaseID)
+	_, err = c.cli.Put(ctx, key, serviceAddr, clientv3.WithLease(leaseID))
 	if err != nil {
 		return 0, fmt.Errorf("failed to register service: %w", err)
 	}
 
+	// 保持租约
 	err = c.KeepAliveLease(leaseID)
 	if err != nil {
 		return 0, fmt.Errorf("failed to keep alive lease: %w", err)
@@ -179,11 +176,18 @@ func (c *Client) RegisterService(serviceName, serviceAddr string, ttl int64) (cl
 	return leaseID, nil
 }
 
-// PutWithLease
-func (c *Client) PutWithLease(key, value string, leaseID clientv3.LeaseID) error {
-	ctx, cancel := c.withTimeout(5 * time.Second)
-	defer cancel()
+// Watch 监听 withPrefix用来监听服务:"/services/xxx"
+func (c *Client) Watch(key string, withPrefix bool) {
+	var rch clientv3.WatchChan
+	if withPrefix {
+		rch = c.cli.Watch(context.Background(), key, clientv3.WithPrefix())
+	} else {
+		rch = c.cli.Watch(context.Background(), key)
+	}
 
-	_, err := c.cli.Put(ctx, key, value, clientv3.WithLease(leaseID))
-	return err
+	for watchResponse := range rch {
+		for _, ev := range watchResponse.Events {
+			fmt.Printf("Type: %s Key: %q Value: %q\n", ev.Type, ev.Kv.Key, ev.Kv.Value)
+		}
+	}
 }
