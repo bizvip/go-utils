@@ -157,3 +157,33 @@ func (c *Client) ListMembers() error {
 	}
 	return nil
 }
+
+// RegisterService 注册服务
+func (c *Client) RegisterService(serviceName, serviceAddr string, ttl int64) (clientv3.LeaseID, error) {
+	leaseID, err := c.CreateLease(ttl)
+	if err != nil {
+		return 0, fmt.Errorf("failed to create lease: %w", err)
+	}
+
+	key := fmt.Sprintf("/services/%s", serviceName)
+	err = c.PutWithLease(key, serviceAddr, leaseID)
+	if err != nil {
+		return 0, fmt.Errorf("failed to register service: %w", err)
+	}
+
+	err = c.KeepAliveLease(leaseID)
+	if err != nil {
+		return 0, fmt.Errorf("failed to keep alive lease: %w", err)
+	}
+
+	return leaseID, nil
+}
+
+// PutWithLease
+func (c *Client) PutWithLease(key, value string, leaseID clientv3.LeaseID) error {
+	ctx, cancel := c.withTimeout(5 * time.Second)
+	defer cancel()
+
+	_, err := c.cli.Put(ctx, key, value, clientv3.WithLease(leaseID))
+	return err
+}
