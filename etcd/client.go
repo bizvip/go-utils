@@ -5,19 +5,19 @@ import (
 	"fmt"
 	"time"
 
-	clientv3 "go.etcd.io/etcd/client/v3"
+	cliv3 "go.etcd.io/etcd/client/v3"
 	"go.etcd.io/etcd/client/v3/concurrency"
 )
 
 type Client struct {
-	cli     *clientv3.Client
+	cli     *cliv3.Client
 	timeout time.Duration
 }
 
 // Connect 建立连接
 func (c *Client) Connect(endpoints []string, dialTimeout time.Duration) error {
 	var err error
-	c.cli, err = clientv3.New(clientv3.Config{
+	c.cli, err = cliv3.New(cliv3.Config{
 		Endpoints:   endpoints,
 		DialTimeout: dialTimeout,
 	})
@@ -74,11 +74,11 @@ func (c *Client) Txn() error {
 	//
 	//txn := c.cli.Txn(ctx)
 	//txn.If(
-	//	clientv3.Compare(clientv3.Value("/example/key"), "=", "value1"),
+	//	cliv3.Compare(cliv3.Value("/example/key"), "=", "value1"),
 	//).Then(
-	//	clientv3.OpPut("/example/key", "value2"),
+	//	cliv3.OpPut("/example/key", "value2"),
 	//).Else(
-	//	clientv3.OpPut("/example/key", "value3"),
+	//	cliv3.OpPut("/example/key", "value3"),
 	//)
 	//_, err := txn.Commit()
 	//return err
@@ -86,7 +86,7 @@ func (c *Client) Txn() error {
 }
 
 // CreateLease 租约管理
-func (c *Client) CreateLease(ttl int64) (clientv3.LeaseID, error) {
+func (c *Client) CreateLease(ttl int64) (cliv3.LeaseID, error) {
 	ctx, cancel := c.withTimeout(5 * time.Second)
 	defer cancel()
 
@@ -98,7 +98,7 @@ func (c *Client) CreateLease(ttl int64) (clientv3.LeaseID, error) {
 }
 
 // KeepAliveLease 保持租约激活
-func (c *Client) KeepAliveLease(id clientv3.LeaseID) error {
+func (c *Client) KeepAliveLease(id cliv3.LeaseID) error {
 	ch, err := c.cli.KeepAlive(context.Background(), id)
 	if err != nil {
 		return err
@@ -150,7 +150,7 @@ func (c *Client) ListMembers() error {
 }
 
 // RegisterService 注册服务
-func (c *Client) RegisterService(serviceName, serviceAddr string, ttl int64) (clientv3.LeaseID, error) {
+func (c *Client) RegisterService(serviceName, serviceAddr string, ttl int64) (cliv3.LeaseID, error) {
 	// 创建租约
 	leaseID, err := c.CreateLease(ttl)
 	if err != nil {
@@ -162,7 +162,7 @@ func (c *Client) RegisterService(serviceName, serviceAddr string, ttl int64) (cl
 	defer cancel()
 
 	key := fmt.Sprintf("/services/%s", serviceName)
-	_, err = c.cli.Put(ctx, key, serviceAddr, clientv3.WithLease(leaseID))
+	_, err = c.cli.Put(ctx, key, serviceAddr, cliv3.WithLease(leaseID))
 	if err != nil {
 		return 0, fmt.Errorf("failed to register service: %w", err)
 	}
@@ -178,9 +178,9 @@ func (c *Client) RegisterService(serviceName, serviceAddr string, ttl int64) (cl
 
 // Watch 监听 withPrefix用来监听服务:"/services/xxx"
 func (c *Client) Watch(key string, withPrefix bool) {
-	var rch clientv3.WatchChan
+	var rch cliv3.WatchChan
 	if withPrefix {
-		rch = c.cli.Watch(context.Background(), key, clientv3.WithPrefix())
+		rch = c.cli.Watch(context.Background(), key, cliv3.WithPrefix())
 	} else {
 		rch = c.cli.Watch(context.Background(), key)
 	}
