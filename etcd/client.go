@@ -191,3 +191,21 @@ func (c *Client) Watch(key string, withPrefix bool) {
 		}
 	}
 }
+
+// GetService 获取服务
+func (c *Client) GetService(serviceName string) (map[string]string, error) {
+	ctx, cancel := c.withTimeout(5 * time.Second)
+	defer cancel()
+
+	resp, err := c.cli.Get(ctx, fmt.Sprintf("/services/%s", serviceName), cliv3.WithPrefix())
+	if err != nil {
+		return nil, fmt.Errorf("failed to get service: %w", err)
+	}
+
+	services := make(map[string]string)
+	for _, kv := range resp.Kvs {
+		services[string(kv.Key)] = string(kv.Value)
+	}
+
+	return services, nil
+}
