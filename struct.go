@@ -5,7 +5,10 @@
 package goutils
 
 import (
+	"fmt"
 	"reflect"
+
+	"github.com/goccy/go-json"
 )
 
 type StructUtils struct{}
@@ -15,7 +18,7 @@ func NewStructUtils() *StructUtils {
 }
 
 // MergeStructData 使用反射来合并两个struct 反射影响高性能
-func MergeStructData(existing, newData interface{}) interface{} {
+func (s *StructUtils) MergeStructData(existing, newData interface{}) interface{} {
 	valExisting := reflect.ValueOf(existing).Elem()
 	valNewData := reflect.ValueOf(newData).Elem()
 
@@ -33,4 +36,19 @@ func MergeStructData(existing, newData interface{}) interface{} {
 	}
 
 	return existing
+}
+
+// StructToMap 将结构体转换为 map
+func (s *StructUtils) StructToMap(configStruct interface{}) (map[string]interface{}, error) {
+	data, err := json.Marshal(configStruct)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal struct to json: %w", err)
+	}
+
+	var result map[string]interface{}
+	if err = json.Unmarshal(data, &result); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal json to map: %w", err)
+	}
+
+	return result, nil
 }
