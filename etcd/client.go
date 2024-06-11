@@ -14,6 +14,16 @@ type Client struct {
 	timeout time.Duration
 }
 
+// NewClient 创建一个新的 Client 实例
+func NewClient(endpoints []string, dialTimeout, timeout time.Duration) (*Client, error) {
+	cli, err := cliv3.New(cliv3.Config{Endpoints: endpoints, DialTimeout: dialTimeout})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create etcd client: %w", err)
+	}
+
+	return &Client{cli: cli, timeout: timeout}, nil
+}
+
 // Connect 建立连接
 func (c *Client) Connect(endpoints []string, dialTimeout time.Duration) error {
 	var err error
@@ -51,22 +61,6 @@ func (c *Client) Put(key, value string, timeout time.Duration) error {
 	return nil
 }
 
-// Get 读取
-func (c *Client) Get(key string, timeout time.Duration) (string, error) {
-	ctx, cancel := c.withTimeout(timeout)
-	defer cancel()
-
-	resp, err := c.cli.Get(ctx, key)
-	if err != nil {
-		return "", fmt.Errorf("failed to get key: %w", err)
-	}
-
-	if len(resp.Kvs) == 0 {
-		return "", fmt.Errorf("key not found")
-	}
-	return string(resp.Kvs[0].Value), nil
-}
-
 // Txn 事务示例代码
 func (c *Client) Txn() error {
 	//ctx, cancel := c.withTimeout(5 * time.Second)
@@ -87,7 +81,7 @@ func (c *Client) Txn() error {
 
 // CreateLease 租约管理
 func (c *Client) CreateLease(ttl int64) (cliv3.LeaseID, error) {
-	ctx, cancel := c.withTimeout(5 * time.Second)
+	ctx, cancel := c.withTimeout(c.timeout)
 	defer cancel()
 
 	leaseResp, err := c.cli.Grant(ctx, ttl)
@@ -136,7 +130,7 @@ func (c *Client) ReleaseLock(m *concurrency.Mutex, s *concurrency.Session) error
 
 // ListMembers 成员管理
 func (c *Client) ListMembers() error {
-	ctx, cancel := c.withTimeout(5 * time.Second)
+	ctx, cancel := c.withTimeout(c.timeout)
 	defer cancel()
 
 	resp, err := c.cli.MemberList(ctx)
@@ -158,7 +152,7 @@ func (c *Client) RegisterService(serviceName, serviceAddr string, ttl int64) (cl
 	}
 
 	// 存储带有租约的键值对
-	ctx, cancel := c.withTimeout(5 * time.Second)
+	ctx, cancel := c.withTimeout(c.timeout)
 	defer cancel()
 
 	key := fmt.Sprintf("/services/%s", serviceName)
@@ -177,9 +171,9 @@ func (c *Client) RegisterService(serviceName, serviceAddr string, ttl int64) (cl
 }
 
 // Watch 监听 withPrefix用来监听服务:"/services/xxx"
-func (c *Client) Watch(key string, withPrefix bool) {
+func (c *Client) Watch(key string, prefix bool) {
 	var rch cliv3.WatchChan
-	if withPrefix {
+	if prefix {
 		rch = c.cli.Watch(context.Background(), key, cliv3.WithPrefix())
 	} else {
 		rch = c.cli.Watch(context.Background(), key)
@@ -192,20 +186,32 @@ func (c *Client) Watch(key string, withPrefix bool) {
 	}
 }
 
-// GetService 获取服务
-func (c *Client) GetService(serviceName string) (map[string]string, error) {
-	ctx, cancel := c.withTimeout(5 * time.Second)
+// Get 获取单个键或服务
+func (c *Client) Get(key string, timeout time.Duration, prefix bool) (map[string]string, error) {
+	ctx, cancel := c.withTimeout(timeout)
 	defer cancel()
 
-	resp, err := c.cli.Get(ctx, fmt.Sprintf("/services/%s", serviceName), cliv3.WithPrefix())
+	var resp *cliv3.GetResponse
+	var err error
+
+	if prefix {
+		resp, err = c.cli.Get(ctx, key, cliv3.WithPrefix())
+	} else {
+		resp, err = c.cli.Get(ctx, key)
+	}
+
 	if err != nil {
-		return nil, fmt.Errorf("failed to get service: %w", err)
+		return nil, fmt.Errorf("failed to get key: %w", err)
 	}
 
-	services := make(map[string]string)
+	if len(resp.Kvs) == 0 {
+		return nil, fmt.Errorf("key not found")
+	}
+
+	result := make(map[string]string)
 	for _, kv := range resp.Kvs {
-		services[string(kv.Key)] = string(kv.Value)
+		result[string(kv.Key)] = string(kv.Value)
 	}
 
-	return services, nil
+	return result, nil
 }
