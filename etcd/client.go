@@ -14,8 +14,9 @@ import (
 )
 
 type Client struct {
-	cli     *cliv3.Client
-	timeout time.Duration
+	cli       *cliv3.Client
+	timeout   time.Duration
+	endpoints []string
 }
 
 // NewClient 创建一个新的 Client 实例
@@ -25,15 +26,19 @@ func NewClient(endpoints []string, dialTimeout, timeout time.Duration) (*Client,
 		return nil, fmt.Errorf("failed to create etcd client: %w", err)
 	}
 
-	return &Client{cli: cli, timeout: timeout}, nil
+	return &Client{
+		cli:       cli,
+		timeout:   timeout,
+		endpoints: endpoints,
+	}, nil
 }
 
 // Connect 建立连接
-func (c *Client) Connect(endpoints []string, dialTimeout time.Duration) error {
+func (c *Client) Connect() error {
 	var err error
 	c.cli, err = cliv3.New(cliv3.Config{
-		Endpoints:   endpoints,
-		DialTimeout: dialTimeout,
+		Endpoints:   c.endpoints,
+		DialTimeout: c.timeout,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to connect to etcd: %w", err)
@@ -49,13 +54,13 @@ func (c *Client) Close() error {
 	return nil
 }
 
-func (c *Client) withTimeout(timeout time.Duration) (context.Context, context.CancelFunc) {
-	return context.WithTimeout(context.Background(), timeout)
+func (c *Client) withTimeout() (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.Background(), c.timeout)
 }
 
 // Put 放置/更新
-func (c *Client) Put(key, value string, timeout time.Duration) error {
-	ctx, cancel := c.withTimeout(timeout)
+func (c *Client) Put(key, value string) error {
+	ctx, cancel := c.withTimeout()
 	defer cancel()
 
 	_, err := c.cli.Put(ctx, key, value)
@@ -67,7 +72,7 @@ func (c *Client) Put(key, value string, timeout time.Duration) error {
 
 // Txn 事务示例代码
 func (c *Client) Txn() error {
-	//ctx, cancel := c.withTimeout(5 * time.Second)
+	//ctx, cancel := c.withTimeout()
 	//defer cancel()
 	//
 	//txn := c.cli.Txn(ctx)
@@ -85,7 +90,7 @@ func (c *Client) Txn() error {
 
 // CreateLease 租约管理
 func (c *Client) CreateLease(ttl int64) (cliv3.LeaseID, error) {
-	ctx, cancel := c.withTimeout(c.timeout)
+	ctx, cancel := c.withTimeout()
 	defer cancel()
 
 	leaseResp, err := c.cli.Grant(ctx, ttl)
@@ -134,7 +139,7 @@ func (c *Client) ReleaseLock(m *concurrency.Mutex, s *concurrency.Session) error
 
 // ListMembers 成员管理
 func (c *Client) ListMembers() error {
-	ctx, cancel := c.withTimeout(c.timeout)
+	ctx, cancel := c.withTimeout()
 	defer cancel()
 
 	resp, err := c.cli.MemberList(ctx)
@@ -156,7 +161,7 @@ func (c *Client) RegisterService(serviceName, serviceAddr string, ttl int64) (cl
 	}
 
 	// 存储带有租约的键值对
-	ctx, cancel := c.withTimeout(c.timeout)
+	ctx, cancel := c.withTimeout()
 	defer cancel()
 
 	key := fmt.Sprintf("/services/%s", serviceName)
@@ -191,8 +196,8 @@ func (c *Client) Watch(key string, prefix bool) {
 }
 
 // Get 获取单个键或服务
-func (c *Client) Get(key string, timeout time.Duration, prefix bool) (map[string]string, error) {
-	ctx, cancel := c.withTimeout(timeout)
+func (c *Client) Get(key string, prefix bool) (map[string]string, error) {
+	ctx, cancel := c.withTimeout()
 	defer cancel()
 
 	var resp *cliv3.GetResponse
