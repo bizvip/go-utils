@@ -1,3 +1,7 @@
+/******************************************************************************
+ * Copyright (c) Archer++ 2024.                                               *
+ ******************************************************************************/
+
 // Package snowflake provides a very simple Twitter snowflake generator and parser.
 package snowflake
 
