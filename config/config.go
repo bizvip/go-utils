@@ -15,7 +15,7 @@ import (
 
 var mu sync.RWMutex
 
-// LoadFile 加载配置文件到指定的结构体指针
+// LoadFile 加载配置文件到指定的结构体指针(结构体自由定义)
 func LoadFile(filePath string, configStruct interface{}, watch bool) error {
 	v := viper.New()
 	v.SetConfigFile(filePath)
