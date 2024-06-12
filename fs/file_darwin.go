@@ -167,3 +167,15 @@ func (fsu *FileSystemUtils) CreateDirIfNotExist(relativePath string) error {
 
 	return nil
 }
+
+// IsFile 路径是否是个文件
+func (fsu *FileSystemUtils) IsFile(path string) (bool, error) {
+	info, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return !info.IsDir(), nil
+}
