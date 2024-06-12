@@ -3,7 +3,7 @@ module github.com/bizvip/go-utils
 go 1.22.2
 
 require (
-	github.com/BurntSushi/toml v1.3.2
+	github.com/BurntSushi/toml v1.4.0
 	github.com/allegro/bigcache/v3 v3.1.0
 	github.com/aws/aws-sdk-go v1.53.1
 	github.com/davidbyttow/govips/v2 v2.14.0
@@ -21,9 +21,9 @@ require (
 	golang.org/x/crypto v0.23.0
 	golang.org/x/image v0.16.0
 	golang.org/x/net v0.25.0
-	google.golang.org/protobuf v1.34.1
-	gorm.io/driver/mysql v1.5.6
-	gorm.io/driver/sqlite v1.5.5
+	google.golang.org/protobuf v1.34.2
+	gorm.io/driver/mysql v1.5.7
+	gorm.io/driver/sqlite v1.5.6
 	gorm.io/gorm v1.25.10
 )
 
