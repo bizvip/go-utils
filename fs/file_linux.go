@@ -24,6 +24,7 @@ func NewFileSysUtils() *FileSystemUtils {
 	return &FileSystemUtils{}
 }
 
+// GetFileCreationTime 获取文件创建时间
 func (fsu *FileSystemUtils) GetFileCreationTime(filePath string) (string, time.Time, error) {
 	fileInfo, err := os.Stat(filePath)
 	if err != nil {
@@ -46,6 +47,7 @@ func (fsu *FileSystemUtils) StartsWithDot(fileName string) bool {
 	return len(fileName) > 0 && fileName[0] == '.'
 }
 
+// GetFileNameMd5 计算文件名的 MD5 值
 func (fsu *FileSystemUtils) GetFileNameMd5(filename string) (string, error) {
 	fileInfo, err := os.Stat(filename)
 	if err != nil {
@@ -53,13 +55,13 @@ func (fsu *FileSystemUtils) GetFileNameMd5(filename string) (string, error) {
 		return "", err
 	}
 
-	// 计算文件名的 MD5 值
 	hash := md5.Sum([]byte(fileInfo.Name()))
 	md5Value := hex.EncodeToString(hash[:])
 
 	return md5Value, nil
 }
 
+// GetFileMd5 计算文件的 MD5 值
 func (fsu *FileSystemUtils) GetFileMd5(filePath string) (string, error) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
@@ -69,6 +71,7 @@ func (fsu *FileSystemUtils) GetFileMd5(filePath string) (string, error) {
 	return hex.EncodeToString(hash[:]), nil
 }
 
+// GetFileMd5Stream 通过流的方式计算文件的 MD5 值
 func (fsu *FileSystemUtils) GetFileMd5Stream(filePath string) (string, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -86,6 +89,7 @@ func (fsu *FileSystemUtils) GetFileMd5Stream(filePath string) (string, error) {
 	return hashString, nil
 }
 
+// GetCurExeDir 获取当前执行文件所在目录
 func (fsu *FileSystemUtils) GetCurExeDir() string {
 	ex, err := os.Executable()
 	if err != nil {
@@ -94,6 +98,7 @@ func (fsu *FileSystemUtils) GetCurExeDir() string {
 	return filepath.Dir(ex)
 }
 
+// GetAllFilesByExt 根据文件扩展名获取所有文件
 func (fsu *FileSystemUtils) GetAllFilesByExt(dir string, ext string) ([]string, error) {
 	var files []string
 	err := filepath.Walk(
@@ -113,6 +118,7 @@ func (fsu *FileSystemUtils) GetAllFilesByExt(dir string, ext string) ([]string, 
 	return files, nil
 }
 
+// IsDirAndHasFiles 检查目录是否存在并且包含文件
 func (fsu *FileSystemUtils) IsDirAndHasFiles(dirPath string) (bool, bool, error) {
 	info, err := os.Stat(dirPath)
 	if err != nil {
@@ -160,4 +166,16 @@ func (fsu *FileSystemUtils) CreateDirIfNotExist(relativePath string) error {
 	}
 
 	return nil
+}
+
+// IsFile 路径是否是个文件
+func (fsu *FileSystemUtils) IsFile(path string) (bool, error) {
+	info, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return !info.IsDir(), nil
 }
