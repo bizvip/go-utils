@@ -7,9 +7,7 @@ package config
 import (
 	"fmt"
 
-	"github.com/allegro/bigcache/v3"
 	goutils "github.com/bizvip/go-utils"
-	"github.com/goccy/go-json"
 	"github.com/spf13/viper"
 )
 
@@ -69,33 +67,34 @@ func WriteConfigFile(configPath string, configStruct interface{}) error {
 	return nil
 }
 
-// WriteConfigBigCache 将数据写入 BigCache 和配置文件
-func WriteConfigBigCache(configPath string, cache *bigcache.BigCache, configStruct interface{}) error {
-	// 将结构体转换为 map
-	sm, err := goutils.NewStructUtils().StructToMap(configStruct)
-	if err != nil {
-		return fmt.Errorf("failed to convert struct to map: %w", err)
-	}
-
-	// 将 map 转换为 JSON
-	jsonData, err := json.Marshal(sm)
-	if err != nil {
-		return fmt.Errorf("failed to marshal config to json: %w", err)
-	}
-
-	// 将 JSON 数据写入 BigCache
-	if err := cache.Set("config", jsonData); err != nil {
-		return fmt.Errorf("failed to write config to bigcache: %w", err)
-	}
-
-	// 将配置写入配置文件
-	viper.SetConfigFile(configPath)
-	if err := viper.MergeConfigMap(sm); err != nil {
-		return fmt.Errorf("failed to merge config map: %w", err)
-	}
-	if err := viper.WriteConfigAs(configPath); err != nil {
-		return fmt.Errorf("failed to write config file: %w", err)
-	}
-
-	return nil
-}
+//
+//// WriteConfigBigCache 将数据写入 BigCache 和配置文件
+//func WriteConfigBigCache(configPath string, cache *bigcache.BigCache, configStruct interface{}) error {
+//	// 将结构体转换为 map
+//	sm, err := goutils.NewStructUtils().StructToMap(configStruct)
+//	if err != nil {
+//		return fmt.Errorf("failed to convert struct to map: %w", err)
+//	}
+//
+//	// 将 map 转换为 JSON
+//	jsonData, err := json.Marshal(sm)
+//	if err != nil {
+//		return fmt.Errorf("failed to marshal config to json: %w", err)
+//	}
+//
+//	// 将 JSON 数据写入 BigCache
+//	if err := cache.Set("config", jsonData); err != nil {
+//		return fmt.Errorf("failed to write config to bigcache: %w", err)
+//	}
+//
+//	// 将配置写入配置文件
+//	viper.SetConfigFile(configPath)
+//	if err := viper.MergeConfigMap(sm); err != nil {
+//		return fmt.Errorf("failed to merge config map: %w", err)
+//	}
+//	if err := viper.WriteConfigAs(configPath); err != nil {
+//		return fmt.Errorf("failed to write config file: %w", err)
+//	}
+//
+//	return nil
+//}
