@@ -31,7 +31,7 @@ func InitConfig(config *bigcache.Config) {
 			// 含义：单个条目的最大字节大小
 			// 作用：用于初始内存分配的估算
 			// 设置：例如 500 表示每个条目的最大大小为 500 字节
-			MaxEntrySize: 32 * 1024,
+			MaxEntrySize: 128 * 1024,
 			// 是否打印调试信息
 			Verbose: true,
 			// 含义：缓存的硬最大内存大小（单位：MB）
