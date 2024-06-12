@@ -12,7 +12,7 @@ import (
 	"github.com/allegro/bigcache/v3"
 )
 
-var Cache *bigcache.BigCache
+var Handle *bigcache.BigCache
 
 type bigCache struct{}
 
@@ -50,7 +50,7 @@ func InitConfig(config *bigcache.Config) {
 		}
 	}
 	var err error
-	Cache, err = bigcache.New(context.Background(), *config)
+	Handle, err = bigcache.New(context.Background(), *config)
 	if err != nil {
 		log.Fatal(err)
 	}
