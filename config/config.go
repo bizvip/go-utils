@@ -25,11 +25,10 @@ func LoadFile(filePath string, configStruct interface{}, watch bool) error {
 	}
 
 	mu.Lock()
+	defer mu.Unlock()
 	if err := v.Unmarshal(configStruct); err != nil {
-		mu.Unlock()
 		return fmt.Errorf("failed to unmarshal config to struct: %w", err)
 	}
-	mu.Unlock()
 
 	// 如果需要监控配置文件变化
 	if watch {
