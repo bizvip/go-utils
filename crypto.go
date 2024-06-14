@@ -47,7 +47,7 @@ func (u *CryptoUtils) Encrypt(text string, pass string) (string, error) {
 	}
 
 	ciphertext := aesGCM.Seal(nonce, nonce, plaintext, nil)
-	ciphertext = append(salt, ciphertext...) // 将 salt 添加到密文开头
+	ciphertext = append(salt, ciphertext...)
 	return base64.StdEncoding.EncodeToString(ciphertext), nil
 }
 
@@ -58,7 +58,7 @@ func (u *CryptoUtils) Decrypt(text string, pass string) (string, error) {
 	}
 
 	if len(enc) < 16 {
-		return "", fmt.Errorf("text too short")
+		return "", fmt.Errorf("文本不合法")
 	}
 	salt := enc[:16]
 	enc = enc[16:]
@@ -77,7 +77,7 @@ func (u *CryptoUtils) Decrypt(text string, pass string) (string, error) {
 
 	nonceSize := aesGCM.NonceSize()
 	if len(enc) < nonceSize {
-		return "", fmt.Errorf("text too short")
+		return "", fmt.Errorf("文本不合法")
 	}
 	nonce, cipherBytes := enc[:nonceSize], enc[nonceSize:]
 
