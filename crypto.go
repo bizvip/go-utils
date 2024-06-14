@@ -8,12 +8,12 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-	"crypto/sha512"
 	"encoding/base64"
 	"fmt"
 	"io"
 
 	"golang.org/x/crypto/pbkdf2"
+	"golang.org/x/crypto/sha3"
 )
 
 type CryptoUtils struct{}
@@ -27,7 +27,7 @@ func (u *CryptoUtils) Encrypt(text string, pass string) (string, error) {
 	if _, err := io.ReadFull(rand.Reader, salt); err != nil {
 		return "", err
 	}
-	key := pbkdf2.Key([]byte(pass), salt, 10000, 32, sha512.New)
+	key := pbkdf2.Key([]byte(pass), salt, 10000, 32, sha3.New512)
 
 	plaintext := []byte(text)
 
@@ -63,7 +63,7 @@ func (u *CryptoUtils) Decrypt(text string, pass string) (string, error) {
 	salt := enc[:16]
 	enc = enc[16:]
 
-	key := pbkdf2.Key([]byte(pass), salt, 10000, 32, sha512.New)
+	key := pbkdf2.Key([]byte(pass), salt, 10000, 32, sha3.New512)
 
 	block, err := aes.NewCipher(key)
 	if err != nil {
