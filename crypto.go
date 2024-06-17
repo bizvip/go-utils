@@ -22,7 +22,6 @@ func NewCryptoUtils() *CryptoUtils {
 	return &CryptoUtils{}
 }
 
-// Encrypt 微调
 func (u *CryptoUtils) Encrypt(text string, pass string) (string, error) {
 	salt := make([]byte, 16)
 	if _, err := io.ReadFull(rand.Reader, salt); err != nil {
@@ -53,74 +52,6 @@ func (u *CryptoUtils) Encrypt(text string, pass string) (string, error) {
 	return base64.StdEncoding.EncodeToString(ciphertext), nil
 }
 
-// func (u *CryptoUtils) Encrypt(text string, pass string) (string, error) {
-// 	salt := make([]byte, 16)
-// 	if _, err := io.ReadFull(rand.Reader, salt); err != nil {
-// 		return "", err
-// 	}
-// 	key := pbkdf2.Key([]byte(pass), salt, 10000, 32, sha3.New512)
-//
-// 	plaintext := []byte(text)
-//
-// 	block, err := aes.NewCipher(key)
-// 	if err != nil {
-// 		return "", err
-// 	}
-//
-// 	aesGCM, err := cipher.NewGCM(block)
-// 	if err != nil {
-// 		return "", err
-// 	}
-//
-// 	nonce := make([]byte, aesGCM.NonceSize())
-// 	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
-// 		return "", err
-// 	}
-//
-// 	ciphertext := aesGCM.Seal(nonce, nonce, plaintext, nil)
-// 	ciphertext = append(salt, ciphertext...)
-// 	return base64.StdEncoding.EncodeToString(ciphertext), nil
-// }
-
-// func (u *CryptoUtils) Decrypt(text string, pass string) (string, error) {
-// 	enc, err := base64.StdEncoding.DecodeString(text)
-// 	if err != nil {
-// 		return "", err
-// 	}
-//
-// 	if len(enc) < 16 {
-// 		return "", fmt.Errorf("文本不合法")
-// 	}
-// 	salt := enc[:16]
-// 	enc = enc[16:]
-//
-// 	key := pbkdf2.Key([]byte(pass), salt, 10000, 32, sha3.New512)
-//
-// 	block, err := aes.NewCipher(key)
-// 	if err != nil {
-// 		return "", err
-// 	}
-//
-// 	aesGCM, err := cipher.NewGCM(block)
-// 	if err != nil {
-// 		return "", err
-// 	}
-//
-// 	nonceSize := aesGCM.NonceSize()
-// 	if len(enc) < nonceSize {
-// 		return "", fmt.Errorf("文本不合法")
-// 	}
-// 	nonce, cipherBytes := enc[:nonceSize], enc[nonceSize:]
-//
-// 	plaintext, err := aesGCM.Open(nil, nonce, cipherBytes, nil)
-// 	if err != nil {
-// 		return "", err
-// 	}
-//
-// 	return string(plaintext), nil
-// }
-
-// Decrypt 微调整
 func (u *CryptoUtils) Decrypt(cipherText string, pass string) (string, error) {
 	enc, err := base64.StdEncoding.DecodeString(cipherText)
 	if err != nil {
