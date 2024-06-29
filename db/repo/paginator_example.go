@@ -1,5 +1,6 @@
 /******************************************************************************
- * Copyright (c) Archer++ 2024.                                               *
+ * Copyright (c) 2024. Archer++. All rights reserved.                         *
+ * Author ORCID: https://orcid.org/0009-0003-8150-367X                        *
  ******************************************************************************/
 
 package repo
@@ -38,7 +39,7 @@ func CreateUserPaginator(cursor paginator.Cursor, order *paginator.Order, limit 
 	return paginator.New(opts...)
 }
 
-//func CreateUserPaginator(/* ... */) {
+// func CreateUserPaginator(/* ... */) {
 //	p := paginator.New(
 //		&paginator.Config{
 //			Rules: []paginator.Rule{
@@ -60,7 +61,7 @@ func CreateUserPaginator(cursor paginator.Cursor, order *paginator.Order, limit 
 //	)
 //	// ...
 //	return p
-//}
+// }
 
 // func CreateUserPaginator(
 //

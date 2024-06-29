@@ -1,5 +1,6 @@
 /******************************************************************************
- * Copyright (c) Archer++ 2024.                                               *
+ * Copyright (c) 2024. Archer++. All rights reserved.                         *
+ * Author ORCID: https://orcid.org/0009-0003-8150-367X                        *
  ******************************************************************************/
 
 package obs
@@ -141,13 +142,13 @@ const (
 type StorageClassType string
 
 const (
-	//StorageClassStandard storage class: STANDARD
+	// StorageClassStandard storage class: STANDARD
 	StorageClassStandard StorageClassType = "STANDARD"
 
-	//StorageClassWarm storage class: WARM
+	// StorageClassWarm storage class: WARM
 	StorageClassWarm StorageClassType = "WARM"
 
-	//StorageClassCold storage class: COLD
+	// StorageClassCold storage class: COLD
 	StorageClassCold StorageClassType = "COLD"
 
 	storageClassStandardIA StorageClassType = "STANDARD_IA"

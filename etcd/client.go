@@ -1,5 +1,6 @@
 /******************************************************************************
- * Copyright (c) Archer++ 2024.                                               *
+ * Copyright (c) 2024. Archer++. All rights reserved.                         *
+ * Author ORCID: https://orcid.org/0009-0003-8150-367X                        *
  ******************************************************************************/
 
 package etcd
@@ -72,19 +73,19 @@ func (c *Client) Put(key, value string) error {
 
 // Txn 事务示例代码
 func (c *Client) Txn() error {
-	//ctx, cancel := c.withTimeout()
-	//defer cancel()
+	// ctx, cancel := c.withTimeout()
+	// defer cancel()
 	//
-	//txn := c.cli.Txn(ctx)
-	//txn.If(
+	// txn := c.cli.Txn(ctx)
+	// txn.If(
 	//	cliv3.Compare(cliv3.Value("/example/key"), "=", "value1"),
-	//).Then(
+	// ).Then(
 	//	cliv3.OpPut("/example/key", "value2"),
-	//).Else(
+	// ).Else(
 	//	cliv3.OpPut("/example/key", "value3"),
-	//)
-	//_, err := txn.Commit()
-	//return err
+	// )
+	// _, err := txn.Commit()
+	// return err
 	return nil
 }
 

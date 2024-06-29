@@ -1,5 +1,6 @@
 /******************************************************************************
- * Copyright (c) Archer++ 2024.                                               *
+ * Copyright (c) 2024. Archer++. All rights reserved.                         *
+ * Author ORCID: https://orcid.org/0009-0003-8150-367X                        *
  ******************************************************************************/
 
 package bigcache
@@ -20,7 +21,7 @@ func InitConfig(config *bigcache.Config) {
 	if config == nil {
 		config = &bigcache.Config{
 			Shards:     1024,
-			LifeWindow: 60 * 24 * 365 * time.Minute, //100年
+			LifeWindow: 60 * 24 * 365 * time.Minute, // 100年
 			// 含义：清理间隔时间
 			// 作用：设置多长时间清理一次过期条目。如果设置为 <= 0，则不会进行自动清理
 			// 设置：例如 5 * time.Minute 表示每 5 分钟清理一次过期条目

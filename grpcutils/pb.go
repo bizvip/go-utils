@@ -3,21 +3,18 @@
  * Author ORCID: https://orcid.org/0009-0003-8150-367X                        *
  ******************************************************************************/
 
-package db
+package grpcutils
 
 import (
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
-var (
-	Lite *gorm.DB
-)
-
-func SQLiteConnect() {
-	var err error
-	Lite, err = gorm.Open(sqlite.Open("nas.db"), &gorm.Config{})
+// ToAny 封装了将任意 proto.Message 转换为 anypb.Any 类型的通用函数
+func ToAny(pb proto.Message) (*anypb.Any, error) {
+	anyData, err := anypb.New(pb)
 	if err != nil {
-		panic("failed to connect to sqlite3 database")
+		return nil, err
 	}
+	return anyData, nil
 }
