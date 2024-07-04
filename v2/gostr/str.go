@@ -26,8 +26,6 @@ import (
 	"github.com/shopspring/decimal"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
-
-	"github.com/bizvip/go-utils/logs"
 )
 
 func StringToNumber(str string) uint32 {
@@ -62,7 +60,6 @@ func UniqueStrings(input []string) []string {
 func RegexpMatch(text string, pattern string) bool {
 	regex, err := regexp.Compile(pattern)
 	if err != nil {
-		logs.Logger().Error("Regex compile error:", err)
 		return false
 	}
 	return regex.MatchString(text)
