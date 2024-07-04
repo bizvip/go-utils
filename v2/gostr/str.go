@@ -3,7 +3,7 @@
  * Author ORCID: https://orcid.org/0009-0003-8150-367X                        *
  ******************************************************************************/
 
-package goutils
+package gostr
 
 import (
 	"crypto/hmac"
@@ -30,20 +30,14 @@ import (
 	"github.com/bizvip/go-utils/logs"
 )
 
-type StrUtils struct{}
-
-func NewStrUtils() *StrUtils {
-	return &StrUtils{}
-}
-
-func (s *StrUtils) StringToNumber(str string) uint32 {
+func StringToNumber(str string) uint32 {
 	h := fnv.New32a()
 	_, _ = h.Write([]byte(str))
 	return h.Sum32()
 }
 
 // PadCnSpaceChar 使用中文空格为字符串填充
-func (s *StrUtils) PadCnSpaceChar(label string, spaces int) string {
+func PadCnSpaceChar(label string, spaces int) string {
 	for i := 0; i < spaces; i++ {
 		label += string('\u3000')
 	}
@@ -51,7 +45,7 @@ func (s *StrUtils) PadCnSpaceChar(label string, spaces int) string {
 }
 
 // UniqueStrings 返回一个新的切片，其中包含原切片中的唯一字符串
-func (s *StrUtils) UniqueStrings(input []string) []string {
+func UniqueStrings(input []string) []string {
 	seen := make(map[string]struct{})
 	var result []string
 
@@ -65,7 +59,7 @@ func (s *StrUtils) UniqueStrings(input []string) []string {
 	return result
 }
 
-func (s *StrUtils) RegexpMatch(text string, pattern string) bool {
+func RegexpMatch(text string, pattern string) bool {
 	regex, err := regexp.Compile(pattern)
 	if err != nil {
 		logs.Logger().Error("Regex compile error:", err)
@@ -74,13 +68,13 @@ func (s *StrUtils) RegexpMatch(text string, pattern string) bool {
 	return regex.MatchString(text)
 }
 
-func (s *StrUtils) UUIDNoDash() string {
+func UUIDNoDash() string {
 	u := uuid.New()
 	uNoDashes := strings.Replace(u.String(), "-", "", -1)
 	return uNoDashes
 }
 
-func (s *StrUtils) RandomId() string {
+func RandomId() string {
 	randomData := make([]byte, 12)
 	_, err := rand.Read(randomData)
 	if err != nil {
@@ -101,7 +95,7 @@ func (s *StrUtils) RandomId() string {
 	return cleaned
 }
 
-func (s *StrUtils) StrToInt64(intStr string) (int64, error) {
+func StrToInt64(intStr string) (int64, error) {
 	if strings.Contains(intStr, ".") {
 		return 0, fmt.Errorf("this method only accepts number without dots")
 	}
@@ -112,12 +106,12 @@ func (s *StrUtils) StrToInt64(intStr string) (int64, error) {
 	return i, nil
 }
 
-func (s *StrUtils) Md5(str string) string {
+func Md5(str string) string {
 	hash := md5.Sum([]byte(str))
 	return hex.EncodeToString(hash[:])
 }
 
-func (s *StrUtils) FilterEmptyChar(str string) string {
+func FilterEmptyChar(str string) string {
 	newStr := strings.ReplaceAll(strings.TrimSpace(str), "&nbsp;", "")
 	newStr = strings.ReplaceAll(newStr, " ", "")
 	newStr = strings.Map(
@@ -133,20 +127,19 @@ func (s *StrUtils) FilterEmptyChar(str string) string {
 	return newStr
 }
 
-func (s *StrUtils) NanoTimestampStr() string {
+func NanoTimestampStr() string {
 	now := time.Now()
 	nano := fmt.Sprintf("%06d", now.Nanosecond()/1000)
 	return now.Format("20060102150405") + "-" + nano
 }
 
-func (s *StrUtils) GetDirNameFromSnowflakeID(snowflakeID int64) string {
+func GetDirNameFromSnowflakeID(snowflakeID int64) string {
 	transformedID := snowflakeID >> 10
 	dirName := strconv.FormatInt(transformedID%10000, 10)
 	return fmt.Sprintf("%04s", dirName)
 }
 
-func (s *StrUtils) IsAlphaNum(str string) bool {
-	//	isAlphanumeric := regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString(str)
+func IsAlphaNum(str string) bool {
 	for _, r := range str {
 		if !unicode.IsLetter(r) && !unicode.IsDigit(r) {
 			return false
@@ -155,11 +148,11 @@ func (s *StrUtils) IsAlphaNum(str string) bool {
 	return true
 }
 
-func (s *StrUtils) Length(str string) int {
+func Length(str string) int {
 	return len([]rune(str))
 }
 
-func (s *StrUtils) ProtoMessageToJson(msg proto.Message) (string, error) {
+func ProtoMessageToJson(msg proto.Message) (string, error) {
 	marshaller := protojson.MarshalOptions{
 		Multiline:     true,
 		Indent:        "  ",
@@ -173,7 +166,7 @@ func (s *StrUtils) ProtoMessageToJson(msg proto.Message) (string, error) {
 }
 
 // GenStrBySeed 根据给定的字符串和种子生成一个可重现的新字符串（不建议用到密码）
-func (s *StrUtils) GenStrBySeed(input, seed string) string {
+func GenStrBySeed(input, seed string) string {
 	h := hmac.New(sha256.New, []byte(seed))
 	h.Write([]byte(input))
 	hash := h.Sum(nil)
@@ -181,7 +174,7 @@ func (s *StrUtils) GenStrBySeed(input, seed string) string {
 	return encoded
 }
 
-func (s *StrUtils) GenSha1(input string) string {
+func GenSha1(input string) string {
 	h := sha1.New()
 	h.Write([]byte(input))
 	r := h.Sum(nil)
@@ -189,7 +182,7 @@ func (s *StrUtils) GenSha1(input string) string {
 }
 
 // Calculator 输入字符串数学表达式，将计算出结果
-func (s *StrUtils) Calculator(exp string) (string, error) {
+func Calculator(exp string) (string, error) {
 	// 去除空格
 	exp = strings.ReplaceAll(exp, " ", "")
 
