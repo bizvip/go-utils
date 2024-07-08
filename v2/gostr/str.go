@@ -28,6 +28,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+// StringToNumber 字符串转换成uint32
 func StringToNumber(str string) uint32 {
 	h := fnv.New32a()
 	_, _ = h.Write([]byte(str))
