@@ -35,6 +35,16 @@ func StringToNumber(str string) uint32 {
 	return h.Sum32()
 }
 
+// StringToInt64 字符串数字转换成int64
+func StringToInt64(str string) (int64, error) {
+	// 使用 strconv.ParseInt 将字符串转换为 int64 类型
+	number, err := strconv.ParseInt(str, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("invalid number format: %v", err)
+	}
+	return number, nil
+}
+
 // PadCnSpaceChar 使用中文空格为字符串填充
 func PadCnSpaceChar(label string, spaces int) string {
 	for i := 0; i < spaces; i++ {

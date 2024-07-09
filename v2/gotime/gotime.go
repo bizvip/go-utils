@@ -6,17 +6,29 @@
 package gotime
 
 import (
+	"fmt"
 	"time"
 )
 
-// CalculateClientTimezoneOffset 计算客户端时区偏移量（以小时为单位）
-func CalculateClientTimezoneOffset(clientTimestampMillis int64) (int, error) {
+// CalculateClientTimezoneOffsetAndName 计算客户端时区偏移量和时区名称
+func CalculateClientTimezoneOffsetAndName(clientTimestampMillis int64) (string, error) {
 	serverTime := time.Now()
 	clientTime := time.Unix(0, clientTimestampMillis*int64(time.Millisecond))
+
 	// 计算时间差（以小时为单位）
-	timeDifference := serverTime.Sub(clientTime)
+	timeDifference := clientTime.Sub(serverTime)
 	hoursDifference := int(timeDifference.Hours())
-	// 计算客户端时区偏移量
+
+	// 计算客户端时区偏移量（以小时为单位）
 	clientTimezoneOffset := hoursDifference % 24
-	return clientTimezoneOffset, nil
+
+	// 构建时区字符串
+	var timezoneName string
+	if clientTimezoneOffset >= 0 {
+		timezoneName = fmt.Sprintf("UTC+%d", clientTimezoneOffset)
+	} else {
+		timezoneName = fmt.Sprintf("UTC%d", clientTimezoneOffset)
+	}
+
+	return timezoneName, nil
 }
