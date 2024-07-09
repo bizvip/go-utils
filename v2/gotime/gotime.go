@@ -10,8 +10,8 @@ import (
 	"time"
 )
 
-// CalculateClientTimezoneOffsetAndName 计算客户端时区偏移量和时区名称
-func CalculateClientTimezoneOffsetAndName(clientTimestampMillis int64) (string, error) {
+// GetTimezoneOffsetByTimestamp 计算客户端时区偏移量和时区名称
+func GetTimezoneOffsetByTimestamp(clientTimestampMillis int64) (string, error) {
 	serverTime := time.Now()
 	clientTime := time.Unix(0, clientTimestampMillis*int64(time.Millisecond))
 
