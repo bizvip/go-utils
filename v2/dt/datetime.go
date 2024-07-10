@@ -19,22 +19,22 @@ func GetTimezoneOffsetByMillis(millis int64) (string, error) {
 		return "", fmt.Errorf("timestamp is out of valid range")
 	}
 
-	serverTime := time.Now().UTC() // 使用 UTC 时间进行计算
-	clientTime := time.Unix(0, millis*int64(time.Millisecond)).UTC()
+	// 固定服务器时间为 UTC+0
+	serverTime := time.Now().UTC()
+
+	// 客户端时间假设为北京时间
+	clientTime := time.Unix(0, millis*int64(time.Millisecond)).In(time.FixedZone("UTC+8", 8*3600))
 
 	// 计算时间差（以小时为单位）
 	timeDifference := clientTime.Sub(serverTime)
 	hoursDifference := int(timeDifference.Hours())
 
-	// 计算客户端时区偏移量（以小时为单位）
-	clientTimezoneOffset := (hoursDifference + 24) % 24
-
 	// 构建时区字符串
 	var timezoneName string
-	if clientTimezoneOffset >= 0 {
-		timezoneName = fmt.Sprintf("UTC+%d", clientTimezoneOffset)
+	if hoursDifference >= 0 {
+		timezoneName = fmt.Sprintf("UTC+%d", hoursDifference)
 	} else {
-		timezoneName = fmt.Sprintf("UTC%d", clientTimezoneOffset)
+		timezoneName = fmt.Sprintf("UTC%d", hoursDifference)
 	}
 
 	return timezoneName, nil
