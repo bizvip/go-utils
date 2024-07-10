@@ -3,7 +3,7 @@
  * Author ORCID: https://orcid.org/0009-0003-8150-367X                        *
  ******************************************************************************/
 
-package gotime
+package dt
 
 import (
 	"fmt"
@@ -14,8 +14,8 @@ import (
 func GetTimezoneOffsetByMillis(millis int64) (string, error) {
 	// 先验证毫秒时间戳是否合法
 	timestamp := time.Unix(0, millis*int64(time.Millisecond))
-	// 检查时间范围（时间戳应在 Unix 纪元之后且不超过当前时间）
-	if timestamp.Before(time.Unix(0, 0)) || timestamp.After(time.Now()) {
+	// 检查时间范围（时间戳应在 Unix 纪元之后且不超过当前时间+24小时）
+	if timestamp.Before(time.Unix(0, 0)) || timestamp.After(time.Now().Add(24*time.Hour)) {
 		return "", fmt.Errorf("timestamp is out of valid range")
 	}
 
