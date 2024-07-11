@@ -21,13 +21,17 @@ jobs:
       - name: Get the latest tag
         id: tag
         run: |
-          latest_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
+          latest_tag=$(git tag --sort=-v:refname | head -n 1)
+          if [ -z "$latest_tag" ]; then
+            latest_tag="v0.0.0"
+          fi
           echo "::set-output name=latest_tag::$latest_tag"
 
       - name: Create new tag
         id: new_tag
         run: |
-          new_tag=v$(date +'%Y%m%d%H%M%S')
+          latest_tag=${{ steps.tag.outputs.latest_tag }}
+          new_tag=$(echo $latest_tag | awk -F. -v OFS=. '{ $NF = $NF + 1; print }')
           git tag $new_tag
           echo "::set-output name=new_tag::$new_tag"
 
