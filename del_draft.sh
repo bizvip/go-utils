@@ -3,7 +3,7 @@
 # GitHub 用户名和仓库名
 USERNAME="bizvip"
 REPO="go-utils"
-TOKEN="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"
+TOKEN="*******"
 
 # 获取所有草稿版本的ID
 draft_releases=$(curl -s -H "Authorization: token $TOKEN" "https://api.github.com/repos/$USERNAME/$REPO/releases" | jq '.[] | select(.draft == true) | .id')
