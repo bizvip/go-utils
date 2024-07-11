@@ -1,0 +1,119 @@
+/******************************************************************************
+ * Copyright (c) 2024. Archer++. All rights reserved.                         *
+ * Author ORCID: https://orcid.org/0009-0003-8150-367X                        *
+ ******************************************************************************/
+
+package str
+
+import (
+	"crypto/md5"
+	"crypto/rand"
+	"encoding/base64"
+	"encoding/hex"
+	"fmt"
+	"hash/fnv"
+	"regexp"
+	"strconv"
+	"strings"
+	"unicode"
+
+	"github.com/google/uuid"
+)
+
+// ToUint32 字符串转换成uint32
+func ToUint32(str string) uint32 {
+	h := fnv.New32a()
+	_, _ = h.Write([]byte(str))
+	return h.Sum32()
+}
+
+// ToInt64 字符串数字转换成int64
+func ToInt64(str string) (int64, error) {
+	// 使用 strconv.ParseInt 将字符串转换为 int64 类型
+	number, err := strconv.ParseInt(str, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("invalid number format: %v", err)
+	}
+	return number, nil
+}
+
+// PadCnSpaceChar 使用中文空格为字符串填充
+func PadCnSpaceChar(label string, spaces int) string {
+	for i := 0; i < spaces; i++ {
+		label += string('\u3000')
+	}
+	return label
+}
+
+// UniqueStrings 返回一个新的切片，其中包含原切片中的唯一字符串
+func UniqueStrings(input []string) []string {
+	seen := make(map[string]struct{})
+	var result []string
+
+	for _, item := range input {
+		if _, exists := seen[item]; !exists {
+			seen[item] = struct{}{}
+			result = append(result, item)
+		}
+	}
+
+	return result
+}
+
+func RegexpMatch(text string, pattern string) bool {
+	regex, err := regexp.Compile(pattern)
+	if err != nil {
+		return false
+	}
+	return regex.MatchString(text)
+}
+
+func UUIDNoDash() string {
+	u := uuid.New()
+	uNoDashes := strings.Replace(u.String(), "-", "", -1)
+	return uNoDashes
+}
+
+func RandomId() string {
+	randomData := make([]byte, 12)
+	_, err := rand.Read(randomData)
+	if err != nil {
+		fmt.Println("Error generating random data:", err)
+		return ""
+	}
+
+	encoded := base64.StdEncoding.EncodeToString(randomData)
+	cleaned := strings.Map(
+		func(r rune) rune {
+			if ('A' <= r && r <= 'Z') || ('a' <= r && r <= 'z') || ('0' <= r && r <= '9') {
+				return r
+			}
+			return -1
+		}, encoded,
+	)
+
+	return cleaned
+}
+
+// Md5 计算字符串的md5
+func Md5(str string) string {
+	hash := md5.Sum([]byte(str))
+	return hex.EncodeToString(hash[:])
+}
+
+// FilterEmptyChar 过滤空字符串
+func FilterEmptyChar(str string) string {
+	newStr := strings.ReplaceAll(strings.TrimSpace(str), "&nbsp;", "")
+	newStr = strings.ReplaceAll(newStr, " ", "")
+	newStr = strings.Map(
+		func(r rune) rune {
+			if unicode.IsSpace(r) {
+				return -1
+			}
+			return r
+		}, newStr,
+	)
+	newStr = strings.ReplaceAll(newStr, ":", "")
+	newStr = strings.ReplaceAll(newStr, "：", "")
+	return newStr
+}
