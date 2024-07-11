@@ -18,8 +18,19 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/goccy/go-json"
 	"github.com/google/uuid"
 )
+
+// ToPrintJSON 将结构体转换为适合打印的格式化的 JSON 字符串
+func ToPrintJSON(v interface{}) (string, error) {
+	// 使用 json.MarshalIndent 进行格式化 JSON 序列化
+	jsonData, err := json.MarshalIndent(v, "", "  ")
+	if err != nil {
+		return "", err
+	}
+	return string(jsonData), nil
+}
 
 // ToUint32 字符串转换成uint32
 func ToUint32(str string) uint32 {
