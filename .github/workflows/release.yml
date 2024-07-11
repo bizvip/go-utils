@@ -1,0 +1,48 @@
+name: Create Release
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  create_release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Git
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+
+      - name: Get the latest tag
+        id: tag
+        run: |
+          latest_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
+          echo "::set-output name=latest_tag::$latest_tag"
+
+      - name: Create new tag
+        id: new_tag
+        run: |
+          new_tag=v$(date +'%Y%m%d%H%M%S')
+          git tag $new_tag
+          echo "::set-output name=new_tag::$new_tag"
+
+      - name: Push new tag to GitHub
+        run: |
+          git push origin ${{ steps.new_tag.outputs.new_tag }}
+
+      - name: Create GitHub release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.new_tag.outputs.new_tag }}
+          release_name: Release ${{ steps.new_tag.outputs.new_tag }}
+          body: |
+            Release description here.
+          draft: false
+          prerelease: false
