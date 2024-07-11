@@ -62,8 +62,8 @@ func ValidateNumberPwd(secPwd string, length int) error {
 	return nil
 }
 
-// ToPwd 使用 argon2id 算法生成密码的散列值
-func ToPwd(password string) (string, error) {
+// ToHash 使用 argon2id 算法生成密码的散列值
+func ToHash(password string) (string, error) {
 	salt, err := GenSalt(SaltSize)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate salt: %w", err)
