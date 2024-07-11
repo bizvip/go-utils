@@ -53,9 +53,9 @@ func NumberPwdValidate(secPwd string, length int) error {
 	return nil
 }
 
-// StrToPwd 使用 argon2id 算法生成密码的散列值
-func StrToPwd(password string) (string, error) {
-	salt, err := GenerateSalt(16)
+// ToPwd 使用 argon2id 算法生成密码的散列值
+func ToPwd(password string) (string, error) {
+	salt, err := GenSalt(16)
 	if err != nil {
 		return "", err
 	}
@@ -68,8 +68,8 @@ func StrToPwd(password string) (string, error) {
 	return fmt.Sprintf("%s$%s", encodedSalt, encodedHash), nil
 }
 
-// GenerateSalt 生成指定长度的盐值
-func GenerateSalt(size int) ([]byte, error) {
+// GenSalt 生成指定长度的盐值
+func GenSalt(size int) ([]byte, error) {
 	salt := make([]byte, size)
 	_, err := rand.Read(salt)
 	if err != nil {
@@ -78,9 +78,9 @@ func GenerateSalt(size int) ([]byte, error) {
 	return salt, nil
 }
 
-// IsCorrectPassword 用于比较输入的密码和存储的散列值是否匹配
-func IsCorrectPassword(password, hashedPassword string) bool {
-	parts := SplitHash(hashedPassword)
+// IsCorrect 用于比较输入的密码和存储的散列值是否匹配
+func IsCorrect(pwd, hashStr string) bool {
+	parts := SplitHash(hashStr)
 	if len(parts) != 2 {
 		return false
 	}
@@ -95,7 +95,7 @@ func IsCorrectPassword(password, hashedPassword string) bool {
 		return false
 	}
 
-	hash := argon2.IDKey([]byte(password), salt, 1, 64*1024, 4, 32)
+	hash := argon2.IDKey([]byte(pwd), salt, 1, 64*1024, 4, 32)
 
 	// 使用 subtle.ConstantTimeCompare 比较散列值
 	if subtle.ConstantTimeCompare(hash, expectedHash) == 1 {
