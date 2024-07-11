@@ -24,8 +24,17 @@ var (
 	ErrInvalidSecPwdSequential  = errors.New("password must not contain three or more sequential digits")
 )
 
-// NumberPwdValidate 验证指定长度的纯数字字符串密码
-func NumberPwdValidate(secPwd string, length int) error {
+// Argon2 参数
+const (
+	Argon2Time    = 1
+	Argon2Memory  = 64 * 1024
+	Argon2Threads = 4
+	Argon2KeyLen  = 32
+	SaltSize      = 16
+)
+
+// ValidateNumberPwd 验证指定长度的纯数字字符串密码
+func ValidateNumberPwd(secPwd string, length int) error {
 	// 构建正则表达式以匹配指定长度的数字字符串
 	regexPattern := fmt.Sprintf(`^[0-9]{%d}$`, length)
 	matched, err := regexp.MatchString(regexPattern, secPwd)
@@ -55,12 +64,12 @@ func NumberPwdValidate(secPwd string, length int) error {
 
 // ToPwd 使用 argon2id 算法生成密码的散列值
 func ToPwd(password string) (string, error) {
-	salt, err := GenSalt(16)
+	salt, err := GenSalt(SaltSize)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to generate salt: %w", err)
 	}
 
-	hash := argon2.IDKey([]byte(password), salt, 1, 64*1024, 4, 32)
+	hash := argon2.IDKey([]byte(password), salt, Argon2Time, Argon2Memory, Argon2Threads, Argon2KeyLen)
 
 	encodedHash := base64.RawStdEncoding.EncodeToString(hash)
 	encodedSalt := base64.RawStdEncoding.EncodeToString(salt)
@@ -73,7 +82,7 @@ func GenSalt(size int) ([]byte, error) {
 	salt := make([]byte, size)
 	_, err := rand.Read(salt)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to generate random salt: %w", err)
 	}
 	return salt, nil
 }
@@ -95,7 +104,7 @@ func IsCorrect(pwd, hashStr string) bool {
 		return false
 	}
 
-	hash := argon2.IDKey([]byte(pwd), salt, 1, 64*1024, 4, 32)
+	hash := argon2.IDKey([]byte(pwd), salt, Argon2Time, Argon2Memory, Argon2Threads, Argon2KeyLen)
 
 	// 使用 subtle.ConstantTimeCompare 比较散列值
 	if subtle.ConstantTimeCompare(hash, expectedHash) == 1 {
