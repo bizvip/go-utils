@@ -39,7 +39,13 @@ jobs:
             minor=${BASH_REMATCH[2]}
             patch=${BASH_REMATCH[3]}
             new_patch=$((patch + 1))
-            new_tag="v${major}.${minor}.${new_patch}"
+            if [ "$new_patch" -ge 100 ]; then
+              new_patch=0
+              new_minor=$((minor + 1))
+              new_tag="v${major}.${new_minor}.${new_patch}"
+            else
+              new_tag="v${major}.${minor}.${new_patch}"
+            fi
           else
             new_tag="v0.0.1"
           fi
