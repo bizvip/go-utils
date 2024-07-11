@@ -10,6 +10,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"hash/fnv"
 	"regexp"
@@ -116,4 +117,25 @@ func FilterEmptyChar(str string) string {
 	newStr = strings.ReplaceAll(newStr, ":", "")
 	newStr = strings.ReplaceAll(newStr, "：", "")
 	return newStr
+}
+
+// 校验是否md5字符串
+var (
+	ErrInvalidMD5Length  = errors.New("invalid length for MD5 hash")
+	ErrInvalidMD5Pattern = errors.New("value does not match MD5 hash pattern")
+)
+
+// IsMd5 验证字符串是否是有效的 MD5 值
+func IsMd5(input string) error {
+	if len(input) != 32 {
+		return ErrInvalidMD5Length
+	}
+	match, err := regexp.MatchString(`^[a-fA-F0-9]{32}$`, input)
+	if err != nil {
+		return err
+	}
+	if !match {
+		return ErrInvalidMD5Pattern
+	}
+	return nil
 }
