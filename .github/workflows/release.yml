@@ -12,27 +12,39 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GH_TOKEN }}
 
-      - name: Set up Git
+      - name: Fetch all tags
         run: |
-          git config --global user.name 'github-actions'
-          git config --global user.email 'github-actions@github.com'
+          git fetch --tags
 
       - name: Get the latest tag
         id: tag
         run: |
-          latest_tag=$(git tag --sort=-v:refname | head -n 1)
+          latest_tag=$(git tag | sort -V | grep -E '^v[0-9]+(\.[0-9]+){2}$' | tail -n 1)
           if [ -z "$latest_tag" ]; then
             latest_tag="v0.0.0"
           fi
+          echo "Latest tag: $latest_tag"
           echo "::set-output name=latest_tag::$latest_tag"
 
       - name: Create new tag
         id: new_tag
         run: |
           latest_tag=${{ steps.tag.outputs.latest_tag }}
-          new_tag=$(echo $latest_tag | awk -F. -v OFS=. '{ $NF = $NF + 1; print }')
+          version_regex='^v([0-9]+)\.([0-9]+)\.([0-9]+)$'
+          if [[ "$latest_tag" =~ $version_regex ]]; then
+            major=${BASH_REMATCH[1]}
+            minor=${BASH_REMATCH[2]}
+            patch=${BASH_REMATCH[3]}
+            new_patch=$((patch + 1))
+            new_tag="v${major}.${minor}.${new_patch}"
+          else
+            new_tag="v0.0.1"
+          fi
           git tag $new_tag
+          echo "New tag: $new_tag"
           echo "::set-output name=new_tag::$new_tag"
 
       - name: Push new tag to GitHub
@@ -42,7 +54,7 @@ jobs:
       - name: Create GitHub release
         uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           tag_name: ${{ steps.new_tag.outputs.new_tag }}
           release_name: Release ${{ steps.new_tag.outputs.new_tag }}
