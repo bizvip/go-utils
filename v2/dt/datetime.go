@@ -7,6 +7,8 @@ package dt
 
 import (
 	"fmt"
+	"regexp"
+	"strconv"
 	"time"
 )
 
@@ -52,4 +54,34 @@ func AdjustMilliTimestamp(timestamp uint64, seconds int64) uint64 {
 
 	// 返回计算后的毫秒时间戳
 	return uint64(t.UnixNano() / int64(time.Millisecond))
+}
+
+// AdjustMilliTimestampByStr 根据传入的时间单位（如 "1d", "-1m","1y"）对当前时间戳进行加减，并返回结果毫秒时间戳
+func AdjustMilliTimestampByStr(timestamp uint64, shift string) (uint64, error) {
+	re := regexp.MustCompile(`^(-?\d+)([dmy])$`)
+	matches := re.FindStringSubmatch(shift)
+	if len(matches) != 3 {
+		return 0, fmt.Errorf("invalid duration format")
+	}
+
+	value, err := strconv.Atoi(matches[1])
+	if err != nil {
+		return 0, fmt.Errorf("invalid number: %v", err)
+	}
+
+	current := time.UnixMilli(int64(timestamp))
+	var newTime time.Time
+
+	switch matches[2] {
+	case "d":
+		newTime = current.AddDate(0, 0, value)
+	case "m":
+		newTime = current.AddDate(0, value, 0)
+	case "y":
+		newTime = current.AddDate(value, 0, 0)
+	default:
+		return 0, fmt.Errorf("invalid time unit")
+	}
+
+	return uint64(newTime.UnixMilli()), nil
 }
