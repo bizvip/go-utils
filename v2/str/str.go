@@ -90,17 +90,17 @@ func UUIDNoDash() string {
 }
 
 // RandNumStr 生成一个指定长度的随机数字字符串
-func RandNumStr(length int) string {
+func RandNumStr(length int) (string, error) {
 	const digits = "0123456789"
 	result := make([]byte, length)
 	for i := range result {
 		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(digits))))
 		if err != nil {
-			panic(err) // rand.Int 应该不会失败，但如果失败，直接 panic
+			return "", err
 		}
 		result[i] = digits[num.Int64()]
 	}
-	return string(result)
+	return string(result), nil
 }
 
 // RandomId 生成一个随机 ID
