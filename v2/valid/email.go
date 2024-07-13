@@ -1,14 +1,21 @@
 /******************************************************************************
- * Copyright (c) 2024. Archer++. All rights reserved.                         *
+ * Copyright (c) 2024. Archer++. All rights reserved.
  * Author ORCID: https://orcid.org/0009-0003-8150-367X                        *
  ******************************************************************************/
 
-package validate
+package valid
 
 import (
+	"errors"
 	"net"
 	"regexp"
 	"strings"
+)
+
+// 定义错误变量
+var (
+	ErrInvalidEmailFormat = errors.New("invalid email format")
+	ErrUnresolvableDomain = errors.New("domain cannot be resolved")
 )
 
 // IsValidEmailFormat 校验邮件地址格式是否合法
@@ -24,12 +31,15 @@ func IsDomainResolvable(domain string) bool {
 	return err == nil
 }
 
-// IsValidEmail 校验邮件地址格式和域名是否可解析
-func IsValidEmail(email string) bool {
+// EmailAddr 校验邮件地址格式和域名是否可解析
+func EmailAddr(email string) error {
 	if !IsValidEmailFormat(email) {
-		return false
+		return ErrInvalidEmailFormat
 	}
 	// 提取域名
 	domain := email[strings.LastIndex(email, "@")+1:]
-	return IsDomainResolvable(domain)
+	if !IsDomainResolvable(domain) {
+		return ErrUnresolvableDomain
+	}
+	return nil
 }
