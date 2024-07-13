@@ -39,3 +39,15 @@ func GetTimezoneOffsetByMillis(millis int64) (string, error) {
 
 	return timezoneName, nil
 }
+
+// AdjustMilliTimestamp 根据 13 位数字毫秒时间戳和加减秒数，返回计算后的时间戳
+func AdjustMilliTimestamp(timestamp uint64, seconds int64) uint64 {
+	// 将毫秒时间戳转换为 time.Time
+	t := time.Unix(0, int64(timestamp)*int64(time.Millisecond))
+
+	// 加减指定的秒数
+	t = t.Add(time.Duration(seconds) * time.Second)
+
+	// 返回计算后的毫秒时间戳
+	return uint64(t.UnixNano() / int64(time.Millisecond))
+}
