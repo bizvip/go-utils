@@ -93,8 +93,9 @@ func UUIDNoDash() string {
 func RandNumStr(length int) (string, error) {
 	const digits = "0123456789"
 	result := make([]byte, length)
+	maxInt := big.NewInt(int64(len(digits)))
 	for i := range result {
-		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(digits))))
+		num, err := rand.Int(rand.Reader, maxInt)
 		if err != nil {
 			return "", err
 		}
