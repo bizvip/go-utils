@@ -1,6 +1,6 @@
 /******************************************************************************
- * Copyright (c) 2024. Archer++. All rights reserved.                         *
- * Author ORCID: https://orcid.org/0009-0003-8150-367X                        *
+ * Copyright (c) 2024. Archer++. All rights reserved.
+ * Author ORCID: https://orcid.org/0009-0003-8150-367X
  ******************************************************************************/
 
 package str
@@ -13,6 +13,7 @@ import (
 	"errors"
 	"fmt"
 	"hash/fnv"
+	"math/big"
 	"regexp"
 	"strconv"
 	"strings"
@@ -32,14 +33,14 @@ func ToPrintJSON(v interface{}) (string, error) {
 	return string(jsonData), nil
 }
 
-// ToUint32 字符串转换成uint32
+// ToUint32 字符串转换成 uint32
 func ToUint32(str string) uint32 {
 	h := fnv.New32a()
 	_, _ = h.Write([]byte(str))
 	return h.Sum32()
 }
 
-// ToInt64 字符串数字转换成int64
+// ToInt64 字符串数字转换成 int64
 func ToInt64(str string) (int64, error) {
 	// 使用 strconv.ParseInt 将字符串转换为 int64 类型
 	number, err := strconv.ParseInt(str, 10, 64)
@@ -72,6 +73,7 @@ func UniqueStrings(input []string) []string {
 	return result
 }
 
+// RegexpMatch 使用正则表达式匹配字符串
 func RegexpMatch(text string, pattern string) bool {
 	regex, err := regexp.Compile(pattern)
 	if err != nil {
@@ -80,12 +82,28 @@ func RegexpMatch(text string, pattern string) bool {
 	return regex.MatchString(text)
 }
 
+// UUIDNoDash 生成不带连字符的 UUID
 func UUIDNoDash() string {
 	u := uuid.New()
 	uNoDashes := strings.Replace(u.String(), "-", "", -1)
 	return uNoDashes
 }
 
+// RandNumStr 生成一个指定长度的随机数字字符串
+func RandNumStr(length int) string {
+	const digits = "0123456789"
+	result := make([]byte, length)
+	for i := range result {
+		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(digits))))
+		if err != nil {
+			panic(err) // rand.Int 应该不会失败，但如果失败，直接 panic
+		}
+		result[i] = digits[num.Int64()]
+	}
+	return string(result)
+}
+
+// RandomId 生成一个随机 ID
 func RandomId() string {
 	randomData := make([]byte, 12)
 	_, err := rand.Read(randomData)
@@ -107,7 +125,7 @@ func RandomId() string {
 	return cleaned
 }
 
-// Md5 计算字符串的md5
+// Md5 计算字符串的 MD5
 func Md5(str string) string {
 	hash := md5.Sum([]byte(str))
 	return hex.EncodeToString(hash[:])
@@ -130,7 +148,7 @@ func FilterEmptyChar(str string) string {
 	return newStr
 }
 
-// 校验是否md5字符串
+// 校验是否 MD5 字符串的错误定义
 var (
 	ErrInvalidMD5Length  = errors.New("invalid length for MD5 hash")
 	ErrInvalidMD5Pattern = errors.New("value does not match MD5 hash pattern")
