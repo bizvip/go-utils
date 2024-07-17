@@ -13,7 +13,7 @@ import (
 
 	"github.com/davidbyttow/govips/v2/vips"
 
-	"github.com/bizvip/go-utils/fs"
+	"github.com/bizvip/go-utils/v2/fs"
 )
 
 type Info struct {
