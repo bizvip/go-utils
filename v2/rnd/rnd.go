@@ -6,8 +6,6 @@
 package rnd
 
 import (
-	cryptorand "crypto/rand"
-	"encoding/hex"
 	"math/rand"
 	"time"
 )
@@ -24,16 +22,4 @@ func RandNumStrNonSafe(length int) string {
 		result[i] = digits[r.Intn(len(digits))]
 	}
 	return string(result)
-}
-
-// GenWBAddress 生成wtc币的收款地址
-func GenWBAddress() (string, error) {
-	addressLength := 39
-	bytes := make([]byte, addressLength/2)
-	_, err := cryptorand.Read(bytes)
-	if err != nil {
-		return "", err
-	}
-	address := hex.EncodeToString(bytes)
-	return "wtc" + address, nil
 }
