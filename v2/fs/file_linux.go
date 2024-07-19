@@ -167,7 +167,7 @@ func Delete(path string) error {
 // CreateDirIfNotExist 在当前执行文件所在目录下创建指定的目录，如果目录不存在
 func CreateDirIfNotExist(relativePath string) error {
 	// 获取当前执行文件所在目录
-	curDir := fsu.GetCurExeDir()
+	curDir := GetCurExeDir()
 
 	// 拼接完整的目录路径
 	fullPath := filepath.Join(curDir, relativePath)
