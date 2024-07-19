@@ -168,10 +168,8 @@ func Delete(path string) error {
 func CreateDirIfNotExist(relativePath string) error {
 	// 获取当前执行文件所在目录
 	curDir := GetCurExeDir()
-
 	// 拼接完整的目录路径
 	fullPath := filepath.Join(curDir, relativePath)
-
 	// 检查目录是否已经存在
 	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
 		err := os.MkdirAll(fullPath, 0755)
@@ -179,7 +177,6 @@ func CreateDirIfNotExist(relativePath string) error {
 			return fmt.Errorf("failed to create directory: %v", err)
 		}
 	}
-
 	return nil
 }
 
@@ -193,4 +190,17 @@ func IsFile(path string) (bool, error) {
 		return false, err
 	}
 	return !info.IsDir(), nil
+}
+
+// CreateDir 在指定路径下创建目录，如果目录不存在
+func CreateDir(dirPath string) error {
+	var err error
+	// 检查目录是否已经存在
+	if _, err = os.Stat(dirPath); os.IsNotExist(err) {
+		err = os.MkdirAll(dirPath, 0755)
+		if err != nil {
+			return fmt.Errorf("failed to create directory: %v", err)
+		}
+	}
+	return nil
 }

@@ -9,6 +9,7 @@ package fs
 
 import (
 	"crypto/md5"
+	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -192,4 +193,17 @@ func IsFile(path string) (bool, error) {
 		return false, err
 	}
 	return !info.IsDir(), nil
+}
+
+// CreateDir 在指定路径下创建目录，如果目录不存在
+func CreateDir(dirPath string) error {
+	var err error
+	// 检查目录是否已经存在
+	if _, err = os.Stat(dirPath); os.IsNotExist(err) {
+		err = os.MkdirAll(dirPath, 0755)
+		if err != nil {
+			return fmt.Errorf("failed to create directory: %v", err)
+		}
+	}
+	return nil
 }
