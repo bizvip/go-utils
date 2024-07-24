@@ -13,6 +13,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 	"syscall"
@@ -203,4 +204,21 @@ func CreateDir(dirPath string) error {
 		}
 	}
 	return nil
+}
+
+// DetectFileType 读取文件的前 512 个字节并检测文件的 MIME 类型
+func DetectFileType(file io.Reader) (string, error) {
+	// 创建缓冲区以存储前 512 个字节
+	buffer := make([]byte, 512)
+	// 读取前 512 个字节
+	if _, err := file.Read(buffer); err != nil {
+		return "", err
+	}
+	// 重置文件读取位置
+	if seeker, ok := file.(io.Seeker); ok {
+		seeker.Seek(0, io.SeekStart)
+	}
+	// 检测文件类型
+	mimeType := http.DetectContentType(buffer)
+	return mimeType, nil
 }
