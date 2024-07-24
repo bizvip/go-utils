@@ -77,8 +77,8 @@ func GetFileNameMd5(filename string) (string, error) {
 	return md5Value, nil
 }
 
-// GetFileMd5 计算文件的 MD5 值
-func GetFileMd5(filePath string) (string, error) {
+// GetSmallFileMd5 计算小文件的 MD5 值 一次性加载 更耗费内存
+func GetSmallFileMd5(filePath string) (string, error) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return "", err
@@ -87,16 +87,17 @@ func GetFileMd5(filePath string) (string, error) {
 	return hex.EncodeToString(hash[:]), nil
 }
 
-// GetFileMd5Stream 通过流的方式计算文件的 MD5 值
-func GetFileMd5Stream(filePath string) (string, error) {
+// GetBigFileMd5 计算文件的 MD5 值 流式加载 省内存不崩溃但略微慢上一丝丝
+func GetBigFileMd5(filePath string) (string, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return "", err
 	}
 	defer func(file *os.File) { _ = file.Close() }(file)
 
+	buf := make([]byte, 1024*1024) // 1MB
 	hash := md5.New()
-	if _, err := io.Copy(hash, file); err != nil {
+	if _, err := io.CopyBuffer(hash, file, buf); err != nil {
 		return "", err
 	}
 

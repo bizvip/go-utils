@@ -76,7 +76,7 @@ func GetFileNameMd5(filename string) (string, error) {
 	return md5Value, nil
 }
 
-// GetFileMd5 计算文件的 MD5 值
+// GetSmallFileMd5 计算文件的 MD5 值
 func GetFileMd5(filePath string) (string, error) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
@@ -86,7 +86,7 @@ func GetFileMd5(filePath string) (string, error) {
 	return hex.EncodeToString(hash[:]), nil
 }
 
-// GetFileMd5Stream 通过流的方式计算文件的 MD5 值
+// GetBigFileMd5 通过流的方式计算文件的 MD5 值
 func GetFileMd5Stream(filePath string) (string, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
