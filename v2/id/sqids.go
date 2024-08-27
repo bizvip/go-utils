@@ -12,6 +12,7 @@ import (
 
 var s *sqids.Sqids
 
+// go get github.com/sqids/sqids-go
 func init() {
 	var err error
 	s, err = sqids.New(sqids.Options{
