@@ -15,16 +15,22 @@ import (
 	"golang.org/x/exp/rand"
 )
 
+// 全局随机数生成器
+var rng *rand.Rand
+
+// init 程序启动期间，只设置一次种子
+func init() {
+	source := rand.NewSource(uint64(time.Now().UnixNano()))
+	rng = rand.New(source)
+}
+
 // RandNumStrNonSafe 生成一个指定长度的随机数字字符串
 func RandNumStrNonSafe(length int) string {
 	const digits = "0123456789"
 	result := make([]byte, length)
 
-	// 创建一个新的随机数生成器实例
-	r := rand.New(rand.NewSource(uint64(time.Now().UnixMilli())))
-
 	for i := range result {
-		result[i] = digits[r.Intn(len(digits))]
+		result[i] = digits[rng.Intn(len(digits))]
 	}
 	return string(result)
 }
@@ -36,7 +42,7 @@ func UUIDNoDash() string {
 	return uNoDashes
 }
 
-// RandomId 生成一个随机 ID
+// RandomId 生成一个随机字符串ID
 func RandomId() string {
 	randomData := make([]byte, 12)
 	_, err := rand.Read(randomData)
@@ -56,4 +62,16 @@ func RandomId() string {
 	)
 
 	return cleaned
+}
+
+// RandomNumberInRange 生成指定范围内的随机数字
+func RandomNumberInRange(min, max int) int {
+	if min > max {
+		panic("min should be less than or equal to max")
+	}
+
+	rand.Seed(uint64(time.Now().UnixNano()))
+
+	// 生成范围内的随机数
+	return rand.Intn(max-min+1) + min
 }

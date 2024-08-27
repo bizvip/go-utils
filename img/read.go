@@ -61,7 +61,7 @@ func (i *ImageUtils) GetInfo(path string, withMd5 bool) (*Info, error) {
 
 	fileMd5 := ""
 	if withMd5 {
-		fileMd5, err = fs.NewFileSysUtils().GetFileMd5Stream(path)
+		fileMd5, err = fs.GetBigFileMd5(path)
 		if err != nil {
 			return nil, err
 		}
