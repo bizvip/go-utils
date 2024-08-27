@@ -6,8 +6,12 @@
 package rnd
 
 import (
+	"encoding/base64"
+	"fmt"
+	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"golang.org/x/exp/rand"
 )
 
@@ -23,4 +27,33 @@ func RandNumStrNonSafe(length int) string {
 		result[i] = digits[r.Intn(len(digits))]
 	}
 	return string(result)
+}
+
+// UUIDNoDash 生成不带连字符的 UUID
+func UUIDNoDash() string {
+	u := uuid.New()
+	uNoDashes := strings.Replace(u.String(), "-", "", -1)
+	return uNoDashes
+}
+
+// RandomId 生成一个随机 ID
+func RandomId() string {
+	randomData := make([]byte, 12)
+	_, err := rand.Read(randomData)
+	if err != nil {
+		fmt.Println("Error generating random data:", err)
+		return ""
+	}
+
+	encoded := base64.StdEncoding.EncodeToString(randomData)
+	cleaned := strings.Map(
+		func(r rune) rune {
+			if ('A' <= r && r <= 'Z') || ('a' <= r && r <= 'z') || ('0' <= r && r <= '9') {
+				return r
+			}
+			return -1
+		}, encoded,
+	)
+
+	return cleaned
 }
