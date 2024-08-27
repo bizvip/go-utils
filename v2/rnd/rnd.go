@@ -69,9 +69,5 @@ func RandomNumberInRange(min, max int) int {
 	if min > max {
 		panic("min should be less than or equal to max")
 	}
-
-	rand.Seed(uint64(time.Now().UnixNano()))
-
-	// 生成范围内的随机数
-	return rand.Intn(max-min+1) + min
+	return rng.Intn(max-min+1) + min
 }
