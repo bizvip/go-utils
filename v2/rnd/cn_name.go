@@ -94,8 +94,5 @@ var first = []string{
 func RandomCnName() string {
 	seed := uint64(time.Now().UnixNano())
 	rng := rand.New(rand.NewSource(seed))
-
-	a := first[rng.Intn(len(first))]
-	b := second[rng.Intn(len(second))]
-	return b + a
+	return first[rng.Intn(len(first))] + second[rng.Intn(len(second))]
 }
