@@ -6,8 +6,9 @@
 package rnd
 
 import (
-	"math/rand"
 	"time"
+
+	"golang.org/x/exp/rand"
 )
 
 // RandNumStrNonSafe 生成一个指定长度的随机数字字符串
@@ -16,7 +17,7 @@ func RandNumStrNonSafe(length int) string {
 	result := make([]byte, length)
 
 	// 创建一个新的随机数生成器实例
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	r := rand.New(rand.NewSource(uint64(time.Now().UnixMilli())))
 
 	for i := range result {
 		result[i] = digits[r.Intn(len(digits))]
