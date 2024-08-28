@@ -91,3 +91,13 @@ func AdjustMilliTimestampByStr(timestamp uint64, shift string) (uint64, error) {
 
 	return uint64(newTime.UnixMilli()), nil
 }
+
+// ConvertStrMillisToTime 将字符串格式的毫秒时间戳转换为 time.Time
+func ConvertStrMillisToTime(millis string) (time.Time, error) {
+	ms, err := strconv.ParseInt(millis, 10, 64)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("invalid millisecond timestamp: %w", err)
+	}
+	t := time.UnixMilli(ms)
+	return t, nil
+}
