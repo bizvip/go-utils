@@ -35,17 +35,20 @@ func RandNumStrNonSafe(length int) string {
 	return string(result)
 }
 
-// UUIDNoDash 生成不带连字符的 UUID
-func UUIDNoDash() string {
+// UUID 可选无横线的UUID
+func UUID(isNoDash bool) string {
 	u := uuid.New()
-	uNoDashes := strings.Replace(u.String(), "-", "", -1)
-	return uNoDashes
+	if isNoDash {
+		return strings.Replace(u.String(), "-", "", -1)
+	} else {
+		return u.String()
+	}
 }
 
-// RandomId 生成一个随机字符串ID
-func RandomId() string {
+// GenRandomAlphaNumeric 生成一个只有大小写字母和数字的随机字符串
+func GenRandomAlphaNumeric() string {
 	randomData := make([]byte, 12)
-	_, err := rand.Read(randomData)
+	_, err := rng.Read(randomData)
 	if err != nil {
 		fmt.Println("Error generating random data:", err)
 		return ""
@@ -64,8 +67,8 @@ func RandomId() string {
 	return cleaned
 }
 
-// RandomNumberInRange 生成指定范围内的随机数字
-func RandomNumberInRange(min, max int) int {
+// GenNumberInRange 生成指定范围内的随机数字
+func GenNumberInRange(min, max int) int {
 	if min > max {
 		panic("min should be less than or equal to max")
 	}

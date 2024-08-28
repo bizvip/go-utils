@@ -8,7 +8,6 @@ package goutils
 import (
 	"crypto/hmac"
 	"crypto/md5"
-	"crypto/rand"
 	"crypto/sha1"
 	"crypto/sha256"
 	"encoding/base64"
@@ -22,7 +21,6 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -72,33 +70,6 @@ func (s *StrUtils) RegexpMatch(text string, pattern string) bool {
 		return false
 	}
 	return regex.MatchString(text)
-}
-
-func (s *StrUtils) UUIDNoDash() string {
-	u := uuid.New()
-	uNoDashes := strings.Replace(u.String(), "-", "", -1)
-	return uNoDashes
-}
-
-func (s *StrUtils) RandomId() string {
-	randomData := make([]byte, 12)
-	_, err := rand.Read(randomData)
-	if err != nil {
-		fmt.Println("Error generating random data:", err)
-		return ""
-	}
-
-	encoded := base64.StdEncoding.EncodeToString(randomData)
-	cleaned := strings.Map(
-		func(r rune) rune {
-			if ('A' <= r && r <= 'Z') || ('a' <= r && r <= 'z') || ('0' <= r && r <= '9') {
-				return r
-			}
-			return -1
-		}, encoded,
-	)
-
-	return cleaned
 }
 
 func (s *StrUtils) StrToInt64(intStr string) (int64, error) {
