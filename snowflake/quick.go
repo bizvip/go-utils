@@ -12,7 +12,7 @@ var f1, f2 *Sonyflake
 var startTime time.Time
 
 func init() {
-	startTime = time.Date(2007, 1, 1, 0, 0, 0, 0, time.UTC)
+	startTime = time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
 	f1 = NewSonyflake(Settings{StartTime: startTime, MachineID: func() (uint16, error) {
 		return 1, nil
 	}})
