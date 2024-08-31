@@ -47,36 +47,3 @@ func ToAlpha(id int, length int, customMap map[int]string) string {
 
 	return result.String()
 }
-
-// Base26 Archer计数法 程序开发者独自发明的计数方法 用来将唯一整数数字id尽可能小的使用英文字母来表示
-func Base26(num int) string {
-	if num < 0 {
-		return ""
-	}
-	// 定义 26 进制的字符集
-	charSet := "ABCDEFGHIJ" + "KLMNOPQRSTUVWXYZ"
-	base := len(charSet)
-
-	var result strings.Builder
-	// 进行 26 进制转换
-	for num >= 0 {
-		// 计算当前位的字符
-		remainder := num % base
-		result.WriteString(string(charSet[remainder]))
-		// 更新 num，准备计算下一位
-		num = (num - remainder) / base
-		// 如果 num 为 0，则跳出循环
-		if num == 0 {
-			break
-		}
-	}
-
-	// 翻转字符串以获得正确的顺序
-	output := result.String()
-	runes := []rune(output)
-	for i, j := 0, len(runes)-1; i < j; i, j = i+1, j-1 {
-		runes[i], runes[j] = runes[j], runes[i]
-	}
-
-	return string(runes)
-}
