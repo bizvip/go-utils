@@ -5,22 +5,23 @@ import (
 )
 
 // 定义 26 进制的字符集
-const base64CharSet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-const base = len(base64CharSet) // 基数长度
+const base26CharSet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+const base = len(base26CharSet) // 基数长度
 
 // 初始化字符映射
 var charMap = createCharMap()
 
 // createCharMap 创建字符到索引的映射
 func createCharMap() map[rune]int {
-	charMap = make(map[rune]int)
-	for i, char := range base64CharSet {
-		charMap[char] = i
+	// 使用局部变量而不是全局变量
+	localCharMap := make(map[rune]int)
+	for i, char := range base26CharSet {
+		localCharMap[char] = i
 	}
-	return charMap
+	return localCharMap
 }
 
-// ToAlpha Base26 Archer计数法 程序开发者独自发明的计数方法 用来将唯一整数数字id尽可能小的使用英文字母来表示
+// ToAlpha Base26 Archer计数法，用来将唯一整数数字id尽可能小的使用英文字母来表示
 func ToAlpha(num int) string {
 	if num < 0 {
 		return ""
@@ -28,13 +29,11 @@ func ToAlpha(num int) string {
 
 	var result strings.Builder
 	// 进行 26 进制转换
-	for num >= 0 {
-		// 计算当前位的字符
+	for {
 		remainder := num % base
-		result.WriteString(string(base64CharSet[remainder]))
-		// 更新 num，准备计算下一位
-		num = (num - remainder) / base
-		// 如果 num 为 0，则跳出循环
+		result.WriteString(string(base26CharSet[remainder]))
+		num = num / base
+
 		if num == 0 {
 			break
 		}
