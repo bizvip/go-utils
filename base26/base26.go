@@ -13,15 +13,15 @@ var charMap = createCharMap()
 
 // createCharMap 创建字符到索引的映射
 func createCharMap() map[rune]int {
-	charMap := make(map[rune]int)
+	charMap = make(map[rune]int)
 	for i, char := range base64CharSet {
 		charMap[char] = i
 	}
 	return charMap
 }
 
-// Base26 Archer计数法 程序开发者独自发明的计数方法 用来将唯一整数数字id尽可能小的使用英文字母来表示
-func Base26(num int) string {
+// ToAlpha Base26 Archer计数法 程序开发者独自发明的计数方法 用来将唯一整数数字id尽可能小的使用英文字母来表示
+func ToAlpha(num int) string {
 	if num < 0 {
 		return ""
 	}
@@ -50,8 +50,8 @@ func Base26(num int) string {
 	return string(runes)
 }
 
-// DeBase26 将字母解析回数字
-func DeBase26(s string) int {
+// ToInt 将字母解析回数字
+func ToInt(s string) int {
 	result := 0
 	multiplier := 1
 
