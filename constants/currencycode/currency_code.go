@@ -5,6 +5,8 @@
 
 package currencycode
 
-const CNY = "CNY"
-const USDT = "USDT"
-const USD = "USD"
+const (
+	CNY  = "CNY"
+	USDT = "USDT"
+	USD  = "USD"
+)
