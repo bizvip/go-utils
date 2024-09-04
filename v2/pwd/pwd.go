@@ -39,16 +39,21 @@ var (
 func GenSalt() (string, error) {
 	salt := make([]byte, SaltSize)
 	if _, err := io.ReadFull(rand.Reader, salt); err != nil {
-		return "", fmt.Errorf("%w: %v", ErrGenerateSaltFailed, err)
+		return "", ErrGenerateSaltFailed
 	}
 	return base64.RawStdEncoding.EncodeToString(salt), nil
 }
 
 // ToHash .
-func ToHash(password, salt string) (string, error) {
+func ToHash(password string) (string, error) {
+	salt, err := GenSalt()
+	if err != nil {
+		return "", ErrGenerateSaltFailed
+	}
+
 	saltBytes, err := base64.RawStdEncoding.DecodeString(salt)
 	if err != nil {
-		return "", fmt.Errorf("%w: %v", ErrDecodeSaltFailed, err)
+		return "", ErrDecodeSaltFailed
 	}
 
 	hash := argon2.IDKey([]byte(password), saltBytes, Argon2Time, Argon2Memory, Argon2Threads, Argon2KeyLen)
@@ -57,27 +62,25 @@ func ToHash(password, salt string) (string, error) {
 }
 
 // IsCorrect .
-func IsCorrect(password, hashStr string) bool {
+func IsCorrect(password, hashStr string) (bool, error) {
 	parts := SplitHash(hashStr)
 	if len(parts) != 2 {
-		return false
+		return false, nil
 	}
 
 	salt, err := base64.RawStdEncoding.DecodeString(parts[0])
 	if err != nil {
-		fmt.Printf("%v: %v\n", ErrDecodeSaltFailed, err)
-		return false
+		return false, ErrDecodeSaltFailed
 	}
 
 	expectedHash, err := base64.RawStdEncoding.DecodeString(parts[1])
 	if err != nil {
-		fmt.Printf("%v: %v\n", ErrDecodeHashFailed, err)
-		return false
+		return false, ErrDecodeHashFailed
 	}
 
 	hash := argon2.IDKey([]byte(password), salt, Argon2Time, Argon2Memory, Argon2Threads, Argon2KeyLen)
 
-	return subtle.ConstantTimeCompare(hash, expectedHash) == 1
+	return subtle.ConstantTimeCompare(hash, expectedHash) == 1, nil
 }
 
 // SplitHash .
