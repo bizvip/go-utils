@@ -3,18 +3,21 @@
  * Author ORCID: https://orcid.org/0009-0003-8150-367X                        *
  ******************************************************************************/
 
-package grpcutils
+package cryptocoin
 
 import (
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
+	cryptorand "crypto/rand"
+	"encoding/hex"
 )
 
-// ToAny 封装了将任意 proto.Message 转换为 anypb.Any 类型的通用函数
-func ToAny(pb proto.Message) (*anypb.Any, error) {
-	anyData, err := anypb.New(pb)
+// GenWBAddress 生成wtc币的收款地址
+func GenWBAddress() (string, error) {
+	addressLength := 39
+	bytes := make([]byte, addressLength/2)
+	_, err := cryptorand.Read(bytes)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	return anyData, nil
+	address := hex.EncodeToString(bytes)
+	return "wtc" + address, nil
 }

@@ -1804,5 +1804,5 @@ package hwc
 //
 // func main() {
 // 	defer obs.CloseLog()
-// 	obs.InitLog("logs/obs-sdk.log", 1024*1024*100, 5, obs.LEVEL_WARN, false)
+// 	obs.InitLog("quicklog/obs-sdk.log", 1024*1024*100, 5, obs.LEVEL_WARN, false)
 // }

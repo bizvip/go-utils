@@ -3,7 +3,7 @@
  * Author ORCID: https://orcid.org/0009-0003-8150-367X                        *
  ******************************************************************************/
 
-package goutils
+package reflects
 
 import (
 	"fmt"
@@ -12,14 +12,8 @@ import (
 	"github.com/goccy/go-json"
 )
 
-type StructUtils struct{}
-
-func NewStructUtils() *StructUtils {
-	return &StructUtils{}
-}
-
 // MergeStructData 使用反射来合并两个struct 反射影响高性能
-func (s *StructUtils) MergeStructData(existing, newData interface{}) interface{} {
+func MergeStructData(existing, newData interface{}) interface{} {
 	valExisting := reflect.ValueOf(existing).Elem()
 	valNewData := reflect.ValueOf(newData).Elem()
 
@@ -40,7 +34,7 @@ func (s *StructUtils) MergeStructData(existing, newData interface{}) interface{}
 }
 
 // StructToMap 将结构体转换为 map
-func (s *StructUtils) StructToMap(configStruct interface{}) (map[string]interface{}, error) {
+func StructToMap(configStruct interface{}) (map[string]interface{}, error) {
 	data, err := json.Marshal(configStruct)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal struct to json: %w", err)

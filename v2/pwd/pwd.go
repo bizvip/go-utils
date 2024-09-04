@@ -1,8 +1,3 @@
-/******************************************************************************
- * Copyright (c) 2024. Archer++. All rights reserved.                         *
- * Author ORCID: https://orcid.org/0009-0003-8150-367X                        *
- ******************************************************************************/
-
 package pwd
 
 import (
@@ -11,84 +6,52 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"regexp"
+	"io"
 	"strings"
 
 	"golang.org/x/crypto/argon2"
 )
 
-// 定义常见错误消息
-var (
-	ErrInvalidSecPwdLength      = errors.New("password must be 6 digits")
-	ErrInvalidSecPwdConsecutive = errors.New("password must not contain three consecutive identical digits")
-	ErrInvalidSecPwdSequential  = errors.New("password must not contain three or more sequential digits")
-)
-
 // Argon2 参数
 const (
-	Argon2Time    = 1
-	Argon2Memory  = 64 * 1024
-	Argon2Threads = 4
-	Argon2KeyLen  = 32
-	SaltSize      = 16
+	Argon2Time    = 4         // Argon2 参数，迭代次数
+	Argon2Memory  = 64 * 1024 // Argon2 参数，内存大小（KB）
+	Argon2Threads = 1         // Argon2 参数，线程数
+	Argon2KeyLen  = 32        // Argon2 参数，生成的密钥长度
+	SaltSize      = 16        // 盐值长度
 )
 
-// ValidateNumberPwd 验证指定长度的纯数字字符串密码
-func ValidateNumberPwd(secPwd string, length int) error {
-	// 构建正则表达式以匹配指定长度的数字字符串
-	regexPattern := fmt.Sprintf(`^[0-9]{%d}$`, length)
-	matched, err := regexp.MatchString(regexPattern, secPwd)
-	if err != nil || !matched {
-		return ErrInvalidSecPwdLength
-	}
+// 定义常见错误消息
+var (
+	ErrGenerateSaltFailed = errors.New("failed to generate salt")
+	ErrDecodeSaltFailed   = errors.New("failed to decode salt")
+	ErrSplitHashInvalid   = errors.New("invalid hash format")
+	ErrDecodeHashFailed   = errors.New("failed to decode hash")
+)
 
-	// 检查是否包含三个或更多连续相同的数字
-	for i := 0; i < len(secPwd)-2; i++ {
-		if secPwd[i] == secPwd[i+1] && secPwd[i] == secPwd[i+2] {
-			return ErrInvalidSecPwdConsecutive
-		}
+// GenerateSalt 生成一个随机盐值
+func GenerateSalt() (string, error) {
+	salt := make([]byte, SaltSize)
+	if _, err := io.ReadFull(rand.Reader, salt); err != nil {
+		return "", fmt.Errorf("%w: %v", ErrGenerateSaltFailed, err)
 	}
-
-	// 检查是否为三个或更多递增或递减的顺子
-	for i := 0; i < len(secPwd)-2; i++ {
-		if secPwd[i+1] == secPwd[i]+1 && secPwd[i+2] == secPwd[i]+2 {
-			return ErrInvalidSecPwdSequential
-		}
-		if secPwd[i+1] == secPwd[i]-1 && secPwd[i+2] == secPwd[i]-2 {
-			return ErrInvalidSecPwdSequential
-		}
-	}
-
-	return nil
+	return base64.RawStdEncoding.EncodeToString(salt), nil
 }
 
-// ToHash 使用 argon2id 算法生成密码的散列值
-func ToHash(password string) (string, error) {
-	salt, err := GenSalt(SaltSize)
+// HashPassword 使用 Argon2id 对密码进行加盐哈希
+func HashPassword(password, salt string) (string, error) {
+	saltBytes, err := base64.RawStdEncoding.DecodeString(salt)
 	if err != nil {
-		return "", fmt.Errorf("failed to generate salt: %w", err)
+		return "", fmt.Errorf("%w: %v", ErrDecodeSaltFailed, err)
 	}
 
-	hash := argon2.IDKey([]byte(password), salt, Argon2Time, Argon2Memory, Argon2Threads, Argon2KeyLen)
-
+	hash := argon2.IDKey([]byte(password), saltBytes, Argon2Time, Argon2Memory, Argon2Threads, Argon2KeyLen)
 	encodedHash := base64.RawStdEncoding.EncodeToString(hash)
-	encodedSalt := base64.RawStdEncoding.EncodeToString(salt)
-
-	return fmt.Sprintf("%s$%s", encodedSalt, encodedHash), nil
+	return fmt.Sprintf("%s$%s", salt, encodedHash), nil
 }
 
-// GenSalt 生成指定长度的盐值
-func GenSalt(size int) ([]byte, error) {
-	salt := make([]byte, size)
-	_, err := rand.Read(salt)
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate random salt: %w", err)
-	}
-	return salt, nil
-}
-
-// IsCorrect 用于比较输入的密码和存储的散列值是否匹配
-func IsCorrect(pwd, hashStr string) bool {
+// IsPasswordCorrect 用于比较输入的密码和存储的散列值是否匹配
+func IsPasswordCorrect(password, hashStr string) bool {
 	parts := SplitHash(hashStr)
 	if len(parts) != 2 {
 		return false
@@ -96,22 +59,19 @@ func IsCorrect(pwd, hashStr string) bool {
 
 	salt, err := base64.RawStdEncoding.DecodeString(parts[0])
 	if err != nil {
+		fmt.Printf("%v: %v\n", ErrDecodeSaltFailed, err)
 		return false
 	}
 
 	expectedHash, err := base64.RawStdEncoding.DecodeString(parts[1])
 	if err != nil {
+		fmt.Printf("%v: %v\n", ErrDecodeHashFailed, err)
 		return false
 	}
 
-	hash := argon2.IDKey([]byte(pwd), salt, Argon2Time, Argon2Memory, Argon2Threads, Argon2KeyLen)
+	hash := argon2.IDKey([]byte(password), salt, Argon2Time, Argon2Memory, Argon2Threads, Argon2KeyLen)
 
-	// 使用 subtle.ConstantTimeCompare 比较散列值
-	if subtle.ConstantTimeCompare(hash, expectedHash) == 1 {
-		return true
-	}
-
-	return false
+	return subtle.ConstantTimeCompare(hash, expectedHash) == 1
 }
 
 // SplitHash 分割存储的散列值和盐值

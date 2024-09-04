@@ -3,7 +3,7 @@
  * Author ORCID: https://orcid.org/0009-0003-8150-367X                        *
  ******************************************************************************/
 
-package wasabicloud
+package wasabi
 
 import (
 	"io"

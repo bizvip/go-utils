@@ -3,7 +3,7 @@
  * Author ORCID: https://orcid.org/0009-0003-8150-367X                        *
  ******************************************************************************/
 
-package goutils
+package crypto
 
 import (
 	"crypto/aes"
@@ -17,13 +17,8 @@ import (
 	"golang.org/x/crypto/sha3"
 )
 
-type CryptoUtils struct{}
-
-func NewCryptoUtils() *CryptoUtils {
-	return &CryptoUtils{}
-}
-
-func (u *CryptoUtils) Encrypt(text string, pass string) (string, error) {
+// AesEncrypt AES加密
+func AesEncrypt(text string, pass string) (string, error) {
 	salt := make([]byte, 16)
 	if _, err := io.ReadFull(rand.Reader, salt); err != nil {
 		return "", err
@@ -53,7 +48,8 @@ func (u *CryptoUtils) Encrypt(text string, pass string) (string, error) {
 	return base64.StdEncoding.EncodeToString(ciphertext), nil
 }
 
-func (u *CryptoUtils) Decrypt(cipherText string, pass string) (string, error) {
+// AesDecrypt AES解密
+func AesDecrypt(cipherText string, pass string) (string, error) {
 	enc, err := base64.StdEncoding.DecodeString(cipherText)
 	if err != nil {
 		return "", err

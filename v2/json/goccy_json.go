@@ -3,7 +3,7 @@
  * Author ORCID: https://orcid.org/0009-0003-8150-367X                        *
  ******************************************************************************/
 
-package goutils
+package json
 
 import (
 	"bytes"
@@ -11,13 +11,7 @@ import (
 	"github.com/goccy/go-json"
 )
 
-type JsonUtils struct{}
-
-func NewJsonUtils() *JsonUtils {
-	return &JsonUtils{}
-}
-
-func (ju *JsonUtils) JSONPrettyFormat(in string) string {
+func PrettyFormat(in string) string {
 	var out bytes.Buffer
 	err := json.Indent(&out, []byte(in), "", "  ")
 	if err != nil {
@@ -26,14 +20,14 @@ func (ju *JsonUtils) JSONPrettyFormat(in string) string {
 	return out.String()
 }
 
-// ToJSONUnsafe returns "{}" on failure case
-func (ju *JsonUtils) ToJSONUnsafe(payload interface{}, pretty bool) string {
+// ToJsonWithNoErr 失败回空对象而不是错误
+func ToJsonWithNoErr(payload interface{}, pretty bool) string {
 	j, err := json.Marshal(payload)
 	if err != nil {
 		return "{}"
 	}
 	if pretty {
-		return ju.JSONPrettyFormat(string(j))
+		return PrettyFormat(string(j))
 	}
 	return string(j)
 }

@@ -14,8 +14,6 @@ import (
 	"time"
 
 	"github.com/shopspring/decimal"
-
-	"github.com/bizvip/go-utils/logs"
 )
 
 type OKX struct {
@@ -41,14 +39,12 @@ func (o *OKX) GetTop10Exchanges(baseCurrency, quoteCurrency string, okxPayMethod
 		quoteCurrency, baseCurrency, string(okxPayMethod), time.Now().UnixMilli())
 	result, err := o.doRequest(url)
 	if err != nil {
-		logs.Logger().Error(err)
 		return nil, err
 	}
 
 	var data DataResponse
 	err = json.Unmarshal([]byte(result), &data)
 	if err != nil {
-		logs.Logger().Error(err)
 		return nil, err
 	}
 
@@ -73,14 +69,12 @@ func (o *OKX) GetUsdtCnyExchangeList(okxPayMethod PayMethod) ([]*Exchange, error
 func (o *OKX) GetUsdtCnyRateOnly(okxPayMethod PayMethod) decimal.Decimal {
 	usdtRates, err := o.GetUsdtCnyExchangeList(okxPayMethod)
 	if err != nil {
-		logs.Logger().Error(err)
 		return decimal.Zero
 	}
 	var total decimal.Decimal
 	for _, usdtRate := range usdtRates {
 		price, err := decimal.NewFromString(usdtRate.Price)
 		if err != nil {
-			logs.Logger().Error(err)
 			continue
 		}
 		total = total.Add(price)

@@ -1,6 +1,6 @@
 /******************************************************************************
- * Copyright (c) 2024. Archer++. All rights reserved.                         *
- * Author ORCID: https://orcid.org/0009-0003-8150-367X                        *
+ * Copyright (c) 2024. Archer++. All rights reserved.
+ * Author ORCID: https://orcid.org/0009-0003-8150-367X
  ******************************************************************************/
 
 package config
@@ -14,35 +14,54 @@ import (
 	"github.com/spf13/viper"
 )
 
-var mu sync.RWMutex
+// Manager 管理配置文件的加载和监控
+type Manager struct {
+	viper  *viper.Viper
+	mu     sync.RWMutex
+	config interface{}
+}
+
+// NewConfigManager 创建一个新的 ConfigManager 实例
+func NewConfigManager(configStruct interface{}) *Manager {
+	return &Manager{
+		viper:  viper.New(),
+		config: configStruct,
+	}
+}
 
 // LoadFile 加载配置文件到指定的结构体指针(结构体自由定义)
-func LoadFile(filePath string, configStruct interface{}, watch bool) error {
-	v := viper.New()
-	v.SetConfigFile(filePath)
+func (c *Manager) LoadFile(filePath string, watch bool) error {
+	c.viper.SetConfigFile(filePath)
 
-	if err := v.ReadInConfig(); err != nil {
+	if err := c.viper.ReadInConfig(); err != nil {
 		return fmt.Errorf("failed to read config file: %w", err)
 	}
 
-	mu.Lock()
-	defer mu.Unlock()
-	if err := v.Unmarshal(configStruct); err != nil {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if err := c.viper.Unmarshal(c.config); err != nil {
 		return fmt.Errorf("failed to unmarshal config to struct: %w", err)
 	}
 
 	// 如果需要监控配置文件变化
 	if watch {
-		v.WatchConfig()
-		v.OnConfigChange(func(e fsnotify.Event) {
+		c.viper.WatchConfig()
+		c.viper.OnConfigChange(func(e fsnotify.Event) {
 			log.Printf("Config file changed: %s", e.Name)
-			mu.Lock()
-			if err := v.Unmarshal(configStruct); err != nil {
+			c.mu.Lock()
+			defer c.mu.Unlock()
+			if err := c.viper.Unmarshal(c.config); err != nil {
 				log.Printf("Failed to reload config: %v", err)
 			}
-			mu.Unlock()
 		})
 	}
 
 	return nil
+}
+
+// GetConfig 返回当前配置
+func (c *Manager) GetConfig() interface{} {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.config
 }

@@ -3,7 +3,7 @@
  * Author ORCID: https://orcid.org/0009-0003-8150-367X                        *
  ******************************************************************************/
 
-package goutils
+package httputils
 
 import (
 	"crypto/tls"
@@ -15,10 +15,6 @@ import (
 	"regexp"
 	"strings"
 )
-
-type HttpUtils struct{}
-
-func NewHttpUtils() *HttpUtils { return &HttpUtils{} }
 
 func DownImage(url, name, savePath string) (string, error) {
 	// 创建一个跳过证书验证的http.Client

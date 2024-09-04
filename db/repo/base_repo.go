@@ -13,7 +13,6 @@ import (
 	"gorm.io/gorm/clause"
 
 	"github.com/bizvip/go-utils/db/mysql"
-	"github.com/bizvip/go-utils/logs"
 )
 
 type BaseRepo[T any] struct{ Orm *gorm.DB }
@@ -40,7 +39,6 @@ type BaseRepo[T any] struct{ Orm *gorm.DB }
 func NewBaseRepo[T any]() *BaseRepo[T] {
 	orm := mysql.GetOrmInstance()
 	if orm == nil {
-		logs.Logger().Error("base repo error : mysql orm instance is nil")
 		return nil
 	}
 	return &BaseRepo[T]{orm}
@@ -212,8 +210,10 @@ func (r *BaseRepo[T]) InsertOrUpdate(insertItem *T, condition map[string]interfa
 
 // UpsertByID 非显式事务(onConflict和clauses)，固定根据id查找记录，如果存在则更新，如果不存在则创建
 func (r *BaseRepo[T]) UpsertByID(model *T, updateFields []string) error {
-	result := r.Orm.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "id"}},
-		DoUpdates: clause.AssignmentColumns(updateFields)}).Create(model)
+	result := r.Orm.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "id"}},
+		DoUpdates: clause.AssignmentColumns(updateFields),
+	}).Create(model)
 	return result.Error
 }
 
@@ -254,8 +254,10 @@ func (r *BaseRepo[T]) Upsert(model *T, condition map[string]interface{}) error {
 	updateFields := getStructFields(model)
 
 	// 创建或更新记录
-	tx := r.Orm.Clauses(clause.OnConflict{Columns: getColumnClauses(conditionFields),
-		DoUpdates: clause.AssignmentColumns(updateFields)}).Create(model)
+	tx := r.Orm.Clauses(clause.OnConflict{
+		Columns:   getColumnClauses(conditionFields),
+		DoUpdates: clause.AssignmentColumns(updateFields),
+	}).Create(model)
 
 	return tx.Error
 }

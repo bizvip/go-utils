@@ -12,6 +12,8 @@ import (
 	"time"
 )
 
+const layout = "2006-01-02 15:04:05"
+
 // GetTimezoneOffsetByMillis 计算客户端时区偏移量和时区名称
 func GetTimezoneOffsetByMillis(millis int64) (string, error) {
 	// 将传入的毫秒时间戳转换为 time.Time 对象
@@ -92,6 +94,27 @@ func AdjustMilliTimestampByStr(timestamp uint64, shift string) (uint64, error) {
 	return uint64(newTime.UnixMilli()), nil
 }
 
+// GetNanoTimestampStr 当前时间的纳秒时间戳字符串
+func GetNanoTimestampStr() string {
+	now := time.Now()
+	nano := fmt.Sprintf("%06d", now.Nanosecond()/1000)
+	return now.Format("20060102150405") + "-" + nano
+}
+
+// GetMicroTimestampStr 当前时间的微秒时间戳字符串
+func GetMicroTimestampStr() string {
+	now := time.Now()
+	micro := fmt.Sprintf("%06d", now.Nanosecond()/1000)   // 纳秒转微秒
+	return now.Format("20060102150405") + "-" + micro[:3] // 取前3位作为微秒
+}
+
+// GetMilliTimestampStr 当前时间的毫秒时间戳字符串
+func GetMilliTimestampStr() string {
+	now := time.Now()
+	milli := fmt.Sprintf("%03d", now.Nanosecond()/1e6) // 纳秒转毫秒
+	return now.Format("20060102150405") + "-" + milli
+}
+
 // ConvertStrMillisToTime 将字符串格式的毫秒时间戳转换为 time.Time
 func ConvertStrMillisToTime(millis string) (time.Time, error) {
 	ms, err := strconv.ParseInt(millis, 10, 64)
@@ -100,4 +123,60 @@ func ConvertStrMillisToTime(millis string) (time.Time, error) {
 	}
 	t := time.UnixMilli(ms)
 	return t, nil
+}
+
+// SetTimezone 设置时区，默认上海
+func SetTimezone(tz ...string) {
+	defaultTimezone := "Asia/Shanghai"
+
+	var timezone string
+	if len(tz) > 0 {
+		timezone = tz[0]
+	} else {
+		timezone = defaultTimezone
+	}
+
+	location, err := time.LoadLocation(timezone)
+	if err != nil {
+		panic("时区设置失败：" + err.Error())
+	}
+	time.Local = location
+}
+
+// CompareTimeStrings 比较两个时间字符串，返回 -1, 0, 1 分别表示第一个时间小于、等于、大于第二个时间
+func CompareTimeStrings(t1, t2, layout string) (int, error) {
+	time1, err := time.Parse(layout, t1)
+	if err != nil {
+		return 0, fmt.Errorf("解析时间字符串失败: %v", err)
+	}
+
+	time2, err := time.Parse(layout, t2)
+	if err != nil {
+		return 0, fmt.Errorf("解析时间字符串失败: %v", err)
+	}
+
+	// 使用 Before 和 After 方法直接比较
+	if time1.Before(time2) {
+		return -1, nil
+	}
+	if time1.After(time2) {
+		return 1, nil
+	}
+	return 0, nil
+}
+
+// TimeDifference 计算两个时间字符串之间的时间间隔
+func TimeDifference(t1, t2 string) (time.Duration, error) {
+	time1, err := time.Parse(layout, t1)
+	if err != nil {
+		return 0, fmt.Errorf("解析时间字符串失败: %v", err)
+	}
+
+	time2, err := time.Parse(layout, t2)
+	if err != nil {
+		return 0, fmt.Errorf("解析时间字符串失败: %v", err)
+	}
+
+	duration := time2.Sub(time1)
+	return duration, nil
 }

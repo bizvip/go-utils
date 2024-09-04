@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/bizvip/go-utils/cloudserver/hwc/obs"
+	"github.com/bizvip/go-utils/cloudservice/hwc/obs"
 )
 
 // HWC_USR=hid_sn0f9rjvmjulkp2
@@ -51,7 +51,7 @@ func getObsClient() *obs.ObsClient {
 func init() {
 	defer obs.CloseLog()
 	_ = obs.InitLog(
-		"runtime/logs/obs-sdk.log",
+		"runtime/quicklog/obs-sdk.log",
 		1024*1024*100,
 		5,
 		obs.LEVEL_WARN,
