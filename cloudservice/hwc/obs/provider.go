@@ -49,7 +49,10 @@ func (bsp *BasicSecurityProvider) getSecurity() securityHolder {
 }
 
 func (bsp *BasicSecurityProvider) refresh(ak, sk, securityToken string) {
-	bsp.val.Store(securityHolder{ak: strings.TrimSpace(ak), sk: strings.TrimSpace(sk), securityToken: strings.TrimSpace(securityToken)})
+	bsp.val.Store(securityHolder{
+		ak: strings.TrimSpace(ak), sk: strings.TrimSpace(sk),
+		securityToken: strings.TrimSpace(securityToken),
+	})
 }
 
 func NewBasicSecurityProvider(ak, sk, securityToken string) *BasicSecurityProvider {
@@ -230,6 +233,8 @@ func NewEcsSecurityProvider(retryCount int) *EcsSecurityProvider {
 	ecsSp := &EcsSecurityProvider{
 		retryCount: retryCount,
 	}
-	ecsSp.httpClient = &http.Client{Transport: getInternalTransport(), CheckRedirect: checkRedirectFunc}
+	ecsSp.httpClient = &http.Client{
+		Transport: getInternalTransport(), CheckRedirect: checkRedirectFunc,
+	}
 	return ecsSp
 }

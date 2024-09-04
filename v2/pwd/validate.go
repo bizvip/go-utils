@@ -17,6 +17,8 @@ var (
 	ErrInvalidSecPwdConsecutive = errors.New("password must not contain three consecutive identical digits")
 	ErrInvalidSecPwdSequential  = errors.New("password must not contain three or more sequential digits")
 	ErrCiphertextTooShort       = errors.New("ciphertext too short")
+	ErrInvalidSHA256Length      = errors.New("SHA256 hash must be 64 characters long")
+	ErrInvalidSHA256Format      = errors.New("SHA256 hash must be a valid hexadecimal string")
 )
 
 // ValidateSixNumberAsPwd 验证指定长度的纯数字字符串密码
@@ -43,6 +45,22 @@ func ValidateSixNumberAsPwd(secPwd string, length int) error {
 		if secPwd[i+1] == secPwd[i]-1 && secPwd[i+2] == secPwd[i]-2 {
 			return ErrInvalidSecPwdSequential
 		}
+	}
+
+	return nil
+}
+
+// ValidateSHA256 验证字符串是否为 64 位长度的 SHA-256 哈希值
+func ValidateSHA256(hash string) error {
+	// 检查长度是否为 64
+	if len(hash) != 64 {
+		return ErrInvalidSHA256Length
+	}
+
+	// 使用正则表达式检查是否为十六进制字符
+	matched, err := regexp.MatchString(`^[a-fA-F0-9]{64}$`, hash)
+	if err != nil || !matched {
+		return ErrInvalidSHA256Format
 	}
 
 	return nil

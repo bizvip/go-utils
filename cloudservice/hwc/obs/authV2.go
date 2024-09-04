@@ -10,7 +10,9 @@ import (
 )
 
 func getV2StringToSign(method, canonicalizedURL string, headers map[string][]string, isObs bool) string {
-	stringToSign := strings.Join([]string{method, "\n", attachHeaders(headers, isObs), "\n", canonicalizedURL}, "")
+	stringToSign := strings.Join([]string{
+		method, "\n", attachHeaders(headers, isObs), "\n", canonicalizedURL,
+	}, "")
 
 	var isSecurityToken bool
 	var securityToken []string

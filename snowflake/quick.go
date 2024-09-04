@@ -1,5 +1,6 @@
 /******************************************************************************
- * Copyright (c) Archer++ 2024.                                               *
+ * Copyright (c) 2024. Archer++. All rights reserved.                         *
+ * Author ORCID: https://orcid.org/0009-0003-8150-367X                        *
  ******************************************************************************/
 
 package snowflake
@@ -13,12 +14,16 @@ var startTime time.Time
 
 func init() {
 	startTime = time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC)
-	f1 = NewSonyflake(Settings{StartTime: startTime, MachineID: func() (uint16, error) {
-		return 1, nil
-	}})
-	f2 = NewSonyflake(Settings{StartTime: startTime, MachineID: func() (uint16, error) {
-		return 2, nil
-	}})
+	f1 = NewSonyflake(Settings{
+		StartTime: startTime, MachineID: func() (uint16, error) {
+			return 1, nil
+		},
+	})
+	f2 = NewSonyflake(Settings{
+		StartTime: startTime, MachineID: func() (uint16, error) {
+			return 2, nil
+		},
+	})
 }
 
 func QuickID() uint64 {

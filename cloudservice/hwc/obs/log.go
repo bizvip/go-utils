@@ -236,7 +236,9 @@ func InitLogWithCacheCnt(logFullPath string, maxLogSize int64, backups int, leve
 			return err
 		}
 
-		fileLogger = &loggerWrapper{fullPath: _fullPath, fd: fd, index: index, cacheCount: cacheCnt, closed: false}
+		fileLogger = &loggerWrapper{
+			fullPath: _fullPath, fd: fd, index: index, cacheCount: cacheCnt, closed: false,
+		}
 		fileLogger.doInit()
 	}
 	if maxLogSize > 0 {

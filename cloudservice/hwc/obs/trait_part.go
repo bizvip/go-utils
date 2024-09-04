@@ -53,7 +53,9 @@ func (input InitiateMultipartUploadInput) trans(isObs bool) (params map[string]s
 }
 
 func (input UploadPartInput) trans(isObs bool) (params map[string]string, headers map[string][]string, data interface{}, err error) {
-	params = map[string]string{"uploadId": input.UploadId, "partNumber": IntToString(input.PartNumber)}
+	params = map[string]string{
+		"uploadId": input.UploadId, "partNumber": IntToString(input.PartNumber),
+	}
 	headers = make(map[string][]string)
 	setSseHeader(headers, input.SseHeader, true, isObs)
 	if input.ContentMD5 != "" {
@@ -89,7 +91,9 @@ func (input ListPartsInput) trans(isObs bool) (params map[string]string, headers
 }
 
 func (input CopyPartInput) trans(isObs bool) (params map[string]string, headers map[string][]string, data interface{}, err error) {
-	params = map[string]string{"uploadId": input.UploadId, "partNumber": IntToString(input.PartNumber)}
+	params = map[string]string{
+		"uploadId": input.UploadId, "partNumber": IntToString(input.PartNumber),
+	}
 	headers = make(map[string][]string, 1)
 	var copySource string
 	if input.CopySourceVersionId != "" {

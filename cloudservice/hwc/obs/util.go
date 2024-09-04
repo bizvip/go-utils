@@ -371,9 +371,11 @@ func GetV2Authorization(ak, sk, method, bucketName, objectKey, queryURL string, 
 	}
 	headers = copyHeaders(headers)
 	pathStyle := isPathStyle(headers, bucketName)
-	conf := &config{securityProviders: []securityProvider{NewBasicSecurityProvider(ak, sk, "")},
-		urlHolder: &urlHolder{scheme: "https", host: "dummy", port: 443},
-		pathStyle: pathStyle}
+	conf := &config{
+		securityProviders: []securityProvider{NewBasicSecurityProvider(ak, sk, "")},
+		urlHolder:         &urlHolder{scheme: "https", host: "dummy", port: 443},
+		pathStyle:         pathStyle,
+	}
 	conf.signature = SignatureObs
 	_, canonicalizedURL := conf.formatUrls(bucketName, objectKey, params, false)
 	ret = v2Auth(ak, sk, method, canonicalizedURL, headers, true)
@@ -452,9 +454,11 @@ func GetAuthorization(ak, sk, method, bucketName, objectKey, queryURL string, he
 	if receviedHost, ok := headers[HEADER_HOST]; ok && len(receviedHost) > 0 && !strings.HasPrefix(receviedHost[0], bucketName+".") {
 		pathStyle = true
 	}
-	conf := &config{securityProviders: []securityProvider{NewBasicSecurityProvider(ak, sk, "")},
-		urlHolder: &urlHolder{scheme: "https", host: "dummy", port: 443},
-		pathStyle: pathStyle}
+	conf := &config{
+		securityProviders: []securityProvider{NewBasicSecurityProvider(ak, sk, "")},
+		urlHolder:         &urlHolder{scheme: "https", host: "dummy", port: 443},
+		pathStyle:         pathStyle,
+	}
 
 	if isTemporary {
 		return getTemporaryAuthorization(ak, sk, method, bucketName, objectKey, signature, conf, params, headers, isObs)

@@ -56,6 +56,9 @@ func New(ak, sk, endpoint string, configurers ...configurer) (*ObsClient, error)
 	}
 
 	doLog(LEVEL_DEBUG, "Create obsclient with config:\n%s\n", conf)
-	obsClient := &ObsClient{conf: conf, httpClient: &http.Client{Transport: conf.transport, CheckRedirect: checkRedirectFunc}}
+	obsClient := &ObsClient{
+		conf:       conf,
+		httpClient: &http.Client{Transport: conf.transport, CheckRedirect: checkRedirectFunc},
+	}
 	return obsClient, nil
 }
