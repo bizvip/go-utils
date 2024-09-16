@@ -13,9 +13,9 @@ import (
 
 // FileWatcher 文件监控操作类
 type FileWatcher struct {
-	watcher   *fsnotify.Watcher
-	mu        sync.Mutex
-	ignoreExt []string // 要忽略的文件后缀名
+	watcher    *fsnotify.Watcher
+	mu         sync.Mutex
+	includeExt []string // 只监控的文件后缀名
 
 	// 事件处理函数
 	OnCreate func(string)
@@ -26,22 +26,33 @@ type FileWatcher struct {
 }
 
 // NewFileWatcher 创建一个新的文件监控器
-func NewFileWatcher(ignoreExts []string) (*FileWatcher, error) {
+func NewFileWatcher(includeExts []string) (*FileWatcher, error) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return nil, err
 	}
 	return &FileWatcher{
-		watcher:   watcher,
-		ignoreExt: ignoreExts, // 初始化忽略的文件后缀名
+		watcher:    watcher,
+		includeExt: includeExts, // 初始化要监控的文件后缀名
 	}, nil
 }
 
-// shouldIgnore 检查文件是否应当被忽略
-func (fw *FileWatcher) shouldIgnore(filename string) bool {
+// shouldMonitor 检查文件是否应当被监控
+func (fw *FileWatcher) shouldMonitor(filename string) bool {
+	// 检查文件是否有后缀名
 	ext := strings.ToLower(filepath.Ext(filename))
-	for _, ignoreExt := range fw.ignoreExt {
-		if ext == ignoreExt {
+
+	// 如果没有后缀名且是目录，监控该目录
+	if ext == "" {
+		fileInfo, err := os.Stat(filename)
+		if err == nil && fileInfo.IsDir() {
+			return true
+		}
+	}
+
+	// 如果文件后缀名在指定的监控列表中，则监控该文件
+	for _, includeExt := range fw.includeExt {
+		if ext == includeExt {
 			return true
 		}
 	}
@@ -84,8 +95,8 @@ func (fw *FileWatcher) Start() {
 					return
 				}
 
-				// 在处理所有事件前，检查文件是否应当被忽略
-				if fw.shouldIgnore(event.Name) {
+				// 在处理所有事件前，检查文件是否应当被监控
+				if !fw.shouldMonitor(event.Name) {
 					log.Printf("忽略文件: %s\n", event.Name)
 					continue
 				}
@@ -104,7 +115,6 @@ func (fw *FileWatcher) Start() {
 
 // handleEvent 处理监控到的文件系统事件，事件函数全部在 goroutine 中执行
 func (fw *FileWatcher) handleEvent(event fsnotify.Event) {
-	// 每个事件都进行后缀名检查，确保所有事件都统一进行忽略处理
 	if event.Op&fsnotify.Create == fsnotify.Create && fw.OnCreate != nil {
 		go fw.OnCreate(event.Name)
 	}
