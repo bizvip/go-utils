@@ -95,13 +95,17 @@ func (fw *FileWatcher) Start() {
 					return
 				}
 
+				// 输出事件的详细信息，调试用
+				log.Printf("捕获到事件: %s, 文件: %s\n", event.Op.String(), event.Name)
+
 				// 在处理所有事件前，检查文件是否应当被监控
 				if !fw.shouldMonitor(event.Name) {
 					log.Printf("忽略文件: %s\n", event.Name)
 					continue
 				}
 
-				fw.handleEvent(event) // 处理事件
+				// 处理事件
+				fw.handleEvent(event)
 
 			case err, ok := <-fw.watcher.Errors:
 				if !ok {
@@ -116,19 +120,34 @@ func (fw *FileWatcher) Start() {
 // handleEvent 处理监控到的文件系统事件，事件函数全部在 goroutine 中执行
 func (fw *FileWatcher) handleEvent(event fsnotify.Event) {
 	if event.Op&fsnotify.Create == fsnotify.Create && fw.OnCreate != nil {
-		go fw.OnCreate(event.Name)
+		go func() {
+			log.Printf("创建事件: %s\n", event.Name)
+			fw.OnCreate(event.Name)
+		}()
 	}
 	if event.Op&fsnotify.Write == fsnotify.Write && fw.OnWrite != nil {
-		go fw.OnWrite(event.Name)
+		go func() {
+			log.Printf("写入事件: %s\n", event.Name)
+			fw.OnWrite(event.Name)
+		}()
 	}
 	if event.Op&fsnotify.Remove == fsnotify.Remove && fw.OnRemove != nil {
-		go fw.OnRemove(event.Name)
+		go func() {
+			log.Printf("删除事件: %s\n", event.Name)
+			fw.OnRemove(event.Name)
+		}()
 	}
 	if event.Op&fsnotify.Rename == fsnotify.Rename && fw.OnRename != nil {
-		go fw.OnRename(event.Name)
+		go func() {
+			log.Printf("重命名事件: %s\n", event.Name)
+			fw.OnRename(event.Name)
+		}()
 	}
 	if event.Op&fsnotify.Chmod == fsnotify.Chmod && fw.OnChmod != nil {
-		go fw.OnChmod(event.Name)
+		go func() {
+			log.Printf("权限修改事件: %s\n", event.Name)
+			fw.OnChmod(event.Name)
+		}()
 	}
 }
 
