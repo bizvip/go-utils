@@ -95,9 +95,6 @@ func (fw *FileWatcher) Start() {
 					return
 				}
 
-				// 输出事件的详细信息，调试用
-				log.Printf("捕获到事件: %s, 文件: %s\n", event.Op.String(), event.Name)
-
 				// 在处理所有事件前，检查文件是否应当被监控
 				if !fw.shouldMonitor(event.Name) {
 					log.Printf("忽略文件: %s\n", event.Name)
