@@ -11,9 +11,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/bizvip/go-utils/os/filesystem"
 	"github.com/davidbyttow/govips/v2/vips"
-
-	"github.com/bizvip/go-utils/v2/fs"
 )
 
 type Info struct {
@@ -61,7 +60,7 @@ func (i *ImageUtils) GetInfo(path string, withMd5 bool) (*Info, error) {
 
 	fileMd5 := ""
 	if withMd5 {
-		fileMd5, err = fs.GetBigFileMd5(path)
+		fileMd5, err = filesystem.GetBigFileMd5(path)
 		if err != nil {
 			return nil, err
 		}
