@@ -1,4 +1,4 @@
-package filewatcher
+package fw
 
 import (
 	"fmt"
