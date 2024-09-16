@@ -4,15 +4,18 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/fsnotify/fsnotify"
 )
 
-// FileWatcher 是一个封装文件监控操作的类
+// FileWatcher 文件监控操作类
 type FileWatcher struct {
-	watcher *fsnotify.Watcher
-	mu      sync.Mutex
+	watcher   *fsnotify.Watcher
+	mu        sync.Mutex
+	ignoreExt []string // 要忽略的文件后缀名
 
 	// 事件处理函数
 	OnCreate func(string)
@@ -23,14 +26,26 @@ type FileWatcher struct {
 }
 
 // NewFileWatcher 创建一个新的文件监控器
-func NewFileWatcher() (*FileWatcher, error) {
+func NewFileWatcher(ignoreExts []string) (*FileWatcher, error) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return nil, err
 	}
 	return &FileWatcher{
-		watcher: watcher,
+		watcher:   watcher,
+		ignoreExt: ignoreExts, // 初始化忽略的文件后缀名
 	}, nil
+}
+
+// shouldIgnore 检查文件是否应当被忽略
+func (fw *FileWatcher) shouldIgnore(filename string) bool {
+	ext := strings.ToLower(filepath.Ext(filename))
+	for _, ignoreExt := range fw.ignoreExt {
+		if ext == ignoreExt {
+			return true
+		}
+	}
+	return false
 }
 
 // WatchFile 开始监控文件或目录 如果监控的目录不存在，则会自动创建该目录
@@ -68,6 +83,12 @@ func (fw *FileWatcher) Start() {
 				if !ok {
 					return
 				}
+				// 检查是否应该忽略该文件
+				if fw.shouldIgnore(event.Name) {
+					log.Printf("忽略文件: %s\n", event.Name)
+					continue
+				}
+
 				fw.handleEvent(event) // 处理事件
 
 			case err, ok := <-fw.watcher.Errors:
