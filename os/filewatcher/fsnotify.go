@@ -83,7 +83,8 @@ func (fw *FileWatcher) Start() {
 				if !ok {
 					return
 				}
-				// 检查是否应该忽略该文件
+
+				// 在处理所有事件前，检查文件是否应当被忽略
 				if fw.shouldIgnore(event.Name) {
 					log.Printf("忽略文件: %s\n", event.Name)
 					continue
@@ -103,6 +104,7 @@ func (fw *FileWatcher) Start() {
 
 // handleEvent 处理监控到的文件系统事件，事件函数全部在 goroutine 中执行
 func (fw *FileWatcher) handleEvent(event fsnotify.Event) {
+	// 每个事件都进行后缀名检查，确保所有事件都统一进行忽略处理
 	if event.Op&fsnotify.Create == fsnotify.Create && fw.OnCreate != nil {
 		go fw.OnCreate(event.Name)
 	}
