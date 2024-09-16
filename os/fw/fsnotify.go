@@ -25,16 +25,30 @@ type FileWatcher struct {
 	OnChmod  func(string)
 }
 
-// NewFileWatcher 创建一个新的文件监控器
+// NewFileWatcher 添加要监控的目录，支持递归子目录
 func NewFileWatcher(includeExts []string) (*FileWatcher, error) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return nil, err
 	}
-	return &FileWatcher{
+	fw := &FileWatcher{
 		watcher:    watcher,
-		includeExt: includeExts, // 初始化要监控的文件后缀名
-	}, nil
+		includeExt: includeExts,
+	}
+	return fw, nil
+}
+
+// AddDirRecursive 递归地添加目录及其子目录到监控列表
+func (fw *FileWatcher) AddDirRecursive(path string) error {
+	return filepath.Walk(path, func(subPath string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			return fw.WatchFile(subPath)
+		}
+		return nil
+	})
 }
 
 // shouldMonitor 检查文件是否应当被监控
@@ -116,35 +130,35 @@ func (fw *FileWatcher) Start() {
 
 // handleEvent 处理监控到的文件系统事件，事件函数全部在 goroutine 中执行
 func (fw *FileWatcher) handleEvent(event fsnotify.Event) {
+	// 如果是创建事件，并且是目录，则自动添加监控
+	if event.Op&fsnotify.Create == fsnotify.Create {
+		fi, err := os.Stat(event.Name)
+		if err == nil && fi.IsDir() {
+			// 添加新目录到监控列表
+			if err := fw.WatchFile(event.Name); err != nil {
+				log.Printf("无法监控新目录 %s: %v\n", event.Name, err)
+			}
+		}
+	}
+
 	if event.Op&fsnotify.Create == fsnotify.Create && fw.OnCreate != nil {
-		go func() {
-			log.Printf("创建事件: %s\n", event.Name)
-			fw.OnCreate(event.Name)
-		}()
+		go func() { fw.OnCreate(event.Name) }()
 	}
+
 	if event.Op&fsnotify.Write == fsnotify.Write && fw.OnWrite != nil {
-		go func() {
-			log.Printf("写入事件: %s\n", event.Name)
-			fw.OnWrite(event.Name)
-		}()
+		go func() { fw.OnWrite(event.Name) }()
 	}
+
 	if event.Op&fsnotify.Remove == fsnotify.Remove && fw.OnRemove != nil {
-		go func() {
-			log.Printf("删除事件: %s\n", event.Name)
-			fw.OnRemove(event.Name)
-		}()
+		go func() { fw.OnRemove(event.Name) }()
 	}
+
 	if event.Op&fsnotify.Rename == fsnotify.Rename && fw.OnRename != nil {
-		go func() {
-			log.Printf("重命名事件: %s\n", event.Name)
-			fw.OnRename(event.Name)
-		}()
+		go func() { fw.OnRename(event.Name) }()
 	}
+
 	if event.Op&fsnotify.Chmod == fsnotify.Chmod && fw.OnChmod != nil {
-		go func() {
-			log.Printf("权限修改事件: %s\n", event.Name)
-			fw.OnChmod(event.Name)
-		}()
+		go func() { fw.OnChmod(event.Name) }()
 	}
 }
 
