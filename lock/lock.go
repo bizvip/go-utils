@@ -11,11 +11,11 @@ import (
 	"time"
 )
 
-// Handler 全局锁变量掌控，不使用注入方式，只要调用包立刻初始化
-var Handler *mutexLock
+// Ctrl 全局锁变量掌控，不使用注入方式，只要调用包立刻初始化
+var Ctrl *mutexLock
 
 func init() {
-	Handler = newLocker()
+	Ctrl = newLocker()
 	SetLockerAutoCleanup(30*60, 60*60)
 }
 
@@ -78,7 +78,7 @@ func SetLockerAutoCleanup(threshold int64, minExistTime int64) {
 	go func() {
 		defer ticker.Stop()
 		for range ticker.C {
-			Handler.cleanUp(threshold, minExistTime)
+			Ctrl.cleanUp(threshold, minExistTime)
 		}
 	}()
 }
