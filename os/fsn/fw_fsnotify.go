@@ -147,7 +147,6 @@ func (w *Watcher) Start() {
 
 				// Before processing, check if the file should be monitored
 				if !w.shouldMonitor(event.Name) {
-					log.Printf("Ignoring file: %s\n", event.Name)
 					continue
 				}
 
