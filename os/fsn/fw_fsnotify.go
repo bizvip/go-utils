@@ -11,13 +11,8 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
-// Watcher 根据系统文件变动事件统治来监控文件
-type Watcher struct {
-	watcher    *fsnotify.Watcher
-	mu         sync.Mutex
-	includeExt []string // 只监控的文件后缀名
-
-	// 事件处理函数
+// EventHandlers holds the functions to be called on various file system events.
+type EventHandlers struct {
 	OnCreate func(string)
 	OnWrite  func(string)
 	OnRemove func(string)
@@ -25,7 +20,21 @@ type Watcher struct {
 	OnChmod  func(string)
 }
 
-// NewFsnWatcher 添加要监控的目录，支持递归子目录
+// Watcher monitors file system events using fsnotify.
+type Watcher struct {
+	watcher    *fsnotify.Watcher
+	mu         sync.Mutex
+	includeExt []string // File extensions to monitor
+
+	// Event handlers
+	OnCreate func(string)
+	OnWrite  func(string)
+	OnRemove func(string)
+	OnRename func(string)
+	OnChmod  func(string)
+}
+
+// NewFsnWatcher creates a new Watcher with the specified file extensions.
 func NewFsnWatcher(includeExts []string) (*Watcher, error) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
@@ -38,7 +47,36 @@ func NewFsnWatcher(includeExts []string) (*Watcher, error) {
 	return fw, nil
 }
 
-// AddDirRecursive 递归地添加目录及其子目录到监控列表
+// StartWatcher initializes the watcher, adds directories, sets event handlers, and starts monitoring.
+func StartWatcher(dirs []string, exts []string, handlers EventHandlers) (*Watcher, error) {
+	watcher, err := NewFsnWatcher(exts)
+	if err != nil {
+		return nil, err
+	}
+
+	// Add directories recursively
+	for _, dir := range dirs {
+		err = watcher.AddDirRecursive(dir)
+		if err != nil {
+			return nil, fmt.Errorf("failed to add directory recursively %s: %w", dir, err)
+		}
+		log.Printf("Started monitoring root directory: %s\n", dir)
+	}
+
+	// Register event handlers
+	watcher.OnCreate = handlers.OnCreate
+	watcher.OnWrite = handlers.OnWrite
+	watcher.OnRemove = handlers.OnRemove
+	watcher.OnRename = handlers.OnRename
+	watcher.OnChmod = handlers.OnChmod
+
+	// Start the watcher
+	watcher.Start()
+
+	return watcher, nil
+}
+
+// AddDirRecursive adds directories and subdirectories to the watch list recursively.
 func (w *Watcher) AddDirRecursive(path string) error {
 	w.mu.Lock()
 	defer w.mu.Unlock()
@@ -53,9 +91,32 @@ func (w *Watcher) AddDirRecursive(path string) error {
 	})
 }
 
-// shouldMonitor 检查文件是否应当被监控
+// watchFileLocked watches a single directory or file. Assumes the mutex is already locked.
+func (w *Watcher) watchFileLocked(path string) error {
+	// Check if the path exists
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		// Create the directory if it doesn't exist
+		err := os.MkdirAll(path, os.ModePerm)
+		if err != nil {
+			return fmt.Errorf("unable to create path %s: %w", path, err)
+		}
+		log.Printf("Path %s did not exist, created it\n", path)
+	} else if err != nil {
+		return fmt.Errorf("unable to access path %s: %w", path, err)
+	}
+
+	// Add the path to the watcher
+	err := w.watcher.Add(path)
+	if err != nil {
+		return fmt.Errorf("unable to watch path %s: %w", path, err)
+	}
+	log.Printf("Watching: %s\n", path)
+	return nil
+}
+
+// shouldMonitor checks if a file should be monitored based on its extension.
 func (w *Watcher) shouldMonitor(filename string) bool {
-	// 检查是否是目录
+	// Check if it's a directory
 	fi, err := os.Stat(filename)
 	if err != nil {
 		return false
@@ -64,7 +125,7 @@ func (w *Watcher) shouldMonitor(filename string) bool {
 		return true
 	}
 
-	// 检查文件是否有指定的后缀名
+	// Check if the file has one of the included extensions
 	ext := strings.ToLower(filepath.Ext(filename))
 	for _, includeExt := range w.includeExt {
 		if ext == includeExt {
@@ -74,37 +135,7 @@ func (w *Watcher) shouldMonitor(filename string) bool {
 	return false
 }
 
-// WatchFile 开始监控文件或目录 如果监控的目录不存在，则会自动创建该目录
-func (w *Watcher) WatchFile(path string) error {
-	w.mu.Lock()
-	defer w.mu.Unlock()
-	return w.watchFileLocked(path)
-}
-
-// 内部方法，假定已获得锁
-func (w *Watcher) watchFileLocked(path string) error {
-	// 检查路径是否存在
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		// 如果路径不存在，尝试创建目录
-		err := os.MkdirAll(path, os.ModePerm)
-		if err != nil {
-			return fmt.Errorf("无法创建路径 %s: %w", path, err)
-		}
-		log.Printf("路径 %s 不存在，已创建\n", path)
-	} else if err != nil {
-		return fmt.Errorf("无法访问路径 %s: %w", path, err)
-	}
-
-	// 添加监控路径
-	err := w.watcher.Add(path)
-	if err != nil {
-		return fmt.Errorf("无法监控路径 %s: %w", path, err)
-	}
-	log.Printf("正在监控: %s\n", path)
-	return nil
-}
-
-// Start 启动文件监控的主循环，并处理监控事件
+// Start begins the main loop for file monitoring and event handling.
 func (w *Watcher) Start() {
 	go func() {
 		for {
@@ -114,48 +145,61 @@ func (w *Watcher) Start() {
 					return
 				}
 
-				// 在处理所有事件前，检查文件是否应当被监控
+				// Before processing, check if the file should be monitored
 				if !w.shouldMonitor(event.Name) {
-					log.Printf("忽略文件: %s\n", event.Name)
+					log.Printf("Ignoring file: %s\n", event.Name)
 					continue
 				}
 
-				// 处理事件
+				// Handle the event
 				w.handleEvent(event)
 
 			case err, ok := <-w.watcher.Errors:
 				if !ok {
 					return
 				}
-				log.Printf("监控错误: %v\n", err)
+				log.Printf("Watcher error: %v\n", err)
 			}
 		}
 	}()
 }
 
 func (w *Watcher) handleEvent(event fsnotify.Event) {
-	// 如果是创建事件
+	// Handle create events
 	if event.Op&fsnotify.Create == fsnotify.Create {
 		fi, err := os.Stat(event.Name)
 		if err == nil {
 			if fi.IsDir() {
-				// 递归添加新目录到监控列表
+				// Recursively add new directories to the watch list
 				if err := w.AddDirRecursive(event.Name); err != nil {
-					log.Printf("无法递归监控新目录 %s: %v\n", event.Name, err)
+					log.Printf("Failed to recursively watch new directory %s: %v\n", event.Name, err)
 				}
+				// Walk the directory and trigger OnCreate for files
+				filepath.Walk(event.Name, func(path string, info os.FileInfo, err error) error {
+					if err != nil {
+						log.Printf("Failed to access path %s: %v\n", path, err)
+						return nil
+					}
+					if !info.IsDir() && w.shouldMonitor(path) {
+						if w.OnCreate != nil {
+							go func(p string) { w.OnCreate(p) }(path)
+						}
+					}
+					return nil
+				})
 			} else if w.shouldMonitor(event.Name) {
-				// 处理新文件的创建事件
+				// Handle creation of new files
 				if w.OnCreate != nil {
 					go func() { w.OnCreate(event.Name) }()
 				}
 			}
 		} else {
-			log.Printf("无法获取文件信息 %s: %v\n", event.Name, err)
+			log.Printf("Failed to get file info %s: %v\n", event.Name, err)
 		}
 		return
 	}
 
-	// 其他事件处理逻辑
+	// Handle other events
 	if w.shouldMonitor(event.Name) {
 		if event.Op&fsnotify.Write == fsnotify.Write && w.OnWrite != nil {
 			go func() { w.OnWrite(event.Name) }()
@@ -175,7 +219,7 @@ func (w *Watcher) handleEvent(event fsnotify.Event) {
 	}
 }
 
-// Close 停止文件监控并释放资源
+// Close stops the file watcher and releases resources.
 func (w *Watcher) Close() error {
 	return w.watcher.Close()
 }
