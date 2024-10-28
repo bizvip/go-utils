@@ -6,79 +6,216 @@
 package lock
 
 import (
+	"hash/fnv"
 	"sync"
 	"sync/atomic"
 	"time"
 )
 
-// Ctrl 全局锁变量掌控，不使用注入方式，只要调用包立刻初始化
-var Ctrl *mutexLock
+const (
+	defaultShards   = 32
+	shardMask       = defaultShards - 1
+	concurrentLimit = 1000 // 高并发下自动切换到分片锁的阈值
+)
+
+var (
+	Adaptive *AdaptiveLock
+	initOnce sync.Once
+)
 
 func init() {
-	Ctrl = newLocker()
-	SetLockerAutoCleanup(30*60, 60*60)
+	initOnce.Do(
+		func() {
+			Adaptive = newLocker()
+			SetLockerAutoCleanup(30*60, 60*60)
+		},
+	)
 }
 
 type timedMutex struct {
 	mutex     sync.Mutex
-	lastUsed  int64
-	createdAt int64 // 记录锁创建的时间 增加一个多少时间无用的锁，才进行内存清理
+	lastUsed  atomic.Int64
+	createdAt int64
 }
 
-type mutexLock struct {
-	mu sync.Map
+type lockShard struct {
+	sync.RWMutex
+	items sync.Map
 }
 
-// 不允许外部使用  只允许通过package初始化调用的方法
-func newLocker() *mutexLock {
-	return &mutexLock{}
+// AdaptiveLock 自适应锁管理器
+type AdaptiveLock struct {
+	shards    [defaultShards]*lockShard
+	simple    sync.Map     // 用于低并发场景
+	useShards atomic.Bool  // 是否使用分片模式
+	lockCount atomic.Int64 // 活跃锁计数
 }
 
-// Lock 锁定一个资源，返回该资源的名称作为标识符
-func (l *mutexLock) Lock(name string) {
+func newLocker() *AdaptiveLock {
+	al := &AdaptiveLock{}
+	// 初始化分片
+	for i := 0; i < defaultShards; i++ {
+		al.shards[i] = &lockShard{}
+	}
+	// 默认使用简单模式
+	al.useShards.Store(false)
+	return al
+}
+
+func (al *AdaptiveLock) getShard(name string) *lockShard {
+	h := fnv.New32a()
+	_, _ = h.Write([]byte(name))
+	return al.shards[h.Sum32()&shardMask]
+}
+
+// Lock 锁定一个资源
+func (al *AdaptiveLock) Lock(name string) {
+	// 更新锁计数并检查是否需要切换模式
+	currentCount := al.lockCount.Add(1)
+	if currentCount > concurrentLimit && !al.useShards.Load() {
+		al.useShards.Store(true)
+	}
+
 	now := time.Now().Unix()
-	tm, _ := l.mu.LoadOrStore(
-		name, &timedMutex{
-			lastUsed:  now,
-			createdAt: now,
-		},
-	)
-	t := tm.(*timedMutex)
-	t.mutex.Lock()
-	atomic.StoreInt64(&t.lastUsed, now)
+	if al.useShards.Load() {
+		// 分片模式
+		targetShard := al.getShard(name)
+		targetShard.RLock()
+		tm, loaded := targetShard.items.Load(name)
+		targetShard.RUnlock()
+
+		if !loaded {
+			targetShard.Lock()
+			tm, _ = targetShard.items.LoadOrStore(
+				name, &timedMutex{
+					createdAt: now,
+				},
+			)
+			targetShard.Unlock()
+		}
+
+		t := tm.(*timedMutex)
+		t.mutex.Lock()
+		t.lastUsed.Store(now)
+	} else {
+		// 简单模式
+		tm, _ := al.simple.LoadOrStore(
+			name, &timedMutex{
+				createdAt: now,
+			},
+		)
+		t := tm.(*timedMutex)
+		t.mutex.Lock()
+		t.lastUsed.Store(now)
+	}
 }
 
 // Unlock 解锁指定的资源
-func (l *mutexLock) Unlock(name string) {
-	tm, ok := l.mu.Load(name)
-	if !ok {
-		return // 如果锁不存在，直接返回
+func (al *AdaptiveLock) Unlock(name string) {
+	defer al.lockCount.Add(-1)
+
+	if al.useShards.Load() {
+		// 分片模式
+		targetShard := al.getShard(name)
+		targetShard.RLock()
+		if tm, ok := targetShard.items.Load(name); ok {
+			t := tm.(*timedMutex)
+			t.mutex.Unlock()
+		}
+		targetShard.RUnlock()
+	} else {
+		// 简单模式
+		if tm, ok := al.simple.Load(name); ok {
+			t := tm.(*timedMutex)
+			t.mutex.Unlock()
+		}
 	}
-	t := tm.(*timedMutex)
-	t.mutex.Unlock()
+
+	// 如果锁计数降低到阈值以下，切换回简单模式
+	if al.lockCount.Load() < concurrentLimit/2 && al.useShards.Load() {
+		al.useShards.Store(false)
+	}
 }
 
 // cleanUp 定期清理超过指定阈值的未使用锁
-func (l *mutexLock) cleanUp(threshold int64, minExistTime int64) {
+func (al *AdaptiveLock) cleanUp(threshold, minExistTime int64) {
 	now := time.Now().Unix()
-	l.mu.Range(
+
+	if al.useShards.Load() {
+		// 分片模式清理
+		var wg sync.WaitGroup
+		for i := 0; i < defaultShards; i++ {
+			wg.Add(1)
+			go func(currentShard *lockShard) {
+				defer wg.Done()
+				al.cleanupShard(currentShard, now, threshold, minExistTime)
+			}(al.shards[i])
+		}
+		wg.Wait()
+	} else {
+		// 简单模式清理
+		var toDelete []interface{}
+		al.simple.Range(
+			func(key, value interface{}) bool {
+				tm := value.(*timedMutex)
+				if tm.mutex.TryLock() {
+					if now-tm.lastUsed.Load() > threshold && now-tm.createdAt > minExistTime {
+						toDelete = append(toDelete, key)
+					}
+					tm.mutex.Unlock()
+				}
+				return true
+			},
+		)
+		for _, key := range toDelete {
+			al.simple.Delete(key)
+		}
+	}
+}
+
+func (al *AdaptiveLock) cleanupShard(shard *lockShard, now, threshold, minExistTime int64) {
+	var toDelete []interface{}
+
+	shard.RLock()
+	shard.items.Range(
 		func(key, value interface{}) bool {
 			tm := value.(*timedMutex)
-			if now-atomic.LoadInt64(&tm.lastUsed) > threshold && now-tm.createdAt > minExistTime {
-				l.mu.Delete(key) // 删除条件同时满足最后使用时间和最小存在时间
+			if tm.mutex.TryLock() {
+				if now-tm.lastUsed.Load() > threshold && now-tm.createdAt > minExistTime {
+					toDelete = append(toDelete, key)
+				}
+				tm.mutex.Unlock()
 			}
 			return true
 		},
 	)
+	shard.RUnlock()
+
+	if len(toDelete) > 0 {
+		shard.Lock()
+		for _, key := range toDelete {
+			shard.items.Delete(key)
+		}
+		shard.Unlock()
+	}
 }
 
-// SetLockerAutoCleanup 设置自动清理锁的任务
-func SetLockerAutoCleanup(threshold int64, minExistTime int64) {
+func SetLockerAutoCleanup(threshold, minExistTime int64) {
 	ticker := time.NewTicker(180 * time.Second)
 	go func() {
 		defer ticker.Stop()
 		for range ticker.C {
-			Ctrl.cleanUp(threshold, minExistTime)
+			Adaptive.cleanUp(threshold, minExistTime)
 		}
 	}()
+}
+
+// GetActiveLockCount 获取当前活跃的锁数量
+func (al *AdaptiveLock) GetActiveLockCount() int64 {
+	return al.lockCount.Load()
+}
+
+// IsShardMode 返回当前是否在使用分片模式
+func (al *AdaptiveLock) IsShardMode() bool {
+	return al.useShards.Load()
 }

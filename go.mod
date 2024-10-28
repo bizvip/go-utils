@@ -5,8 +5,8 @@ go 1.23
 require (
 	github.com/BurntSushi/toml v1.4.0
 	github.com/allegro/bigcache/v3 v3.1.0
-	github.com/aws/aws-sdk-go v1.53.1
-	github.com/davidbyttow/govips/v2 v2.14.0
+	github.com/aws/aws-sdk-go v1.55.5
+	github.com/davidbyttow/govips/v2 v2.15.0
 	github.com/fatih/color v1.17.0
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/goccy/go-json v0.10.3
@@ -21,7 +21,7 @@ require (
 	github.com/ua-parser/uap-go v0.0.0-20240611065828-3a4781585db6
 	go.etcd.io/etcd/client/v3 v3.5.14
 	golang.org/x/crypto v0.23.0
-	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
+	golang.org/x/exp v0.0.0-20241009180824-f66d83c29e7c
 	golang.org/x/image v0.16.0
 	golang.org/x/net v0.25.0
 	golang.org/x/text v0.15.0
@@ -49,14 +49,14 @@ require (
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
-	github.com/mattn/go-sqlite3 v1.14.22 // indirect
+	github.com/mattn/go-sqlite3 v1.14.24 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
-	github.com/spf13/cast v1.6.0 // indirect
+	github.com/spf13/cast v1.7.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	go.etcd.io/etcd/api/v3 v3.5.14 // indirect
