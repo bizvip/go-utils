@@ -65,6 +65,6 @@ jobs:
           tag_name: ${{ steps.new_tag.outputs.new_tag }}
           release_name: Release ${{ steps.new_tag.outputs.new_tag }}
           body: |
-            Release description here.
+            go utils package.
           draft: false
           prerelease: false
