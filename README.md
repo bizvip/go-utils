@@ -1,5 +1,12 @@
 ## go-utils 
-### Warning : Not Finished
+
+### Warning : Unstable
+
+### Install
+
+```bash
+go get github.com/bizvip/go-utils
+```
 
 ---
 
@@ -25,8 +32,7 @@ Below are some of the included components or self-developed components:
 - File processing
 ```
 
-## go-utils 
-### 警告 部分库尚未完善
+### 警告 尚未完善
 
 ---
 
