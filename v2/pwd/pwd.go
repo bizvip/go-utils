@@ -3,7 +3,6 @@
  * Author ORCID: https://orcid.org/0009-0003-8150-367X                        *
  ******************************************************************************/
 
-// 修改后的代码
 package pwd
 
 import (
@@ -61,8 +60,14 @@ func ToHash(password string) (string, error) {
 	encodedHash := base64.RawStdEncoding.EncodeToString(hash)
 
 	// 使用标准格式存储哈希和参数
-	return fmt.Sprintf("$argon2id$v=19$m=%d,t=%d,p=%d$%s$%s",
-		Argon2Memory, Argon2Time, Argon2Threads, salt, encodedHash), nil
+	return fmt.Sprintf(
+		"$argon2id$v=19$m=%d,t=%d,p=%d$%s$%s",
+		Argon2Memory,
+		Argon2Time,
+		Argon2Threads,
+		salt,
+		encodedHash,
+	), nil
 }
 
 // IsCorrect 验证密码是否与存储的哈希匹配
@@ -105,8 +110,7 @@ func IsCorrect(password, hashStr string) (bool, error) {
 	return subtle.ConstantTimeCompare(computedHash, decodedHash) == 1, nil
 }
 
-// 为向后兼容提供的函数
-// SplitHash 拆分旧格式的哈希字符串
+// SplitHash 为向后兼容提供的函数 拆分旧格式的哈希字符串
 func SplitHash(hash string) []string {
 	// 检查是否为新格式
 	if strings.HasPrefix(hash, "$argon2id$") {
