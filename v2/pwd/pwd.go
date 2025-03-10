@@ -83,7 +83,7 @@ func IsCorrect(password, hashStr string) (bool, error) {
 	var parallelism uint8
 	_, err := fmt.Sscanf(segments[3], "m=%d,t=%d,p=%d", &memory, &iterations, &parallelism)
 	if err != nil {
-		return false, fmt.Errorf("无法解析哈希参数: %w", err)
+		return false, fmt.Errorf("failed to parse hash parameters: %w", err)
 	}
 
 	salt, err := base64.RawStdEncoding.DecodeString(segments[4])

@@ -27,7 +27,7 @@ func init() {
 }
 
 func QuickID() uint64 {
-	id, _ := f1.NextID() // 分析算法，基本不可能出错
+	id, _ := f1.NextID()
 	return id
 }
 
