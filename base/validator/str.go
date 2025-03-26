@@ -1,4 +1,4 @@
-package valid
+package validator
 
 import (
 	"errors"
@@ -35,4 +35,10 @@ func IsAlphaNum(str string) bool {
 		}
 	}
 	return true
+}
+
+// IsLengthBetween 检查字符串长度是否在指定范围内（包括边界值）
+func IsLengthBetween(str string, min, max int) bool {
+	length := len(str)
+	return length >= min && length <= max
 }
