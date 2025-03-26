@@ -63,7 +63,7 @@ func ID() uint64 {
 	return uint64(idgen.NextId())
 }
 
-// QuickID 生成ID
+// QuickID 生成ID 兼容旧版API
 func QuickID() uint64 {
 	return uint64(idgen.NextId())
 }
