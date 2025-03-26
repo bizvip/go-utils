@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"hash"
 	"hash/fnv"
@@ -21,6 +22,16 @@ import (
 	"golang.org/x/crypto/sha3"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
+)
+
+// 定义错误变量
+var (
+	ErrInvalidNumberFormat = errors.New("invalid number format, no dots allowed")
+	ErrIntParseFailed      = errors.New("failed to parse as int")
+	ErrFileOpenFailed      = errors.New("failed to open file")
+	ErrHashCalculation     = errors.New("failed to calculate hash")
+	ErrRegexCompilation    = errors.New("failed to compile regex pattern")
+	ErrJsonMarshalFailed   = errors.New("failed to marshal to JSON")
 )
 
 // ToUint32 字符串转换成 uint32
@@ -54,7 +65,7 @@ func UniqueStrings(input []string) []string {
 func RegexpMatch(txt string, pattern string) (bool, error) {
 	regex, err := regexp.Compile(pattern)
 	if err != nil {
-		return false, err
+		return false, ErrRegexCompilation
 	}
 	return regex.MatchString(txt), nil
 }
@@ -62,11 +73,11 @@ func RegexpMatch(txt string, pattern string) (bool, error) {
 // ToInt64 将字符串转换成 int64
 func ToInt64(intStr string) (int64, error) {
 	if strings.Contains(intStr, ".") {
-		return 0, fmt.Errorf("this method only accepts numbers without dots")
+		return 0, ErrInvalidNumberFormat
 	}
 	i, err := strconv.ParseInt(intStr, 10, 64)
 	if err != nil {
-		return 0, fmt.Errorf("failed to parse as int: %v", err)
+		return 0, ErrIntParseFailed
 	}
 	return i, nil
 }
@@ -79,17 +90,17 @@ func CalcHash(input string, useStream bool, hashFunc hash.Hash) (string, error) 
 	if useStream {
 		file, err := os.Open(input) // 使用流的方式计算哈希
 		if err != nil {
-			return "", fmt.Errorf("failed to open file: %v", err)
+			return "", ErrFileOpenFailed
 		}
 		defer func(file *os.File) { _ = file.Close() }(file)
 
 		if _, err := io.Copy(hashFunc, file); err != nil {
-			return "", fmt.Errorf("failed to calculate hash: %v", err)
+			return "", ErrHashCalculation
 		}
 	} else {
 		_, err := hashFunc.Write([]byte(input)) // 使用一次性内存加载的方式计算哈希
 		if err != nil {
-			return "", fmt.Errorf("failed to calculate hash: %v", err)
+			return "", ErrHashCalculation
 		}
 	}
 
@@ -147,7 +158,7 @@ func ToPrettyJson(v interface{}, isProto bool) (string, error) {
 		}
 		jsonBytes, err := marshaller.Marshal(v.(proto.Message))
 		if err != nil {
-			return "", err
+			return "", ErrJsonMarshalFailed
 		}
 		return string(jsonBytes), nil
 	}
@@ -155,7 +166,7 @@ func ToPrettyJson(v interface{}, isProto bool) (string, error) {
 	// 普通结构体的 JSON 转换
 	jsonData, err := json.MarshalIndent(v, "", "  ")
 	if err != nil {
-		return "", err
+		return "", ErrJsonMarshalFailed
 	}
 	return string(jsonData), nil
 }

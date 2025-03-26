@@ -10,8 +10,10 @@ import (
 	"strings"
 )
 
+// 这个变量是测试用，实际初始化从 new 里面传递参数
 var (
-	raidApiKey  string = "2cf5688f73msh55fc8f71f9a01eap1964a2jsn12d1f9213dff"
+	// raidApiKey  string = "2cf5688f73msh55fc8f71f9a01eap1964a2jsn12d1f9213dff"
+	raidApiKey  string = "xxxxx"
 	raidApiHost string = "google-translate1.p.rapidapi.com"
 )
 

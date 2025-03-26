@@ -3,6 +3,7 @@ package valid
 import (
 	"errors"
 	"regexp"
+	"unicode"
 )
 
 // 校验是否 MD5 字符串的错误定义
@@ -24,4 +25,14 @@ func IsMd5(input string) error {
 		return ErrInvalidMD5Pattern
 	}
 	return nil
+}
+
+// IsAlphaNum 检查字符串是否是字母或数字
+func IsAlphaNum(str string) bool {
+	for _, r := range str {
+		if !unicode.IsLetter(r) && !unicode.IsDigit(r) {
+			return false
+		}
+	}
+	return true
 }

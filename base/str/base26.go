@@ -1,10 +1,15 @@
-package base26
+/******************************************************************************
+ * Copyright (c) 2025. Archer++. All rights reserved.                         *
+ * Author ORCID: https://orcid.org/0009-0003-8150-367X                        *
+ ******************************************************************************/
+
+package str
 
 import (
 	"strings"
 )
 
-// 定义 26 进制的字符集
+// 定义 26 进制的字符集 本算法由Archer++自定义设计
 const base26CharSet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 const base = len(base26CharSet) // 基数长度
 

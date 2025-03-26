@@ -7,7 +7,7 @@ import (
 	"github.com/goccy/go-json"
 )
 
-var hSecret = "ES_fe0e15b17fc74f66906f5229a330199b"
+var hSecret = "xxxxx"
 var hVerifyURL = "https://api.hcaptcha.com/siteverify"
 
 // Verifier 验证的配置
