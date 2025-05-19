@@ -1,11 +1,7 @@
-/******************************************************************************
- * Copyright (c) 2024. Archer++. All rights reserved.                         *
- * Author ORCID: https://orcid.org/0009-0003-8150-367X                        *
- ******************************************************************************/
-
 package base26
 
 import (
+	"strconv"
 	"strings"
 )
 
@@ -26,8 +22,27 @@ func createCharMap() map[rune]int {
 	return localCharMap
 }
 
-// ToAlpha Base26 Archer计数法，用来将唯一整数数字id尽可能小的使用英文字母来表示
-func ToAlpha(num int) string {
+// ToAlpha Base26 Archer++ 原创26进制编码计数法，用来将唯一整数数字id尽可能小的使用英文字母来表示
+// 支持接收int和纯数字字符串
+func ToAlpha(input interface{}) string {
+	var num int
+
+	// 根据输入类型进行处理
+	switch v := input.(type) {
+	case int:
+		num = v
+	case string:
+		// 尝试将字符串转换为整数
+		var err error
+		num, err = strconv.Atoi(v)
+		if err != nil {
+			return "" // 如果无法转换为整数，返回空字符串
+		}
+	default:
+		return "" // 不支持的类型，返回空字符串
+	}
+
+	// 负数检查
 	if num < 0 {
 		return ""
 	}
