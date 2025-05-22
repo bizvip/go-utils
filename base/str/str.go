@@ -184,3 +184,38 @@ func GenSha1(input string) string {
 	h.Write([]byte(input))
 	return hex.EncodeToString(h.Sum(nil))
 }
+
+// GenSlug 生成slug
+func GenSlug(title string) string {
+	var b strings.Builder
+	b.Grow(len(title))
+
+	// 直接一趟循环完成：小写 + 过滤 + 合并 -
+	prevDash := false
+	for _, r := range strings.ToLowerSpecial(unicode.TurkishCase, title) {
+		if unicode.IsLetter(r) || unicode.IsNumber(r) {
+			// 统一把非 ASCII 字母转成 ASCII（可选，需 transliteration 库）
+			if r > 127 {
+				// 示例：这里简单跳过；生产可用 github.com/mozillazg/go-unidecode 等做音译
+				continue
+			}
+			b.WriteRune(r)
+			prevDash = false
+		} else if !prevDash {
+			b.WriteByte('-')
+			prevDash = true
+		}
+	}
+
+	slug := strings.Trim(b.String(), "-")
+
+	// 再次截断并去尾/首 -
+	if len(slug) > 100 {
+		slug = strings.Trim(slug[:100], "-")
+	}
+
+	if slug == "" {
+		slug = "n-a" // 或者生成 uuid/时间戳等
+	}
+	return slug
+}
