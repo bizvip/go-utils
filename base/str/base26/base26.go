@@ -22,7 +22,7 @@ func createCharMap() map[rune]int {
 	return localCharMap
 }
 
-// ToAlpha Base26 Archer++ 原创26进制编码计数法，用来将唯一整数数字id尽可能小的使用英文字母来表示
+// ToAlpha Base26 Archer++ 原创26进制编码计数法，用来将唯一整数数字id尽可能短的使用英文字母来表示
 // 支持接收int和纯数字字符串
 func ToAlpha(input interface{}) string {
 	var num int
