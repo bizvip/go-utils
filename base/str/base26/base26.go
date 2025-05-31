@@ -1,6 +1,7 @@
 package base26
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"slices"
@@ -100,8 +101,9 @@ func StrNumToAlpha(input string) (string, error) {
 	// 如果作为 int64 解析失败，检查是否是因为数字太大（但仍可能是有效的 uint64）
 	// 只有当原始字符串不以"-"开头且错误是 strconv.ErrRange 时，才尝试 ParseUint
 	if !strings.HasPrefix(input, "-") {
-		numErr, ok := errInt.(*strconv.NumError)
-		if ok && numErr.Err == strconv.ErrRange {
+		var numErr *strconv.NumError
+		ok := errors.As(errInt, &numErr)
+		if ok && errors.Is(numErr.Err, strconv.ErrRange) {
 			valUint, errUint := strconv.ParseUint(input, 10, 64)
 			if errUint == nil {
 				// 解析为 uint64 成功 (通常是正数且大于 math.MaxInt64)
