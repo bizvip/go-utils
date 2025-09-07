@@ -6,6 +6,8 @@
 
 > A comprehensive collection of Go utility libraries and self-developed components with simple and elegant encapsulations.
 
+This package continuously adopts the latest Go versions and cutting-edge technologies to maintain the most modern and advanced features. We prioritize performance optimization while keeping everything simple and reliable.
+
 [中文文档](README_CN.md) | English
 
 ## 📋 Table of Contents
