@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_TOKEN }}
 
@@ -27,7 +27,7 @@ jobs:
             latest_tag="v0.0.0"
           fi
           echo "Latest tag: $latest_tag"
-          echo "::set-output name=latest_tag::$latest_tag"
+          echo "latest_tag=$latest_tag" >> $GITHUB_OUTPUT
 
       - name: Create new tag
         id: new_tag
@@ -51,7 +51,7 @@ jobs:
           fi
           git tag $new_tag
           echo "New tag: $new_tag"
-          echo "::set-output name=new_tag::$new_tag"
+          echo "new_tag=$new_tag" >> $GITHUB_OUTPUT
 
       - name: Push new tag to GitHub
         run: |

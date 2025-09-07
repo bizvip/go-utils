@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ master, main ]
+  push:
+    branches: [ master, main ]
+    paths-ignore:
+      - '**.md'
+      - 'LICENSE'
+      - '.gitignore'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.21'
+    
+    - name: Get dependencies
+      run: go mod download
+    
+    - name: Run Format Check
+      run: |
+        gofmt_files=$(gofmt -l .)
+        if [[ -n "${gofmt_files}" ]]; then
+          echo "The following files need formatting:"
+          echo "${gofmt_files}"
+          exit 1
+        fi
+    
+    - name: Run Vet
+      run: go vet ./...
+    
+    - name: Run Tests
+      run: go test -v ./tests/...
+    
+    - name: Run Tests with Coverage
+      run: |
+        go test -v -coverprofile=coverage.out ./tests/...
+        go tool cover -func=coverage.out
