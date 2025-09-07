@@ -2,10 +2,10 @@ package config
 
 import (
 	"fmt"
-	"log"
 	"sync"
 
 	"github.com/fsnotify/fsnotify"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 )
 
@@ -42,11 +42,11 @@ func (c *Manager) LoadFile(filePath string, watch bool) error {
 	if watch {
 		c.viper.WatchConfig()
 		c.viper.OnConfigChange(func(e fsnotify.Event) {
-			log.Printf("Config file changed: %s", e.Name)
+			log.Info().Str("file", e.Name).Msg("Config file changed")
 			c.mu.Lock()
 			defer c.mu.Unlock()
 			if err := c.viper.Unmarshal(c.config); err != nil {
-				log.Printf("Failed to reload config: %v", err)
+				log.Error().Err(err).Msg("Failed to reload config")
 			}
 		})
 	}

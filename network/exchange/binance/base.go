@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/goccy/go-json"
+	"github.com/rs/zerolog/log"
 )
 
 // 定义API的Base URL
@@ -54,13 +55,13 @@ func doRequestWithFallback(req *http.Request) (*http.Response, error) {
 		resp, err := httpClient.Do(req)
 		if err != nil {
 			lastErr = err
-			fmt.Printf("Error accessing %s: %v\n", baseURL, err)
+			log.Error().Str("url", baseURL).Err(err).Msg("Error accessing URL")
 			continue
 		}
 		// 检查返回状态
 		if resp.StatusCode != http.StatusOK {
 			lastErr = fmt.Errorf("unexpected status code %d from %s", resp.StatusCode, baseURL)
-			fmt.Printf("Error from %s: %v\n", baseURL, lastErr)
+			log.Error().Str("url", baseURL).Err(lastErr).Msg("Error from URL")
 			continue
 		}
 		return resp, nil
@@ -83,21 +84,21 @@ func GetApi(query string) interface{} {
 	// 创建请求
 	req, err := createGetRequest(query)
 	if err != nil {
-		fmt.Printf("Error creating request: %v\n", err)
+		log.Error().Err(err).Msg("Error creating request")
 		return nil
 	}
 
 	// 执行请求并处理失败
 	resp, err := doRequestWithFallback(req)
 	if err != nil {
-		fmt.Printf("Error executing request: %v\n", err)
+		log.Error().Err(err).Msg("Error executing request")
 		return nil
 	}
 
 	// 解析响应
 	result, err := parseResponse(resp)
 	if err != nil {
-		fmt.Printf("Error parsing response: %v\n", err)
+		log.Error().Err(err).Msg("Error parsing response")
 		return nil
 	}
 

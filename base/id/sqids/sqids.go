@@ -1,7 +1,7 @@
 package sqids
 
 import (
-	"log"
+	"github.com/rs/zerolog/log"
 
 	"github.com/sqids/sqids-go"
 )
@@ -16,7 +16,7 @@ func init() {
 		MinLength: 6,
 	})
 	if err != nil {
-		log.Fatalf("Failed to create sqids instance: %v", err)
+		log.Fatal().Err(err).Msg("Failed to create sqids instance")
 	}
 }
 

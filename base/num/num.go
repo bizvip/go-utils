@@ -2,12 +2,10 @@ package num
 
 import (
 	"errors"
-	"fmt"
 	"math"
 	"math/big"
 	"regexp"
 	"strconv"
-	"strings"
 
 	"github.com/shopspring/decimal"
 	"github.com/sqids/sqids-go"
@@ -121,68 +119,7 @@ func GetMaxNum(vals ...int) int {
 	return maxVal
 }
 
-// Calculator 输入字符串数学表达式，将计算出结果
-func Calculator(exp string) (string, error) {
-	// 去除空格
-	exp = strings.ReplaceAll(exp, " ", "")
-
-	// 定义正则表达式匹配 + - * / ^ sqrt % mod
-	re := regexp.MustCompile(`^([\d.]+)([\+\-\*/\^%]|sqrt|mod)([\d.]*)$`)
-	matches := re.FindStringSubmatch(exp)
-
-	if len(matches) < 3 {
-		return "", fmt.Errorf("无效的表达式")
-	}
-
-	// 解析数字和操作符
-	num1, err := decimal.NewFromString(matches[1])
-	if err != nil {
-		return "", fmt.Errorf("无效的数字: %s", matches[1])
-	}
-
-	var num2 decimal.Decimal
-	if matches[3] != "" {
-		num2, err = decimal.NewFromString(matches[3])
-		if err != nil {
-			return "", fmt.Errorf("无效的数字: %s", matches[3])
-		}
-	}
-
-	operator := matches[2]
-
-	// 计算结果
-	var result decimal.Decimal
-	switch operator {
-	case "+":
-		result = num1.Add(num2)
-	case "-":
-		result = num1.Sub(num2)
-	case "*":
-		result = num1.Mul(num2)
-	case "/":
-		if num2.IsZero() {
-			return "", fmt.Errorf("除数不能为零")
-		}
-		result = num1.Div(num2)
-	case "^":
-		// decimal 没有直接的幂运算方法，需转换为 float64
-		exp, _ := num2.Float64()
-		result = num1.Pow(decimal.NewFromFloat(exp))
-	case "sqrt":
-		if num1.LessThan(decimal.Zero) {
-			return "", fmt.Errorf("负数不能开根号")
-		}
-		// decimal 没有直接的开根号方法，需转换为 float64
-		floatVal, _ := num1.Float64()
-		result = decimal.NewFromFloat(math.Sqrt(floatVal))
-	case "%":
-		result = num1.Div(num2).Mul(decimal.NewFromInt(100))
-		return result.String() + "%", nil
-	case "mod":
-		result = num1.Mod(num2)
-	default:
-		return "", fmt.Errorf("无效的操作符: %s", operator)
-	}
-
-	return result.String(), nil
+// Calc  输入字符串数学表达式，将计算出结果
+func Calc(exp string) (string, error) {
+	return EvaluateToString(exp)
 }

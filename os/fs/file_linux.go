@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"io"
 	"net/http"
 	"os"
@@ -62,7 +63,7 @@ func StartsWithDot(fileName string) bool {
 func GetFileNameMd5(filename string) (string, error) {
 	fileInfo, err := os.Stat(filename)
 	if err != nil {
-		fmt.Println("Error getting file info:", err)
+		log.Error().Err(err).Msg("Error getting file info")
 		return "", err
 	}
 

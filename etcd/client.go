@@ -3,6 +3,7 @@ package etcd
 import (
 	"context"
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"time"
 
 	cliv3 "go.etcd.io/etcd/client/v3"
@@ -143,7 +144,7 @@ func (c *Client) ListMembers() error {
 		return err
 	}
 	for _, member := range resp.Members {
-		fmt.Printf("Member: %v\n", member)
+		log.Info().Interface("member", member).Msg("ETCD Member")
 	}
 	return nil
 }
@@ -186,7 +187,7 @@ func (c *Client) Watch(key string, prefix bool) {
 
 	for watchResponse := range rch {
 		for _, ev := range watchResponse.Events {
-			fmt.Printf("Type: %s Key: %q Value: %q\n", ev.Type, ev.Kv.Key, ev.Kv.Value)
+			log.Info().Str("type", ev.Type.String()).Bytes("key", ev.Kv.Key).Bytes("value", ev.Kv.Value).Msg("ETCD Watch Event")
 		}
 	}
 }

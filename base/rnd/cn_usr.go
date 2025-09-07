@@ -133,5 +133,7 @@ var first = []string{
 
 // RandomCnName 生成一个随机形容词+名词组合字符串
 func RandomCnName() string {
-	return first[rng.Intn(len(first))] + second[rng.Intn(len(second))]
+	firstIdx := GenNumberInRange(0, len(first)-1)
+	secondIdx := GenNumberInRange(0, len(second)-1)
+	return first[firstIdx] + second[secondIdx]
 }

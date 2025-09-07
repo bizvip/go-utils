@@ -1,0 +1,236 @@
+# 🛠️ Go Utils
+
+[![Go 版本](https://img.shields.io/badge/Go-%3E%3D%201.21-blue.svg)](https://golang.org/)
+[![许可证](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![构建状态](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/bizvip/go-utils)
+
+> 一个全面的 Go 工具库集合，包含自主开发的组件和优雅简洁的封装。
+
+[English](README.md) | 中文文档
+
+## 📋 目录
+
+- [安装](#-安装)
+- [快速开始](#-快速开始)
+- [包概览](#-包概览)
+- [功能特性](#-功能特性)
+- [测试](#-测试)
+- [贡献](#-贡献)
+- [许可证](#-许可证)
+
+## 🚀 安装
+
+```bash
+go get github.com/bizvip/go-utils
+```
+
+## 🎯 快速开始
+
+```go
+package main
+
+import (
+    "fmt"
+    "github.com/bizvip/go-utils/base/num"
+    "github.com/bizvip/go-utils/base/str"
+)
+
+func main() {
+    // 数学表达式计算
+    result, _ := num.Calc("(2 + 3) * 4")
+    fmt.Println("结果:", result) // 结果: 20
+
+    // 字符串工具
+    encoded := str.Base62Encode(12345)
+    fmt.Println("编码结果:", encoded)
+}
+```
+
+## 📦 包概览
+
+### 🔢 基础工具
+
+| 包名 | 描述 | 核心功能 |
+|------|------|----------|
+| **base/num** | 数值操作和计算 | 表达式计算器、小数处理、ID编码 |
+| **base/str** | 字符串操作工具 | Base26/Base62编码、字符串验证 |
+| **base/crypto** | 加密操作 | AES加密/解密 |
+| **base/dt** | 日期时间工具 | 日期格式化、解析、计算 |
+| **base/pwd** | 密码工具 | 生成、验证、安全检查 |
+
+### 🌐 网络与API
+
+| 包名 | 描述 | 核心功能 |
+|------|------|----------|
+| **network/google** | Google服务集成 | 翻译API与批量处理 |
+| **network/exchange** | 加密货币交易所API | Binance、OKX市场数据 |
+| **network/httputils** | HTTP工具 | 下载助手、请求构建器 |
+| **network/ip** | IP地址工具 | 地理位置、验证 |
+
+### ☁️ 云服务
+
+| 包名 | 描述 | 核心功能 |
+|------|------|----------|
+| **cloudservice/wasabi** | Wasabi云存储 | 文件上传、下载、管理 |
+
+### 🖼️ 媒体与处理
+
+| 包名 | 描述 | 核心功能 |
+|------|------|----------|
+| **img** | 图像处理工具包 | 调整大小、格式转换、优化 |
+| **i18n** | 国际化 | 多语言支持、OpenCC集成 |
+
+### 🛠️ 系统与操作系统
+
+| 包名 | 描述 | 核心功能 |
+|------|------|----------|
+| **os/console** | 控制台工具 | 彩色输出、格式化 |
+| **os/fs** | 文件系统操作 | 跨平台文件处理 |
+| **lock** | 并发工具 | 原子锁、同步 |
+
+## ✨ 功能特性
+
+### 🧮 高级计算器
+```go
+// 支持复杂数学表达式
+result, _ := num.Calc("2 + 3 × (4 ÷ 2)")
+fmt.Println(result) // 输出: 8
+```
+
+### 🔐 安全密码验证
+```go
+// 使用自定义规则验证安全密码
+err := num.ValidateSecPwd("123456")
+if err != nil {
+    fmt.Println("密码无效:", err)
+}
+```
+
+### 🌍 谷歌翻译集成
+```go
+// 使用谷歌翻译API进行批量翻译
+translations, _ := google.BatchTranslate(texts, "en", "zh")
+```
+
+### 💱 加密货币支持
+```go
+// 验证加密货币地址
+isValid := cryptocoin.ValidateBTCAddress("1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa")
+```
+
+### 🎨 控制台样式
+```go
+// 彩色控制台输出
+console.PrintSuccess("操作成功完成！")
+console.PrintError("发生错误！")
+```
+
+## 🧪 测试
+
+我们为所有包维护全面的测试覆盖：
+
+```bash
+# 运行所有测试（包含格式化）
+make test
+
+# 运行覆盖率测试
+make test-coverage
+
+# 运行基准测试
+make bench
+
+# 完整CI流水线
+make ci
+```
+
+### 测试结构
+```
+tests/
+├── base/
+│   └── num/
+│       ├── calculator_test.go
+│       └── num_test.go
+└── [其他包]/
+```
+
+## 🏗️ 项目结构
+
+```
+go-utils/
+├── base/                    # 核心工具
+│   ├── crypto/             # 加密功能
+│   ├── dt/                 # 日期/时间工具  
+│   ├── num/                # 数值操作
+│   ├── str/                # 字符串操作
+│   └── ...
+├── network/                # 网络相关包
+│   ├── google/             # Google APIs
+│   ├── exchange/           # 加密货币交易所
+│   └── ...
+├── cloudservice/           # 云服务集成
+├── tests/                  # 集中测试文件
+├── Makefile               # 构建自动化
+└── README.md
+```
+
+## 📊 性能
+
+所有关键功能都经过基准测试：
+
+- **计算器**: 每次表达式评估约500纳秒
+- **Base62编码**: 每次操作约100纳秒  
+- **字符串验证**: 每次检查约50纳秒
+
+## 🤝 贡献
+
+欢迎贡献！请查看我们的[贡献指南](CONTRIBUTING.md)。
+
+1. Fork 这个仓库
+2. 创建您的功能分支 (`git checkout -b feature/amazing-feature`)
+3. 提交您的更改 (`git commit -m 'Add some amazing feature'`)
+4. 推送到分支 (`git push origin feature/amazing-feature`)
+5. 开启一个 Pull Request
+
+## ⚠️ 稳定性说明
+
+此库正在积极开发中。版本之间API可能会发生变化。升级前请检查更新日志。
+
+## 📄 许可证
+
+此项目在MIT许可证下授权 - 查看 [LICENSE](LICENSE) 文件了解详情。
+
+## 🙏 致谢
+
+- 用 ❤️ 为Go社区构建
+- 受各种开源Go工具启发
+- 特别感谢所有贡献者
+
+## 📚 详细功能说明
+
+### 数值计算包 (base/num)
+- **表达式计算器**: 基于Go AST的强大数学表达式解析器
+- **交易密码验证**: 6位数字密码，防止连续数字
+- **哈希ID转换**: Sqids编码的安全ID转换
+- **小数处理**: 精确的小数运算和格式化
+
+### 字符串处理包 (base/str)  
+- **Base26编码**: 适用于序号编码的Base26算法
+- **Base62编码**: 高效的数字到字符串编码
+- **字符串验证**: 多种格式验证工具
+
+### 网络工具包 (network/*)
+- **谷歌翻译**: 支持批量翻译的Google Translate API封装
+- **交易所API**: Binance和OKX加密货币市场数据
+- **HTTP工具**: 文件下载、请求构建等实用工具
+
+### 系统工具包 (os/*)
+- **控制台工具**: 彩色输出、进度条、格式化显示
+- **文件系统**: 跨平台文件操作，支持macOS和Linux
+- **嵌入文件**: Go embed文件管理工具
+
+---
+
+<div align="center">
+<p>由 <a href="https://github.com/bizvip">@bizvip</a> 用 ❤️ 制作</p>
+<p>⭐ 如果这个项目对您有帮助，请在GitHub上给我们一个星标！</p>
+</div>

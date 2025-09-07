@@ -2,7 +2,7 @@ package fsn
 
 import (
 	"fmt"
-	"log"
+	"github.com/rs/zerolog/log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -60,7 +60,7 @@ func StartWatcher(dirs []string, exts []string, handlers EventHandlers) (*Watche
 		if err != nil {
 			return nil, fmt.Errorf("failed to add directory recursively %s: %w", dir, err)
 		}
-		log.Printf("Started monitoring root directory: %s\n", dir)
+		log.Info().Str("directory", dir).Msg("Started monitoring root directory")
 	}
 
 	// Register event handlers
@@ -100,7 +100,7 @@ func (w *Watcher) watchFileLocked(path string) error {
 		if err != nil {
 			return fmt.Errorf("unable to create path %s: %w", path, err)
 		}
-		log.Printf("Path %s did not exist, created it\n", path)
+		log.Info().Str("path", path).Msg("Path did not exist, created it")
 	} else if err != nil {
 		return fmt.Errorf("unable to access path %s: %w", path, err)
 	}
@@ -110,7 +110,7 @@ func (w *Watcher) watchFileLocked(path string) error {
 	if err != nil {
 		return fmt.Errorf("unable to watch path %s: %w", path, err)
 	}
-	log.Printf("Watching: %s\n", path)
+	log.Info().Str("path", path).Msg("Watching")
 	return nil
 }
 
@@ -157,7 +157,7 @@ func (w *Watcher) Start() {
 				if !ok {
 					return
 				}
-				log.Printf("Watcher error: %v\n", err)
+				log.Error().Err(err).Msg("Watcher error")
 			}
 		}
 	}()
@@ -171,12 +171,12 @@ func (w *Watcher) handleEvent(event fsnotify.Event) {
 			if fi.IsDir() {
 				// Recursively add new directories to the watch list
 				if err := w.AddDirRecursive(event.Name); err != nil {
-					log.Printf("Failed to recursively watch new directory %s: %v\n", event.Name, err)
+					log.Error().Str("directory", event.Name).Err(err).Msg("Failed to recursively watch new directory")
 				}
 				// Walk the directory and trigger OnCreate for files
 				filepath.Walk(event.Name, func(path string, info os.FileInfo, err error) error {
 					if err != nil {
-						log.Printf("Failed to access path %s: %v\n", path, err)
+						log.Error().Str("path", path).Err(err).Msg("Failed to access path")
 						return nil
 					}
 					if !info.IsDir() && w.shouldMonitor(path) {
@@ -193,7 +193,7 @@ func (w *Watcher) handleEvent(event fsnotify.Event) {
 				}
 			}
 		} else {
-			log.Printf("Failed to get file info %s: %v\n", event.Name, err)
+			log.Error().Str("file", event.Name).Err(err).Msg("Failed to get file info")
 		}
 		return
 	}

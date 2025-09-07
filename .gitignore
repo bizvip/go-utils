@@ -3,3 +3,5 @@ bin
 *.key
 scripts/*
 .DS_Store
+CLAUDE.md
+.claude

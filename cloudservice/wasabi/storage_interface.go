@@ -1,13 +1,13 @@
 package wasabi
 
 import (
+	"context"
 	"io"
 	"os"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
 type s3Conf struct {
@@ -35,15 +35,24 @@ func (c *s3Conf) GetEndpoint() string   { return c.endpoint }
 func (c *s3Conf) GetAccessKey() string  { return c.accessKey }
 func (c *s3Conf) GetSecretKey() string  { return c.secretKey }
 
-func (c *s3Conf) handler() *s3.S3 {
-	config := &aws.Config{
-		Region:      aws.String(c.GetRegion()),
-		Endpoint:    aws.String(c.GetEndpoint()),
-		Credentials: credentials.NewStaticCredentials(c.GetAccessKey(), c.GetSecretKey(), ""),
+func (c *s3Conf) handler() *s3.Client {
+	cfg := aws.Config{
+		Region:      c.GetRegion(),
+		Credentials: credentials.NewStaticCredentialsProvider(c.GetAccessKey(), c.GetSecretKey(), ""),
 	}
 
-	sess := session.Must(session.NewSession(config))
-	return s3.New(sess)
+	if c.GetEndpoint() != "" {
+		cfg.EndpointResolverWithOptions = aws.EndpointResolverWithOptionsFunc(
+			func(service, region string, options ...interface{}) (aws.Endpoint, error) {
+				return aws.Endpoint{
+					URL:               c.GetEndpoint(),
+					SigningRegion:     c.GetRegion(),
+					HostnameImmutable: true,
+				}, nil
+			})
+	}
+
+	return s3.NewFromConfig(cfg)
 }
 
 func (c *s3Conf) PutFile(localPath, remotePath string) error {
@@ -55,25 +64,21 @@ func (c *s3Conf) PutFile(localPath, remotePath string) error {
 
 	svc := c.handler()
 
-	_, err = svc.PutObject(
-		&s3.PutObjectInput{
-			Bucket: aws.String(c.GetBucketName()),
-			Key:    aws.String(remotePath),
-			Body:   file,
-		},
-	)
+	_, err = svc.PutObject(context.TODO(), &s3.PutObjectInput{
+		Bucket: aws.String(c.GetBucketName()),
+		Key:    aws.String(remotePath),
+		Body:   file,
+	})
 	return err
 }
 
 func (c *s3Conf) GetFile(remotePath, localPath string) error {
 	svc := c.handler()
 
-	resp, err := svc.GetObject(
-		&s3.GetObjectInput{
-			Bucket: aws.String(c.GetBucketName()),
-			Key:    aws.String(remotePath),
-		},
-	)
+	resp, err := svc.GetObject(context.TODO(), &s3.GetObjectInput{
+		Bucket: aws.String(c.GetBucketName()),
+		Key:    aws.String(remotePath),
+	})
 	if err != nil {
 		return err
 	}
@@ -92,26 +97,26 @@ func (c *s3Conf) GetFile(remotePath, localPath string) error {
 func (c *s3Conf) DelFile(remotePath string) error {
 	svc := c.handler()
 
-	_, err := svc.DeleteObject(
-		&s3.DeleteObjectInput{
-			Bucket: aws.String(c.GetBucketName()),
-			Key:    aws.String(remotePath),
-		},
-	)
+	_, err := svc.DeleteObject(context.TODO(), &s3.DeleteObjectInput{
+		Bucket: aws.String(c.GetBucketName()),
+		Key:    aws.String(remotePath),
+	})
 	return err
 }
 
 func (c *s3Conf) GetAllBuckets() ([]string, error) {
 	svc := c.handler()
 
-	result, err := svc.ListBuckets(nil)
+	result, err := svc.ListBuckets(context.TODO(), &s3.ListBucketsInput{})
 	if err != nil {
 		return nil, err
 	}
 
 	var buckets []string
 	for _, bucket := range result.Buckets {
-		buckets = append(buckets, aws.StringValue(bucket.Name))
+		if bucket.Name != nil {
+			buckets = append(buckets, *bucket.Name)
+		}
 	}
 
 	return buckets, nil
@@ -124,18 +129,18 @@ func (c *s3Conf) GetAllFilesFromBucket(bucketName string) ([]string, error) {
 
 	svc := c.handler()
 
-	result, err := svc.ListObjectsV2(
-		&s3.ListObjectsV2Input{
-			Bucket: aws.String(bucketName),
-		},
-	)
+	result, err := svc.ListObjectsV2(context.TODO(), &s3.ListObjectsV2Input{
+		Bucket: aws.String(bucketName),
+	})
 	if err != nil {
 		return nil, err
 	}
 
 	var files []string
 	for _, obj := range result.Contents {
-		files = append(files, aws.StringValue(obj.Key))
+		if obj.Key != nil {
+			files = append(files, *obj.Key)
+		}
 	}
 
 	return files, nil

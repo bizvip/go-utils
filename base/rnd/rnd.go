@@ -1,33 +1,34 @@
 package rnd
 
 import (
+	"crypto/rand"
 	"encoding/base64"
-	"fmt"
+	"github.com/rs/zerolog/log"
+	"math/big"
 	"strings"
-	"time"
 
 	"github.com/google/uuid"
-	"golang.org/x/exp/rand"
 )
 
-// 全局随机数生成器
-var rng *rand.Rand
-
-// init 程序启动期间，只设置一次种子
-func init() {
-	source := rand.NewSource(uint64(time.Now().UnixNano()))
-	rng = rand.New(source)
-}
-
-// RandNumStrNonSafe 生成一个指定长度的随机数字字符串
-func RandNumStrNonSafe(length int) string {
+// RandNumStr 生成一个指定长度的随机数字字符串（加密安全）
+func RandNumStr(length int) string {
 	const digits = "0123456789"
 	result := make([]byte, length)
 
 	for i := range result {
-		result[i] = digits[rng.Intn(len(digits))]
+		n, err := rand.Int(rand.Reader, big.NewInt(int64(len(digits))))
+		if err != nil {
+			log.Error().Err(err).Msg("Error generating random number")
+			return ""
+		}
+		result[i] = digits[n.Int64()]
 	}
 	return string(result)
+}
+
+// RandNumStrNonSafe 生成一个指定长度的随机数字字符串（兼容性保留，使用加密安全版本）
+func RandNumStrNonSafe(length int) string {
+	return RandNumStr(length)
 }
 
 // UUID 可选无横线的UUID
@@ -40,12 +41,12 @@ func UUID(isNoDash bool) string {
 	}
 }
 
-// GenRandomAlphaNumeric 生成一个只有大小写字母和数字的随机字符串
+// GenRandomAlphaNumeric 生成一个只有大小写字母和数字的随机字符串（加密安全）
 func GenRandomAlphaNumeric() string {
 	randomData := make([]byte, 12)
-	_, err := rng.Read(randomData)
+	_, err := rand.Read(randomData)
 	if err != nil {
-		fmt.Println("Error generating random data:", err)
+		log.Error().Err(err).Msg("Error generating random data")
 		return ""
 	}
 
@@ -62,10 +63,18 @@ func GenRandomAlphaNumeric() string {
 	return cleaned
 }
 
-// GenNumberInRange 生成指定范围内的随机数字
+// GenNumberInRange 生成指定范围内的随机数字（加密安全）
 func GenNumberInRange(min, max int) int {
 	if min > max {
 		panic("min should be less than or equal to max")
 	}
-	return rng.Intn(max-min+1) + min
+
+	rangeSize := max - min + 1
+	n, err := rand.Int(rand.Reader, big.NewInt(int64(rangeSize)))
+	if err != nil {
+		log.Error().Err(err).Msg("Error generating random number in range")
+		return min
+	}
+
+	return int(n.Int64()) + min
 }
