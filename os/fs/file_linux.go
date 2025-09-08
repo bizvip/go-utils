@@ -83,7 +83,7 @@ func GetFileMd5(filePath string) (string, error) {
 	return hex.EncodeToString(hash[:]), nil
 }
 
-// GetBigFileMd5 通过流的方式计算文件的 MD5 值
+// GetFileMd5Stream 通过流的方式计算文件的 MD5 值
 func GetFileMd5Stream(filePath string) (string, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -99,6 +99,11 @@ func GetFileMd5Stream(filePath string) (string, error) {
 	hashValue := hash.Sum(nil)
 	hashString := hex.EncodeToString(hashValue)
 	return hashString, nil
+}
+
+// GetBigFileMd5 兼容性别名，调用 GetFileMd5Stream
+func GetBigFileMd5(filePath string) (string, error) {
+	return GetFileMd5Stream(filePath)
 }
 
 // GetCurExeDir 获取当前执行文件所在目录

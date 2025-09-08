@@ -38,12 +38,33 @@ func GenSalt() (string, error) {
 	return base64.RawStdEncoding.EncodeToString(salt), nil
 }
 
+// HashConfig 哈希配置参数
+type HashConfig struct {
+	Time    uint32
+	Memory  uint32
+	Threads uint8
+	KeyLen  uint32
+}
+
+// DefaultHashConfig 默认哈希配置
+var DefaultHashConfig = HashConfig{
+	Time:    Argon2Time,
+	Memory:  Argon2Memory,
+	Threads: Argon2Threads,
+	KeyLen:  Argon2KeyLen,
+}
+
 // ToHash 将密码转换为安全的哈希存储格式
 // 返回格式: $argon2id$v=19$m=65536,t=4,p=1$<salt>$<hash>
 func ToHash(password string) (string, error) {
+	return ToHashWithConfig(password, DefaultHashConfig)
+}
+
+// ToHashWithConfig 使用自定义配置将密码转换为哈希格式
+func ToHashWithConfig(password string, config HashConfig) (string, error) {
 	salt, err := GenSalt()
 	if err != nil {
-		return "", err // 已经是包装过的错误
+		return "", err
 	}
 
 	saltBytes, err := base64.RawStdEncoding.DecodeString(salt)
@@ -51,15 +72,14 @@ func ToHash(password string) (string, error) {
 		return "", fmt.Errorf("%w: %v", ErrDecodeSaltFailed, err)
 	}
 
-	hash := argon2.IDKey([]byte(password), saltBytes, Argon2Time, Argon2Memory, Argon2Threads, Argon2KeyLen)
+	hash := argon2.IDKey([]byte(password), saltBytes, config.Time, config.Memory, config.Threads, config.KeyLen)
 	encodedHash := base64.RawStdEncoding.EncodeToString(hash)
 
-	// 使用标准格式存储哈希和参数
 	return fmt.Sprintf(
 		"$argon2id$v=19$m=%d,t=%d,p=%d$%s$%s",
-		Argon2Memory,
-		Argon2Time,
-		Argon2Threads,
+		config.Memory,
+		config.Time,
+		config.Threads,
 		salt,
 		encodedHash,
 	), nil

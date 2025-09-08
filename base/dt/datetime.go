@@ -1,6 +1,7 @@
 package dt
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -54,9 +55,9 @@ func AdjustMilliTimestamp(timestamp uint64, seconds int64) uint64 {
 }
 
 var (
-	ErrInvalidDurationFormat = fmt.Errorf("invalid duration format")
-	ErrInvalidNumber         = fmt.Errorf("invalid number")
-	ErrInvalidTimeUnit       = fmt.Errorf("invalid time unit")
+	ErrInvalidDurationFormat = errors.New("invalid duration format")
+	ErrInvalidNumber         = errors.New("invalid number")
+	ErrInvalidTimeUnit       = errors.New("invalid time unit")
 )
 
 // AdjustMilliTimestampByStr 根据传入的时间单位（如 "1d", "-1m","1y"）对当前时间戳进行加减，并返回结果毫秒时间戳

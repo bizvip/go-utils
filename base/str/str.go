@@ -46,10 +46,10 @@ func PadCnSpaceChar(label string, spaces int) string {
 	return label + strings.Repeat("\u3000", spaces)
 }
 
-// UniqueStrings 返回一个新的切片，其中包含原切片中的唯一字符串
-func UniqueStrings(input []string) []string {
-	seen := make(map[string]struct{})
-	var result []string
+// UniqueSlice 使用泛型返回包含唯一元素的切片，适用于任何可比较类型
+func UniqueSlice[T comparable](input []T) []T {
+	seen := make(map[T]struct{})
+	result := make([]T, 0, len(input)) // 预分配容量优化性能
 
 	for _, item := range input {
 		if _, exists := seen[item]; !exists {
@@ -61,6 +61,11 @@ func UniqueStrings(input []string) []string {
 	return result
 }
 
+// UniqueStrings 保持向后兼容
+func UniqueStrings(input []string) []string {
+	return UniqueSlice(input)
+}
+
 // RegexpMatch 使用正则表达式匹配字符串
 func RegexpMatch(txt string, pattern string) (bool, error) {
 	regex, err := regexp.Compile(pattern)
@@ -70,8 +75,8 @@ func RegexpMatch(txt string, pattern string) (bool, error) {
 	return regex.MatchString(txt), nil
 }
 
-// ToInt64 将字符串转换成 int64
-func ToInt64(intStr string) (int64, error) {
+// ParseInt 使用泛型将字符串转换为指定的整数类型
+func ParseInt[T ~int | ~int8 | ~int16 | ~int32 | ~int64](intStr string) (T, error) {
 	if strings.Contains(intStr, ".") {
 		return 0, ErrInvalidNumberFormat
 	}
@@ -79,28 +84,29 @@ func ToInt64(intStr string) (int64, error) {
 	if err != nil {
 		return 0, ErrIntParseFailed
 	}
-	return i, nil
+	return T(i), nil
 }
 
-// CalcHash 计算字符串或文件的哈希（支持 MD5、SHA256 和 SHA3-256）
-// - input: 要计算哈希的字符串或文件路径
-// - useStream: 是否使用流的方式计算哈希
-// - hashFunc: 哈希函数 (hash.Hash)
+// ToInt64 保持向后兼容
+func ToInt64(intStr string) (int64, error) {
+	return ParseInt[int64](intStr)
+}
+
+// CalcHash 计算字符串或文件的哈希
 func CalcHash(input string, useStream bool, hashFunc hash.Hash) (string, error) {
 	if useStream {
-		file, err := os.Open(input) // 使用流的方式计算哈希
+		file, err := os.Open(input)
 		if err != nil {
-			return "", ErrFileOpenFailed
+			return "", fmt.Errorf("%w: %w", ErrFileOpenFailed, err)
 		}
-		defer func(file *os.File) { _ = file.Close() }(file)
+		defer file.Close()
 
 		if _, err := io.Copy(hashFunc, file); err != nil {
-			return "", ErrHashCalculation
+			return "", fmt.Errorf("%w: %w", ErrHashCalculation, err)
 		}
 	} else {
-		_, err := hashFunc.Write([]byte(input)) // 使用一次性内存加载的方式计算哈希
-		if err != nil {
-			return "", ErrHashCalculation
+		if _, err := hashFunc.Write([]byte(input)); err != nil {
+			return "", fmt.Errorf("%w: %w", ErrHashCalculation, err)
 		}
 	}
 
