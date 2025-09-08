@@ -15,13 +15,13 @@ vet:
 	@go vet ./...
 	@echo "✅ Vetting completed successfully"
 
-# Run all tests from tests directory (with automatic formatting)
+# Run all tests from entire project (with automatic formatting)
 test:
 	@echo "Running go fmt..."
 	@go fmt ./...
 	@echo "✅ Formatting completed successfully"
 	@echo "Running tests..."
-	@go test -v ./tests/...
+	@go test -v ./...
 	@echo "✅ All tests completed successfully"
 
 # Run tests with coverage (with automatic formatting)
@@ -30,7 +30,7 @@ test-coverage:
 	@go fmt ./...
 	@echo "✅ Formatting completed successfully"
 	@echo "Running tests with coverage..."
-	@go test -v -coverprofile=coverage.out ./tests/...
+	@go test -v -coverprofile=coverage.out ./...
 	@go tool cover -html=coverage.out -o coverage.html
 	@echo "✅ Tests with coverage completed successfully"
 	@echo "Coverage report generated: coverage.html"
@@ -41,7 +41,7 @@ bench:
 	@go fmt ./...
 	@echo "✅ Formatting completed successfully"
 	@echo "Running benchmarks..."
-	@go test -bench=. -benchmem ./tests/...
+	@go test -bench=. -benchmem ./...
 	@echo "✅ Benchmarks completed successfully"
 
 # Clean generated files
@@ -66,7 +66,7 @@ help:
 	@echo "  all           - Run tests (with auto-formatting) [default]"
 	@echo "  all-with-vet  - Run vet + tests (with auto-formatting)"
 	@echo "  vet           - Run go vet (with auto-formatting)"
-	@echo "  test          - Run all unit tests (with auto-formatting)"
+	@echo "  test          - Run all unit tests from entire project (with auto-formatting)"
 	@echo "  test-coverage - Run tests with coverage report (with auto-formatting)"
 	@echo "  bench         - Run benchmarks (with auto-formatting)"
 	@echo "  tidy          - Tidy go modules"
