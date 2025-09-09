@@ -15,6 +15,7 @@ This package continuously adopts the latest Go versions and cutting-edge technol
 - [Installation](#-installation)
 - [Quick Start](#-quick-start)
 - [Package Overview](#-package-overview)
+- [Complete Function Directory](#-complete-function-directory)
 - [Features](#-features)
 - [Testing](#-testing)
 - [Contributing](#-contributing)
@@ -54,41 +55,263 @@ func main() {
 
 | Package | Description | Key Features |
 |---------|-------------|--------------|
-| **base/num** | Numerical operations and calculations | Expression calculator, decimal handling, ID encoding |
-| **base/str** | String manipulation utilities | Base26/Base62 encoding, string validation |
-| **base/crypto** | Cryptographic operations | AES encryption/decryption |
-| **base/dt** | Date and time utilities | Date formatting, parsing, calculations |
-| **base/pwd** | Password utilities | Generation, validation, security checks |
+| **base/num** | Numerical operations and calculations | Expression calculator with AST parsing, decimal handling, Sqids hash ID encoding |
+| **base/str** | String manipulation utilities | Base26/Base62 encoding, hash calculations (MD5/SHA256/SHA3), Unicode operations |
+| **base/crypto** | Cryptographic operations | AES-GCM encryption/decryption with PBKDF2 key derivation |
+| **base/dt** | Date and time utilities | Timezone offset calculations, timestamp manipulation, time comparisons |
+| **base/pwd** | Password utilities | Argon2 hashing, security password validation with pattern checks |
+| **base/collections** | Generic collections (Go 1.24+) | Filter, Map, Reduce, GroupBy, Chunk with type safety |
+| **base/validator** | Validation framework | Generic validators, email/phone/ID card validation |
+| **base/id/sqids** | ID generation | Sqids library integration for hash IDs |
+| **base/snowflake** | Snowflake IDs | Yitter ID Generator, custom base time support |
+| **base/rnd** | Random generation | Cryptographically secure random strings, UUID generation |
+| **base/json** | JSON utilities | goccy/go-json integration, pretty formatting |
+| **base/htm** | HTML utilities | HTML compression and minification |
 
 ### 🌐 Network & APIs
 
 | Package | Description | Key Features |
 |---------|-------------|--------------|
-| **network/google** | Google services integration | Translate API with batch processing |
-| **network/exchange** | Cryptocurrency exchange APIs | Binance, OKX market data |
-| **network/httputils** | HTTP utilities | Download helpers, request builders |
-| **network/ip** | IP address utilities | Geolocation, validation |
+| **network/google** | Google services integration | Translate API with batch processing via RapidAPI |
+| **network/exchange/binance** | Binance exchange API | Market data retrieval with automatic fallback |
+| **network/httputils** | HTTP utilities | Image download with custom headers, path sanitization |
 
 ### ☁️ Cloud Services
 
 | Package | Description | Key Features |
 |---------|-------------|--------------|
-| **cloudservice/wasabi** | Wasabi cloud storage | File upload, download, management |
-
-### 🖼️ Media & Processing
-
-| Package | Description | Key Features |
-|---------|-------------|--------------|
-| **img** | Image processing toolkit | Resize, format conversion, optimization |
-| **i18n** | Internationalization | Multi-language support, OpenCC integration |
+| **cloudservice/wasabi** | S3-compatible storage | Wasabi cloud storage interface |
 
 ### 🛠️ System & OS
 
 | Package | Description | Key Features |
 |---------|-------------|--------------|
-| **os/console** | Console utilities | Colored output, formatting |
-| **os/fs** | File system operations | Cross-platform file handling |
-| **lock** | Concurrency utilities | Atomic locks, synchronization |
+| **os/console** | Console utilities | Colored terminal output, progress bars, formatted display |
+| **os/fs** | File system operations | Cross-platform file handling (Darwin/Linux), hash calculations |
+
+### ⚙️ Configuration
+
+| Package | Description | Key Features |
+|---------|-------------|--------------|
+| **conf** | Generic configuration management | Go 1.24+ generics, Viper integration, file watching |
+
+## 📚 Complete Function Directory
+
+### base/num - Numerical Operations
+
+| Function | Description |
+|----------|-------------|
+| `ValidateSecPwd(secPwd string) error` | Validates 6-digit security passwords |
+| `Int64ToHashId(number int64, minLen uint8) string` | Converts int64 to Sqids hash ID |
+| `HashIdToInt64(id string, minLen uint8) (int64, error)` | Converts hash ID back to int64 |
+| `MergeToDecimal(number *big.Int, dec int) decimal.Decimal` | Shifts decimal point left |
+| `FormatNumStrToDecimalAndShift(number string, decimals uint) decimal.Decimal` | Converts string to decimal with shift |
+| `CheckNumStrInRange(s string, min, max float64) (bool, error)` | Checks if number is in range |
+| `StrToDecimalTruncate(s string, precision int32) (decimal.Decimal, error)` | Converts with truncation |
+| `DecimalFormatBanker(value decimal.Decimal) string` | Banker's rounding format |
+| `GetMaxNum(vals ...int) int` | Returns maximum integer |
+| `Calc(exp string) (string, error)` | Evaluates mathematical expressions |
+| `NewCalculator() *Calculator` | Creates calculator instance |
+| `Evaluate(expression string) (float64, error)` | Evaluates using AST parsing |
+
+### base/str - String Utilities
+
+| Function | Description |
+|----------|-------------|
+| `ToUint32(str string) uint32` | Converts string to uint32 using FNV hash |
+| `PadCnSpaceChar(label string, spaces int) string` | Pads with Chinese spaces |
+| `UniqueSlice[T comparable](input []T) []T` | Returns unique elements |
+| `RegexpMatch(txt, pattern string) (bool, error)` | Regex pattern matching |
+| `ParseInt[T ~int...](intStr string) (T, error)` | Generic integer parsing |
+| `Md5(input string, useStream bool) (string, error)` | MD5 hash calculation |
+| `Sha256(input string, useStream bool, isSha3 bool) (string, error)` | SHA256/SHA3 hash |
+| `FilterEmptyChar(str string) string` | Removes empty characters |
+| `UnicodeLength(str string) int` | Unicode string length |
+| `ToPrettyJson(v interface{}, isProto bool) (string, error)` | JSON formatting |
+| `GenSlug(title string) string` | URL-friendly slug generation |
+
+### base/str/base26 - Base26 Encoding
+
+| Function | Description |
+|----------|-------------|
+| `Uint64ToAlpha(input uint64) (string, error)` | Converts uint64 to base26 |
+| `Int64ToAlpha(input int64) (string, error)` | Converts int64 with sign support |
+| `StrNumToAlpha(input string) (string, error)` | String number to base26 |
+| `ToNum(alphaStr string) (string, error)` | Base26 to decimal string |
+| `IsValidBase26(s string) bool` | Validates base26 format |
+
+### base/str/base62 - Base62 Encoding
+
+| Function | Description |
+|----------|-------------|
+| `SHA256ToBase62(sha256Hash string) (string, error)` | SHA256 to base62 |
+| `Base62ToSHA256(base62Str string) (string, error)` | Base62 to SHA256 |
+
+### base/crypto - Cryptographic Functions
+
+| Function | Description |
+|----------|-------------|
+| `AesEncrypt(text, pass string) (string, error)` | AES-GCM encryption with PBKDF2 |
+| `AesDecrypt(cipherText, pass string) (string, error)` | AES-GCM decryption |
+
+### base/dt - Date/Time Utilities
+
+| Function | Description |
+|----------|-------------|
+| `GetTimezoneOffsetByMillis(millis int64) (string, error)` | Calculates timezone offset |
+| `AdjustMilliTimestamp(timestamp uint64, seconds int64) uint64` | Adjusts timestamp |
+| `AdjustMilliTimestampByStr(timestamp uint64, shift string) (uint64, error)` | Adjusts by time unit |
+| `GetNanoTimestampStr() string` | Current nanosecond timestamp |
+| `GetMicroTimestampStr() string` | Current microsecond timestamp |
+| `GetMilliTimestampStr() string` | Current millisecond timestamp |
+| `ConvertStrMillisToTime(millis string) (time.Time, error)` | String millis to time |
+| `SetTimezone(tz ...string)` | Sets timezone (default Shanghai) |
+| `CompareTimeStrings(t1, t2, layout string) (int, error)` | Compares time strings |
+| `TimeDifference(t1, t2 string) (time.Duration, error)` | Calculates time difference |
+
+### base/pwd - Password Utilities
+
+| Function | Description |
+|----------|-------------|
+| `GenSalt() (string, error)` | Generates random salt |
+| `ToHash(password string) (string, error)` | Argon2 password hashing |
+| `ToHashWithConfig(password string, config HashConfig) (string, error)` | Custom config hashing |
+| `IsCorrect(password, hashStr string) (bool, error)` | Verifies password |
+| `ValidateSixNumberAsPwd(secPwd string, length int) error` | Validates numeric passwords |
+| `ValidateSHA256(hash string) error` | Validates SHA256 format |
+
+### base/collections - Generic Collections
+
+| Function | Description |
+|----------|-------------|
+| `Filter[T any](slice []T, predicate func(T) bool) []T` | Filters by predicate |
+| `Map[T, U any](slice []T, mapper func(T) U) []U` | Maps to different type |
+| `Reduce[T, U any](slice []T, initialValue U, reducer func(U, T) U) U` | Reduces collection |
+| `Find[T any](slice []T, predicate func(T) bool) (T, bool)` | Finds first match |
+| `Contains[T comparable](slice []T, target T) bool` | Checks containment |
+| `Unique[T comparable](slice []T) []T` | Returns unique elements |
+| `SortBy[T any, K cmp.Ordered](slice []T, keyFunc func(T) K)` | Sorts by key |
+| `GroupBy[T any, K comparable](slice []T, keyFunc func(T) K) map[K][]T` | Groups by key |
+| `Chunk[T any](slice []T, size int) [][]T` | Splits into chunks |
+| `Reverse[T any](slice []T)` | Reverses in-place |
+
+### base/validator - Validation Framework
+
+| Function | Description |
+|----------|-------------|
+| `NewValidator[T any](rules ...ValidationRule[T]) *Validator[T]` | Creates validator |
+| `ValidateEmail(email, field string) error` | Validates email format |
+| `ValidatePhone(phone, field string) error` | Validates Chinese phone |
+| `ValidateIDCard(idCard, field string) error` | Validates Chinese ID card |
+| `ValidatePassword(password, field string) error` | Validates password strength |
+| `IsValidEmailFormat(email string) bool` | Email format validation |
+| `IsDomainResolvable(domain string) bool` | Checks domain resolution |
+| `IsEmailAddrValidWithDomain(email string) error` | Email with domain check |
+| `IsMd5(input string) error` | Validates MD5 format |
+| `IsAlphaNum(str string) bool` | Alphanumeric check |
+| `IsLengthBetween(str string, min, max int) bool` | Length range validation |
+
+### base/id/sqids - ID Generation
+
+| Function | Description |
+|----------|-------------|
+| `ToAlpha(ids []uint64) string` | Converts IDs to alphanumeric |
+| `ToInt(ids string) []uint64` | Converts string to ID array |
+
+### base/snowflake - Snowflake IDs
+
+| Function | Description |
+|----------|-------------|
+| `InitWith(workerId uint16, baseTime *time.Time)` | Initialize with settings |
+| `ID() uint64` | Generates new Snowflake ID |
+| `QuickID() uint64` | Backward compatible ID generation |
+
+### base/rnd - Random Generation
+
+| Function | Description |
+|----------|-------------|
+| `RandNumStr(length int) string` | Secure random digits |
+| `UUID(isNoDash bool) string` | UUID with/without dashes |
+| `GenRandomAlphaNumeric() string` | Random alphanumeric string |
+| `GenNumberInRange(min, max int) int` | Random number in range |
+
+### base/json - JSON Utilities
+
+| Function | Description |
+|----------|-------------|
+| `PrettyFormat(in string) string` | Formats JSON with indentation |
+| `ToJsonWithNoErr(payload interface{}, pretty bool) string` | JSON marshaling without errors |
+
+### base/htm - HTML Utilities
+
+| Function | Description |
+|----------|-------------|
+| `Compress(htmlSrc string, stripScriptStyle bool) (string, error)` | HTML compression |
+
+### network/google - Google Translate
+
+| Function | Description |
+|----------|-------------|
+| `NewTranslationService(apiKey, apiHost string) *TranslationService` | Creates service |
+| `GoogleTranslateToEn(text, source string) (string, error)` | Translates to English |
+| `GoogleTranslateToCN(text, source string) (string, error)` | Translates to Chinese |
+| `GoogleDetectLang(text string) (string, error)` | Detects language |
+
+### network/httputils - HTTP Utilities
+
+| Function | Description |
+|----------|-------------|
+| `DownImage(url, name, savePath string) (string, error)` | Downloads images |
+
+### network/exchange/binance - Binance API
+
+| Function | Description |
+|----------|-------------|
+| `GetApi(query string) interface{}` | Generic GET with fallback |
+
+### cloudservice/wasabi - S3 Storage
+
+| Function | Description |
+|----------|-------------|
+| `NewWasabiHandler(bucketName, region, endpoint, accessKey, secretKey string) *StorageHandler` | Creates handler |
+
+### os/console - Terminal Output
+
+| Function | Description |
+|----------|-------------|
+| `Console() *C` | Returns stdout console |
+| `ConsoleErr() *C` | Returns stderr console |
+| `Black/Red/Green/Yellow/Blue/Magenta/Cyan/White/Gray(txt string)` | Colored output |
+| `Success/Error/Warning/Info(txt string)` | Status messages |
+| `Progress(current, total, width int)` | Progress bar |
+| `Box/Title/Section(txt string)` | Formatted output |
+
+### os/fs - File System Operations
+
+| Function | Description |
+|----------|-------------|
+| `ComputeFileSHA256(filePath string) (string, error)` | SHA256 of file |
+| `GetFileCreationTime(filePath string) (string, time.Time, error)` | File creation time |
+| `GetFileNameMd5(filename string) (string, error)` | MD5 of filename |
+| `GetSmallFileMd5/GetBigFileMd5(filePath string) (string, error)` | File MD5 |
+| `GetCurExeDir() string` | Current executable directory |
+| `GetAllFilesByExt(dir, ext string) ([]string, error)` | Files by extension |
+| `IsDirAndHasFiles(dirPath string) (bool, bool, error)` | Directory validation |
+| `Delete(path string) error` | File/directory deletion |
+| `CreateDir/CreateDirIfNotExist(path string) error` | Directory creation |
+| `IsFile(path string) (bool, error)` | File type check |
+| `DetectFileType(file io.Reader) (string, error)` | MIME type detection |
+
+### conf - Configuration Management
+
+| Function | Description |
+|----------|-------------|
+| `New[T any](config *T) *Manager[T]` | Creates config manager |
+| `NewFromExecutable[T any](config *T, configName string) (*Manager[T], error)` | Auto-loads config |
+| `NewFromExecutableWithWatch[T any](config *T, configName string) (*Manager[T], error)` | With file watching |
+| `LoadFile(filePath string, watch bool) error` | Loads configuration |
+| `GetConfig() *T` | Thread-safe config access |
+| `UpdateConfig(updateFn func(*T))` | Atomic config updates |
 
 ## ✨ Features
 
