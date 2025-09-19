@@ -13,7 +13,7 @@ func init() {
 	var err error
 	s, err = sqids.New(sqids.Options{
 		Alphabet:  "7QAe51ajZrfx4Bg6Sp8YzNhobJIRcOyqVTmnFCsPW9k3G2uE0liwDdHXLUMvKt",
-		MinLength: 6,
+		MinLength: 4,
 	})
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to create sqids instance")

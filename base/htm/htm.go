@@ -5,7 +5,7 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/tdewolff/minify/v2"
-	minhtml "github.com/tdewolff/minify/v2/html"
+	minifyv2 "github.com/tdewolff/minify/v2/html"
 )
 
 // Compress 压缩 HTML 字符串。
@@ -16,7 +16,7 @@ import (
 func Compress(htmlSrc string, stripScriptStyle bool) (string, error) {
 	// 初始化 minifier（如需高频调用，可放包级变量复用）
 	m := minify.New()
-	m.AddFunc("text/html", minhtml.Minify)
+	m.AddFunc("text/html", minifyv2.Minify)
 
 	// 1) 不过滤脚本/样式，直接压缩
 	if !stripScriptStyle {

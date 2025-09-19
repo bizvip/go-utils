@@ -13,7 +13,7 @@ const (
 	// Bit allocation
 	timeBits     uint = 39 // ~17.4 years
 	workerIdBits uint = 4  // up to 16 nodes (0-15)
-	sequenceBits uint = 4  // 8 IDs/ms (~8000 IDs/s per node)
+	sequenceBits uint = 4  // ~ 16000/s
 )
 
 const spinSleep = 50 * time.Microsecond
@@ -28,9 +28,9 @@ var (
 	totalBits           = timeBits + workerIdBits + sequenceBits
 )
 
-// ShortFlakeIdGenerator is a monotonic, short-length Snowflake-like ID generator.
+// ShortIdGenerator is a monotonic, short-length Snowflake-like ID generator.
 // It uses a process-local monotonic clock plus a startup offset derived from wall clock.
-type ShortFlakeIdGenerator struct {
+type ShortIdGenerator struct {
 	mu sync.Mutex
 
 	// Last emitted time (milliseconds since customEpoch, monotonic within the process)
@@ -48,8 +48,8 @@ type ShortFlakeIdGenerator struct {
 	baseOffsetMs uint64
 }
 
-// NewShortFlakeIdGenerator creates a new generator for the given workerId.
-func NewShortFlakeIdGenerator(workerId int64) (*ShortFlakeIdGenerator, error) {
+// NewShortIdGenerator creates a new generator for the given workerId.
+func NewShortIdGenerator(workerId int64) (*ShortIdGenerator, error) {
 	// Defensive: ensure total width fits in uint64
 	//if totalBits > 63 {
 	//	return nil, fmt.Errorf("invalid bit allocation: time=%d worker=%d seq=%d (sum=%d > 63)",
@@ -72,7 +72,7 @@ func NewShortFlakeIdGenerator(workerId int64) (*ShortFlakeIdGenerator, error) {
 		baseOffsetMs = 0
 	}
 
-	return &ShortFlakeIdGenerator{
+	return &ShortIdGenerator{
 		workerId:     uint64(workerId),
 		baseMono:     now,
 		baseOffsetMs: baseOffsetMs,
@@ -80,7 +80,7 @@ func NewShortFlakeIdGenerator(workerId int64) (*ShortFlakeIdGenerator, error) {
 }
 
 // monoNowMs returns a process-monotonic "milliseconds since customEpoch".
-func (g *ShortFlakeIdGenerator) monoNowMs() uint64 {
+func (g *ShortIdGenerator) monoNowMs() uint64 {
 	elapsed := time.Since(g.baseMono).Milliseconds()
 	if elapsed < 0 {
 		// Should not happen; keep it defensive.
@@ -90,7 +90,7 @@ func (g *ShortFlakeIdGenerator) monoNowMs() uint64 {
 }
 
 // NextID generates one ID. It is strictly monotonic within the process for the same worker.
-func (g *ShortFlakeIdGenerator) NextID() (uint64, error) {
+func (g *ShortIdGenerator) NextID() (uint64, error) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 
@@ -128,7 +128,7 @@ func (g *ShortFlakeIdGenerator) NextID() (uint64, error) {
 }
 
 // BatchNext generates n IDs in one critical section to reduce lock contention.
-func (g *ShortFlakeIdGenerator) BatchNext(n int) ([]uint64, error) {
+func (g *ShortIdGenerator) BatchNext(n int) ([]uint64, error) {
 	if n <= 0 {
 		return nil, nil
 	}
@@ -166,7 +166,7 @@ func (g *ShortFlakeIdGenerator) BatchNext(n int) ([]uint64, error) {
 }
 
 // Decompose splits an ID into (timestampMsSinceCustomEpoch, workerId, sequence).
-func (g *ShortFlakeIdGenerator) Decompose(id uint64) (tsMs uint64, workerId uint64, seq uint64) {
+func (g *ShortIdGenerator) Decompose(id uint64) (tsMs uint64, workerId uint64, seq uint64) {
 	seq = id & maxSequence
 	workerId = (id >> workerIdShift) & maxWorkerId
 	tsMs = id >> timestampShift
