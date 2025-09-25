@@ -21,7 +21,7 @@ require (
 	github.com/spf13/viper v1.20.0
 	github.com/sqids/sqids-go v0.4.1
 	github.com/tdewolff/minify/v2 v2.23.8
-	github.com/yitter/idgenerator-go v1.3.3
+	github.com/zeebo/blake3 v0.2.4
 	go.etcd.io/etcd/client/v3 v3.5.20
 	golang.org/x/crypto v0.37.0
 	golang.org/x/image v0.25.0
@@ -48,6 +48,7 @@ require (
 	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
+	github.com/klauspost/cpuid/v2 v2.0.12 // indirect
 	github.com/liuzl/cedar-go v0.0.0-20170805034717-80a9c64b256d // indirect
 	github.com/liuzl/da v0.0.0-20180704015230-14771aad5b1d // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
