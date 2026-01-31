@@ -57,7 +57,10 @@ func main() {
 |---------|-------------|--------------|
 | **base/num** | Numerical operations and calculations | Expression calculator with AST parsing, decimal handling, Sqids hash ID encoding |
 | **base/str** | String manipulation utilities | Base26/Base62 encoding, hash calculations (MD5/SHA256/SHA3), Unicode operations |
+| **base/str/base26** | Base26 encoding | Numeric/string to base26 conversions, validation |
+| **base/str/base62** | Base62 encoding | SHA256 <-> Base62 conversions |
 | **base/crypto** | Cryptographic operations | AES-GCM encryption/decryption with PBKDF2 key derivation |
+| **base/blake3hash** | BLAKE3 hashing | Stream/file hashing helpers |
 | **base/dt** | Date and time utilities | Timezone offset calculations, timestamp manipulation, time comparisons |
 | **base/pwd** | Password utilities | Argon2 hashing, security password validation with pattern checks |
 | **base/collections** | Generic collections (Go 1.24+) | Filter, Map, Reduce, GroupBy, Chunk with type safety |
@@ -66,6 +69,7 @@ func main() {
 | **base/snowflake** | Snowflake IDs | Yitter ID Generator, custom base time support |
 | **base/rnd** | Random generation | Cryptographically secure random strings, UUID generation |
 | **base/json** | JSON utilities | goccy/go-json integration, pretty formatting |
+| **base/reflects** | Reflection helpers | Struct merge and Struct-to-map conversion |
 | **base/htm** | HTML utilities | HTML compression and minification |
 
 ### 🌐 Network & APIs
@@ -74,7 +78,11 @@ func main() {
 |---------|-------------|--------------|
 | **network/google** | Google services integration | Translate API with batch processing via RapidAPI |
 | **network/exchange/binance** | Binance exchange API | Market data retrieval with automatic fallback |
+| **network/exchange/okx** | OKX exchange API | Fiat/crypto exchange rates |
+| **network/hcaptcha** | hCaptcha verification | Server-side token verification |
 | **network/httputils** | HTTP utilities | Image download with custom headers, path sanitization |
+| **network/ip** | IP utilities | Local/public IP, GeoIP, client info |
+| **network/ua** | User-Agent parser | Parses UA strings into device/browser info |
 
 ### ☁️ Cloud Services
 
@@ -82,12 +90,50 @@ func main() {
 |---------|-------------|--------------|
 | **cloudservice/wasabi** | S3-compatible storage | Wasabi cloud storage interface |
 
+### 🖼️ Image
+
+| Package | Description | Key Features |
+|---------|-------------|--------------|
+| **img** | Image utilities | Base64 conversion, resize, image info (optional libvips) |
+
+### 🈯 I18n & Localization
+
+| Package | Description | Key Features |
+|---------|-------------|--------------|
+| **i18n/goi18n** | i18n helpers | go-i18n integration helpers |
+| **i18n/opencc** | Chinese conversion | OpenCC wrapper utilities |
+
+### 📌 Constants
+
+| Package | Description | Key Features |
+|---------|-------------|--------------|
+| **consts/cryptocurrency** | Crypto constants | Coin/network/token constants, explorers |
+| **consts/currencycode** | Currency codes | Fiat currency code constants |
+
+### 🧩 Patterns & Concurrency
+
+| Package | Description | Key Features |
+|---------|-------------|--------------|
+| **lock** | Adaptive lock | Sharded lock with cleanup |
+| **oo/singleton** | Singleton helpers | Lazy initialization, per-key singleton |
+
+### 🧰 Infrastructure & Models
+
+| Package | Description | Key Features |
+|---------|-------------|--------------|
+| **etcd** | etcd client wrapper | KV ops, leases, locks, watch |
+| **ex** | Error model | Structured error type with metadata |
+
 ### 🛠️ System & OS
 
 | Package | Description | Key Features |
 |---------|-------------|--------------|
+| **os** | Byte size helpers | ByteSize conversions and formatting |
 | **os/console** | Console utilities | Colored terminal output, progress bars, formatted display |
+| **os/em** | Embed helpers | Read embedded files and list directories |
 | **os/fs** | File system operations | Cross-platform file handling (Darwin/Linux), hash calculations |
+| **os/fsn** | File watch | fsnotify-based directory watcher |
+| **os/io/logger** | Logging | Zerolog-based logger with DI and rotation |
 
 ### ⚙️ Configuration
 

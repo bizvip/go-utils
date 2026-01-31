@@ -243,8 +243,8 @@ func IsValidTONAddress(address string) bool {
 	}
 	tag := decoded[0]
 	// tag 合法性（宽松检查）：低 6 位 0x11 或 0x51；不强制 testnet 位
-	okTag := (tag&0x1F == 0x11) || (tag&0x1F == 0x11) || (tag&0x1F == 0x11) // 宽松处理
-	_ = okTag                                                               // 这里不严格限制 tag，兼容性更强
+	okTag := (tag & 0x1F) == 0x11 // 宽松处理
+	_ = okTag                     // 这里不严格限制 tag，兼容性更强
 
 	// CRC16-XMODEM 校验
 	body := decoded[:34]

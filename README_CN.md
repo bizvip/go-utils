@@ -56,18 +56,32 @@ func main() {
 |------|------|----------|
 | **base/num** | 数值操作和计算 | 表达式计算器、小数处理、ID编码 |
 | **base/str** | 字符串操作工具 | Base26/Base62编码、字符串验证 |
+| **base/str/base26** | Base26 编码 | 数字/字符串与 Base26 互转 |
+| **base/str/base62** | Base62 编码 | SHA256 与 Base62 互转 |
 | **base/crypto** | 加密操作 | AES加密/解密 |
+| **base/blake3hash** | BLAKE3 哈希 | 文件/流哈希计算 |
 | **base/dt** | 日期时间工具 | 日期格式化、解析、计算 |
 | **base/pwd** | 密码工具 | 生成、验证、安全检查 |
+| **base/collections** | 泛型集合 | Filter/Map/Reduce/GroupBy 等 |
+| **base/validator** | 验证框架 | 邮箱/手机号/身份证等验证 |
+| **base/id/sqids** | ID 生成 | Sqids 编码/解码 |
+| **base/snowflake** | 雪花ID | 分布式 ID 生成 |
+| **base/rnd** | 随机工具 | 安全随机数/UUID |
+| **base/json** | JSON 工具 | JSON 格式化 |
+| **base/reflects** | 反射工具 | 结构体合并/转 map |
+| **base/htm** | HTML工具 | 压缩、清理、优化 |
 
 ### 🌐 网络与API
 
 | 包名 | 描述 | 核心功能 |
 |------|------|----------|
 | **network/google** | Google服务集成 | 翻译API与批量处理 |
-| **network/exchange** | 加密货币交易所API | Binance、OKX市场数据 |
+| **network/exchange/binance** | Binance API | 行情获取 |
+| **network/exchange/okx** | OKX API | 汇率与报价 |
+| **network/hcaptcha** | hCaptcha 验证 | 服务端验证 |
 | **network/httputils** | HTTP工具 | 下载助手、请求构建器 |
-| **network/ip** | IP地址工具 | 地理位置、验证 |
+| **network/ip** | IP地址工具 | IP 信息与 GeoIP |
+| **network/ua** | User-Agent 解析 | 浏览器/设备信息 |
 
 ### ☁️ 云服务
 
@@ -75,20 +89,56 @@ func main() {
 |------|------|----------|
 | **cloudservice/wasabi** | Wasabi云存储 | 文件上传、下载、管理 |
 
-### 🖼️ 媒体与处理
+### 🖼️ 图像
 
 | 包名 | 描述 | 核心功能 |
 |------|------|----------|
 | **img** | 图像处理工具包 | 调整大小、格式转换、优化 |
-| **i18n** | 国际化 | 多语言支持、OpenCC集成 |
+
+### 🈯 国际化
+
+| 包名 | 描述 | 核心功能 |
+|------|------|----------|
+| **i18n/goi18n** | i18n 工具 | go-i18n 封装 |
+| **i18n/opencc** | 中文转换 | OpenCC 封装 |
+
+### 📌 常量
+
+| 包名 | 描述 | 核心功能 |
+|------|------|----------|
+| **consts/cryptocurrency** | 加密货币常量 | 币种/链/协议/浏览器 |
+| **consts/currencycode** | 法币代码 | 常用货币代码 |
+
+### 🧩 模式与并发
+
+| 包名 | 描述 | 核心功能 |
+|------|------|----------|
+| **lock** | 自适应锁 | 分片锁与清理 |
+| **oo/singleton** | 单例工具 | 延迟初始化/按 key 单例 |
+
+### 🧰 基础设施与模型
+
+| 包名 | 描述 | 核心功能 |
+|------|------|----------|
+| **etcd** | ETCD 客户端 | KV/租约/锁/监听 |
+| **ex** | 错误模型 | 结构化错误与元数据 |
 
 ### 🛠️ 系统与操作系统
 
 | 包名 | 描述 | 核心功能 |
 |------|------|----------|
+| **os** | ByteSize 工具 | 字节大小换算 |
 | **os/console** | 控制台工具 | 彩色输出、格式化 |
+| **os/em** | Embed 工具 | 读取嵌入文件 |
 | **os/fs** | 文件系统操作 | 跨平台文件处理 |
-| **lock** | 并发工具 | 原子锁、同步 |
+| **os/fsn** | 文件监听 | 基于 fsnotify |
+| **os/io/logger** | 日志系统 | Zerolog + 依赖注入 |
+
+### ⚙️ 配置
+
+| 包名 | 描述 | 核心功能 |
+|------|------|----------|
+| **conf** | 配置管理 | 泛型配置、热更新 |
 
 ## ✨ 功能特性
 

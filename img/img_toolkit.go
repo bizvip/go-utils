@@ -11,13 +11,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/davidbyttow/govips/v2/vips"
 	"github.com/kolesa-team/go-webp/encoder"
 	"github.com/kolesa-team/go-webp/webp"
 	"golang.org/x/image/bmp"
 	"golang.org/x/image/draw"
-
-	"github.com/bizvip/go-utils/os/fs"
 )
 
 // ImageInfo represents information about an image
@@ -159,59 +156,4 @@ func ResizeImage(options ResizeOptions) error {
 	}
 
 	return nil
-}
-
-// GetImageInfo retrieves information about an image file
-func GetImageInfo(path string, withMd5 bool) (*ImageInfo, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	img, format, err := image.Decode(file)
-	if err != nil {
-		// 尝试使用 govips 读取图像信息
-		vips.Startup(nil)
-		defer vips.Shutdown()
-
-		ref, err := vips.NewImageFromFile(path)
-		if err != nil {
-			return nil, err
-		}
-		defer ref.Close()
-
-		width := ref.Width()
-		height := ref.Height()
-		format = vips.ImageTypes[ref.Format()]
-
-		// 创建一个空的 image.RGBA 以避免返回 nil 图像
-		img = &image.RGBA{Rect: image.Rect(0, 0, width, height)}
-	}
-
-	ext := filepath.Ext(path)
-	fileInfo, err := file.Stat()
-	if err != nil {
-		return nil, err
-	}
-
-	fileMd5 := ""
-	if withMd5 {
-		fileMd5, err = fs.GetBigFileMd5(path)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	info := &ImageInfo{
-		Width:    img.Bounds().Dx(),
-		Height:   img.Bounds().Dy(),
-		Format:   format,
-		Ext:      ext,
-		Size:     fileInfo.Size(),
-		FileName: filepath.Base(path),
-		FileMD5:  fileMd5,
-	}
-
-	return info, nil
 }

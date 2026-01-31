@@ -14,8 +14,8 @@ import (
 
 // Argon2 参数
 const (
-	Argon2Time    = 4         // Argon2 参数，迭代次数
-	Argon2Memory  = 64 * 1024 // Argon2 参数，内存大小（KB）
+	Argon2Time    = 2         // Argon2 参数，迭代次数
+	Argon2Memory  = 19 * 1024 // Argon2 参数，内存大小（KB）
 	Argon2Threads = 1         // Argon2 参数，线程数
 	Argon2KeyLen  = 32        // Argon2 参数，生成的密钥长度
 	SaltSize      = 16        // 盐值长度
@@ -55,7 +55,7 @@ var DefaultHashConfig = HashConfig{
 }
 
 // ToHash 将密码转换为安全的哈希存储格式
-// 返回格式: $argon2id$v=19$m=65536,t=4,p=1$<salt>$<hash>
+// 返回格式: $argon2id$v=19$m=19456,t=2,p=1$<salt>$<hash>
 func ToHash(password string) (string, error) {
 	return ToHashWithConfig(password, DefaultHashConfig)
 }
