@@ -143,221 +143,377 @@ func main() {
 
 ## 📚 Complete Function Directory
 
-### base/num - Numerical Operations
+### base/blake3hash
+- `Must` — `base/blake3hash/blake3hash.go`
+- `SumBytes` — `base/blake3hash/blake3hash.go`
+- `SumFile` — `base/blake3hash/blake3hash.go`
+- `SumReader` — `base/blake3hash/blake3hash.go`
 
-| Function | Description |
-|----------|-------------|
-| `ValidateSecPwd(secPwd string) error` | Validates 6-digit security passwords |
-| `Int64ToHashId(number int64, minLen uint8) string` | Converts int64 to Sqids hash ID |
-| `HashIdToInt64(id string, minLen uint8) (int64, error)` | Converts hash ID back to int64 |
-| `MergeToDecimal(number *big.Int, dec int) decimal.Decimal` | Shifts decimal point left |
-| `FormatNumStrToDecimalAndShift(number string, decimals uint) decimal.Decimal` | Converts string to decimal with shift |
-| `CheckNumStrInRange(s string, min, max float64) (bool, error)` | Checks if number is in range |
-| `StrToDecimalTruncate(s string, precision int32) (decimal.Decimal, error)` | Converts with truncation |
-| `DecimalFormatBanker(value decimal.Decimal) string` | Banker's rounding format |
-| `GetMaxNum(vals ...int) int` | Returns maximum integer |
-| `Calc(exp string) (string, error)` | Evaluates mathematical expressions |
-| `NewCalculator() *Calculator` | Creates calculator instance |
-| `Evaluate(expression string) (float64, error)` | Evaluates using AST parsing |
+### base/crypto
+- `AesDecrypt` — `base/crypto/aes.go`
+- `AesEncrypt` — `base/crypto/aes.go`
 
-### base/str - String Utilities
+### base/dt
+- `AdjustMilliTimestamp` — `base/dt/datetime.go`
+- `AdjustMilliTimestampByStr` — `base/dt/datetime.go`
+- `CompareTimeStrings` — `base/dt/datetime.go`
+- `ConvertStrMillisToTime` — `base/dt/datetime.go`
+- `GetMicroTimestampStr` — `base/dt/datetime.go`
+- `GetMilliTimestampStr` — `base/dt/datetime.go`
+- `GetNanoTimestampStr` — `base/dt/datetime.go`
+- `GetTimezoneOffsetByMillis` — `base/dt/datetime.go`
+- `SetTimezone` — `base/dt/datetime.go`
+- `TimeDifference` — `base/dt/datetime.go`
 
-| Function | Description |
-|----------|-------------|
-| `ToUint32(str string) uint32` | Converts string to uint32 using FNV hash |
-| `PadCnSpaceChar(label string, spaces int) string` | Pads with Chinese spaces |
-| `UniqueSlice[T comparable](input []T) []T` | Returns unique elements |
-| `RegexpMatch(txt, pattern string) (bool, error)` | Regex pattern matching |
-| `ParseInt[T ~int...](intStr string) (T, error)` | Generic integer parsing |
-| `Md5(input string, useStream bool) (string, error)` | MD5 hash calculation |
-| `Sha256(input string, useStream bool, isSha3 bool) (string, error)` | SHA256/SHA3 hash |
-| `FilterEmptyChar(str string) string` | Removes empty characters |
-| `UnicodeLength(str string) int` | Unicode string length |
-| `ToPrettyJson(v interface{}, isProto bool) (string, error)` | JSON formatting |
-| `GenSlug(title string) string` | URL-friendly slug generation |
+### base/htm
+- `Compress` — `base/htm/htm.go`
 
-### base/str/base26 - Base26 Encoding
+### base/id/sqids
+- `ToAlpha` — `base/id/sqids/sqids.go`
+- `ToInt` — `base/id/sqids/sqids.go`
 
-| Function | Description |
-|----------|-------------|
-| `Uint64ToAlpha(input uint64) (string, error)` | Converts uint64 to base26 |
-| `Int64ToAlpha(input int64) (string, error)` | Converts int64 with sign support |
-| `StrNumToAlpha(input string) (string, error)` | String number to base26 |
-| `ToNum(alphaStr string) (string, error)` | Base26 to decimal string |
-| `IsValidBase26(s string) bool` | Validates base26 format |
+### base/json
+- `PrettyFormat` — `base/json/goccy_json.go`
+- `ToJsonWithNoErr` — `base/json/goccy_json.go`
 
-### base/str/base62 - Base62 Encoding
+### base/num
+- `Calc` — `base/num/num.go`
+- `Calculator.Evaluate` — `base/num/calculator.go`
+- `CheckNumStrInRange` — `base/num/num.go`
+- `DecimalFormatBanker` — `base/num/num.go`
+- `Evaluate` — `base/num/calculator.go`
+- `EvaluateToString` — `base/num/calculator.go`
+- `FormatNumStrToDecimalAndShift` — `base/num/num.go`
+- `GetMaxNum` — `base/num/num.go`
+- `HashIdToInt64` — `base/num/num.go`
+- `Int64ToHashId` — `base/num/num.go`
+- `MergeToDecimal` — `base/num/num.go`
+- `NewCalculator` — `base/num/calculator.go`
+- `StrToDecimalTruncate` — `base/num/num.go`
+- `ValidateSecPwd` — `base/num/num.go`
 
-| Function | Description |
-|----------|-------------|
-| `SHA256ToBase62(sha256Hash string) (string, error)` | SHA256 to base62 |
-| `Base62ToSHA256(base62Str string) (string, error)` | Base62 to SHA256 |
+### base/pwd
+- `GenSalt` — `base/pwd/pwd.go`
+- `IsCorrect` — `base/pwd/pwd.go`
+- `SplitHash` — `base/pwd/pwd.go`
+- `ToHash` — `base/pwd/pwd.go`
+- `ToHashWithConfig` — `base/pwd/pwd.go`
+- `ValidateSHA256` — `base/pwd/validate.go`
+- `ValidateSixNumberAsPwd` — `base/pwd/validate.go`
 
-### base/crypto - Cryptographic Functions
+### base/reflects
+- `MergeStructData` — `base/reflects/reflects.go`
 
-| Function | Description |
-|----------|-------------|
-| `AesEncrypt(text, pass string) (string, error)` | AES-GCM encryption with PBKDF2 |
-| `AesDecrypt(cipherText, pass string) (string, error)` | AES-GCM decryption |
+### base/rnd
+- `GenNumberInRange` — `base/rnd/rnd.go`
+- `GenRandomAlphaNumeric` — `base/rnd/rnd.go`
+- `RandNumStr` — `base/rnd/rnd.go`
+- `RandNumStrNonSafe` — `base/rnd/rnd.go`
+- `RandomCnName` — `base/rnd/cn_usr.go`
+- `UUID` — `base/rnd/rnd.go`
 
-### base/dt - Date/Time Utilities
+### base/snowflake
+- `NewShortIdGenerator` — `base/snowflake/short_version.go`
+- `ShortIdGenerator.BatchNext` — `base/snowflake/short_version.go`
+- `ShortIdGenerator.Decompose` — `base/snowflake/short_version.go`
+- `ShortIdGenerator.NextID` — `base/snowflake/short_version.go`
 
-| Function | Description |
-|----------|-------------|
-| `GetTimezoneOffsetByMillis(millis int64) (string, error)` | Calculates timezone offset |
-| `AdjustMilliTimestamp(timestamp uint64, seconds int64) uint64` | Adjusts timestamp |
-| `AdjustMilliTimestampByStr(timestamp uint64, shift string) (uint64, error)` | Adjusts by time unit |
-| `GetNanoTimestampStr() string` | Current nanosecond timestamp |
-| `GetMicroTimestampStr() string` | Current microsecond timestamp |
-| `GetMilliTimestampStr() string` | Current millisecond timestamp |
-| `ConvertStrMillisToTime(millis string) (time.Time, error)` | String millis to time |
-| `SetTimezone(tz ...string)` | Sets timezone (default Shanghai) |
-| `CompareTimeStrings(t1, t2, layout string) (int, error)` | Compares time strings |
-| `TimeDifference(t1, t2 string) (time.Duration, error)` | Calculates time difference |
+### base/str
+- `CalcHash` — `base/str/str.go`
+- `FilterEmptyChar` — `base/str/str.go`
+- `GenFixedStrWithSeed` — `base/str/str.go`
+- `GenSha1` — `base/str/str.go`
+- `GenSlug` — `base/str/str.go`
+- `GetDirNameFromSnowflakeID` — `base/str/str.go`
+- `Md5` — `base/str/str.go`
+- `PadCnSpaceChar` — `base/str/str.go`
+- `RegexpMatch` — `base/str/str.go`
+- `Sha256` — `base/str/str.go`
+- `ToInt64` — `base/str/str.go`
+- `ToPrettyJson` — `base/str/str.go`
+- `ToUint32` — `base/str/str.go`
+- `UnicodeLength` — `base/str/str.go`
+- `UniqueStrings` — `base/str/str.go`
 
-### base/pwd - Password Utilities
+### base/str/base26
+- `Int64ToAlpha` — `base/str/base26/base26.go`
+- `IsValidBase26` — `base/str/base26/base26.go`
+- `StrNumToAlpha` — `base/str/base26/base26.go`
+- `ToNum` — `base/str/base26/base26.go`
+- `Uint64ToAlpha` — `base/str/base26/base26.go`
 
-| Function | Description |
-|----------|-------------|
-| `GenSalt() (string, error)` | Generates random salt |
-| `ToHash(password string) (string, error)` | Argon2 password hashing |
-| `ToHashWithConfig(password string, config HashConfig) (string, error)` | Custom config hashing |
-| `IsCorrect(password, hashStr string) (bool, error)` | Verifies password |
-| `ValidateSixNumberAsPwd(secPwd string, length int) error` | Validates numeric passwords |
-| `ValidateSHA256(hash string) error` | Validates SHA256 format |
+### base/str/base62
+- `Base62ToSHA256` — `base/str/base62/base62.go`
+- `SHA256ToBase62` — `base/str/base62/base62.go`
 
-### base/collections - Generic Collections
+### base/validator
+- `InRule[T].Validate` — `base/validator/validator.go`
+- `IsAlphaNum` — `base/validator/str.go`
+- `IsDomainResolvable` — `base/validator/email.go`
+- `IsEmailAddrValidWithDomain` — `base/validator/email.go`
+- `IsLengthBetween` — `base/validator/str.go`
+- `IsMd5` — `base/validator/str.go`
+- `IsValidDomain` — `base/validator/email.go`
+- `IsValidEmailFormat` — `base/validator/email.go`
+- `NewRegexRule` — `base/validator/validator.go`
+- `RangeRule[T].Validate` — `base/validator/validator.go`
+- `RegexRule.Validate` — `base/validator/validator.go`
+- `RequiredRule[T].Validate` — `base/validator/validator.go`
+- `StringLengthRule.Validate` — `base/validator/validator.go`
+- `ValidateEmail` — `base/validator/validator.go`
+- `ValidateIDCard` — `base/validator/validator.go`
+- `ValidatePassword` — `base/validator/validator.go`
+- `ValidatePhone` — `base/validator/validator.go`
+- `ValidationError.Error` — `base/validator/validator.go`
+- `Validator[T].AddRule` — `base/validator/validator.go`
+- `Validator[T].Validate` — `base/validator/validator.go`
 
-| Function | Description |
-|----------|-------------|
-| `Filter[T any](slice []T, predicate func(T) bool) []T` | Filters by predicate |
-| `Map[T, U any](slice []T, mapper func(T) U) []U` | Maps to different type |
-| `Reduce[T, U any](slice []T, initialValue U, reducer func(U, T) U) U` | Reduces collection |
-| `Find[T any](slice []T, predicate func(T) bool) (T, bool)` | Finds first match |
-| `Contains[T comparable](slice []T, target T) bool` | Checks containment |
-| `Unique[T comparable](slice []T) []T` | Returns unique elements |
-| `SortBy[T any, K cmp.Ordered](slice []T, keyFunc func(T) K)` | Sorts by key |
-| `GroupBy[T any, K comparable](slice []T, keyFunc func(T) K) map[K][]T` | Groups by key |
-| `Chunk[T any](slice []T, size int) [][]T` | Splits into chunks |
-| `Reverse[T any](slice []T)` | Reverses in-place |
+### cloudservice/wasabi
+- `NewWasabiHandler` — `cloudservice/wasabi/wasabi.go`
+- `s3Conf.DelFile` — `cloudservice/wasabi/storage_interface.go`
+- `s3Conf.GetAccessKey` — `cloudservice/wasabi/storage_interface.go`
+- `s3Conf.GetAllBuckets` — `cloudservice/wasabi/storage_interface.go`
+- `s3Conf.GetAllFilesFromBucket` — `cloudservice/wasabi/storage_interface.go`
+- `s3Conf.GetBucketName` — `cloudservice/wasabi/storage_interface.go`
+- `s3Conf.GetEndpoint` — `cloudservice/wasabi/storage_interface.go`
+- `s3Conf.GetFile` — `cloudservice/wasabi/storage_interface.go`
+- `s3Conf.GetRegion` — `cloudservice/wasabi/storage_interface.go`
+- `s3Conf.GetSecretKey` — `cloudservice/wasabi/storage_interface.go`
+- `s3Conf.PutFile` — `cloudservice/wasabi/storage_interface.go`
 
-### base/validator - Validation Framework
+### conf
+- `AppConfig.SetDefaults` — `conf/example.go`
+- `Manager[T].GetConfig` — `conf/config.go`
+- `Manager[T].LoadFile` — `conf/config.go`
+- `Manager[T].UpdateConfig` — `conf/config.go`
 
-| Function | Description |
-|----------|-------------|
-| `NewValidator[T any](rules ...ValidationRule[T]) *Validator[T]` | Creates validator |
-| `ValidateEmail(email, field string) error` | Validates email format |
-| `ValidatePhone(phone, field string) error` | Validates Chinese phone |
-| `ValidateIDCard(idCard, field string) error` | Validates Chinese ID card |
-| `ValidatePassword(password, field string) error` | Validates password strength |
-| `IsValidEmailFormat(email string) bool` | Email format validation |
-| `IsDomainResolvable(domain string) bool` | Checks domain resolution |
-| `IsEmailAddrValidWithDomain(email string) error` | Email with domain check |
-| `IsMd5(input string) error` | Validates MD5 format |
-| `IsAlphaNum(str string) bool` | Alphanumeric check |
-| `IsLengthBetween(str string, min, max int) bool` | Length range validation |
+### cryptocoin
+- `DetectAddress` — `cryptocoin/validate.go`
+- `IsValidBEP20Address` — `cryptocoin/validate.go`
+- `IsValidBTCAddress` — `cryptocoin/validate.go`
+- `IsValidERC20Address` — `cryptocoin/validate.go`
+- `IsValidEVMAddress` — `cryptocoin/validate.go`
+- `IsValidTONAddress` — `cryptocoin/validate.go`
+- `IsValidTRC20Address` — `cryptocoin/validate.go`
+- `ParseTONRaw` — `cryptocoin/validate.go`
 
-### base/id/sqids - ID Generation
+### etcd
+- `Client.AcquireLock` — `etcd/client.go`
+- `Client.Close` — `etcd/client.go`
+- `Client.Connect` — `etcd/client.go`
+- `Client.CreateLease` — `etcd/client.go`
+- `Client.Get` — `etcd/client.go`
+- `Client.KeepAliveLease` — `etcd/client.go`
+- `Client.ListMembers` — `etcd/client.go`
+- `Client.Put` — `etcd/client.go`
+- `Client.RegisterService` — `etcd/client.go`
+- `Client.ReleaseLock` — `etcd/client.go`
+- `Client.Txn` — `etcd/client.go`
+- `Client.Watch` — `etcd/client.go`
+- `NewClient` — `etcd/client.go`
 
-| Function | Description |
-|----------|-------------|
-| `ToAlpha(ids []uint64) string` | Converts IDs to alphanumeric |
-| `ToInt(ids string) []uint64` | Converts string to ID array |
+### ex
+- `Error.Error` — `ex/ex_model.go`
+- `Error.MarshalZerologObject` — `ex/ex_model.go`
+- `Error.SetMessage` — `ex/ex_model.go`
+- `Error.SetMeta` — `ex/ex_model.go`
+- `Error.String` — `ex/ex_model.go`
 
-### base/snowflake - Snowflake IDs
+### i18n/goi18n
+- `I18nManager.GetTemplateLangMap` — `i18n/goi18n/go_i18n.go`
+- `I18nManager.Translate` — `i18n/goi18n/go_i18n.go`
+- `NewI18nManager` — `i18n/goi18n/go_i18n.go`
 
-| Function | Description |
-|----------|-------------|
-| `InitWith(workerId uint16, baseTime *time.Time)` | Initialize with settings |
-| `ID() uint64` | Generates new Snowflake ID |
-| `QuickID() uint64` | Backward compatible ID generation |
+### i18n/opencc
+- `Convert` — `i18n/opencc/opencc.go`
+- `SimpToTW` — `i18n/opencc/opencc.go`
+- `SimpToTrad` — `i18n/opencc/opencc.go`
+- `TWToS` — `i18n/opencc/opencc.go`
+- `TradToSimp` — `i18n/opencc/opencc.go`
+- `WarmUp` — `i18n/opencc/opencc.go`
 
-### base/rnd - Random Generation
+### img
+- `Base64ToFile` — `img/img_toolkit.go`
+- `GetImageInfo` — `img/image_info.go`, `img/image_info_vips.go`
+- `ImageToBase64` — `img/img_toolkit.go`
+- `ResizeImage` — `img/img_toolkit.go`
 
-| Function | Description |
-|----------|-------------|
-| `RandNumStr(length int) string` | Secure random digits |
-| `UUID(isNoDash bool) string` | UUID with/without dashes |
-| `GenRandomAlphaNumeric() string` | Random alphanumeric string |
-| `GenNumberInRange(min, max int) int` | Random number in range |
+### lock
+- `AdaptiveLock.GetActiveLockCount` — `lock/lock.go`
+- `AdaptiveLock.IsShardMode` — `lock/lock.go`
+- `AdaptiveLock.Lock` — `lock/lock.go`
+- `AdaptiveLock.Unlock` — `lock/lock.go`
+- `SetLockerAutoCleanup` — `lock/lock.go`
 
-### base/json - JSON Utilities
+### network/exchange/binance
+- `GetApi` — `network/exchange/binance/base.go`
+- `MarketService.GetAggTrades` — `network/exchange/binance/market.go`
+- `MarketService.GetAvgPrice` — `network/exchange/binance/market.go`
+- `MarketService.GetDepth` — `network/exchange/binance/market.go`
+- `MarketService.GetExchangeInfo` — `network/exchange/binance/market.go`
+- `MarketService.GetHistoricalTrades` — `network/exchange/binance/market.go`
+- `MarketService.GetKlines` — `network/exchange/binance/market.go`
+- `MarketService.GetPing` — `network/exchange/binance/market.go`
+- `MarketService.GetServerTime` — `network/exchange/binance/market.go`
+- `MarketService.GetTicker` — `network/exchange/binance/market.go`
+- `MarketService.GetTicker24Hr` — `network/exchange/binance/market.go`
+- `MarketService.GetTickerBookTicker` — `network/exchange/binance/market.go`
+- `MarketService.GetTickerPrice` — `network/exchange/binance/market.go`
+- `MarketService.GetTickerTradingDay` — `network/exchange/binance/market.go`
+- `MarketService.GetTrades` — `network/exchange/binance/market.go`
+- `MarketService.GetUIKlines` — `network/exchange/binance/market.go`
+- `NewMarketService` — `network/exchange/binance/market.go`
 
-| Function | Description |
-|----------|-------------|
-| `PrettyFormat(in string) string` | Formats JSON with indentation |
-| `ToJsonWithNoErr(payload interface{}, pretty bool) string` | JSON marshaling without errors |
+### network/exchange/okx
+- `NewOkxExchangeService` — `network/exchange/okx/okx.go`
+- `OKX.GetTop10Exchanges` — `network/exchange/okx/okx.go`
+- `OKX.GetUsdtCnyExchangeList` — `network/exchange/okx/okx.go`
+- `OKX.GetUsdtCnyRateOnly` — `network/exchange/okx/okx.go`
 
-### base/htm - HTML Utilities
+### network/google
+- `NewTranslationService` — `network/google/google_translate.go`
+- `TranslationService.GoogleDetectLang` — `network/google/google_translate.go`
+- `TranslationService.GoogleTranslateToCN` — `network/google/google_translate.go`
+- `TranslationService.GoogleTranslateToEn` — `network/google/google_translate.go`
 
-| Function | Description |
-|----------|-------------|
-| `Compress(htmlSrc string, stripScriptStyle bool) (string, error)` | HTML compression |
+### network/hcaptcha
+- `NewHCaptchaVerifier` — `network/hcaptcha/captcha.go`
+- `Verifier.Verify` — `network/hcaptcha/captcha.go`
 
-### network/google - Google Translate
+### network/httputils
+- `DownImage` — `network/httputils/download.go`
 
-| Function | Description |
-|----------|-------------|
-| `NewTranslationService(apiKey, apiHost string) *TranslationService` | Creates service |
-| `GoogleTranslateToEn(text, source string) (string, error)` | Translates to English |
-| `GoogleTranslateToCN(text, source string) (string, error)` | Translates to Chinese |
-| `GoogleDetectLang(text string) (string, error)` | Detects language |
+### network/ip
+- `GetClientIP` — `network/ip/ip.go`
+- `GetFullClientInfo` — `network/ip/ip.go`
+- `GetGeoIPInfo` — `network/ip/ip.go`
+- `GetLocalPrivateIP` — `network/ip/ip.go`
+- `GetLocalPublicIP` — `network/ip/ip.go`
+- `GetMyGeoIPInfo` — `network/ip/ip.go`
+- `IsPrivateIP` — `network/ip/ip.go`
+- `IsValidPublicIP` — `network/ip/ip.go`
+- `ToUniqueStr` — `network/ip/ip.go`
 
-### network/httputils - HTTP Utilities
+### network/ua
+- `Parse` — `network/ua/ua.go`
 
-| Function | Description |
-|----------|-------------|
-| `DownImage(url, name, savePath string) (string, error)` | Downloads images |
+### oo/singleton
+- `PerKey[K, V].Delete` — `oo/singleton/singleton.go`
+- `PerKey[K, V].Get` — `oo/singleton/singleton.go`
+- `PerKey[K, V].Has` — `oo/singleton/singleton.go`
+- `PerKey[K, V].Range` — `oo/singleton/singleton.go`
 
-### network/exchange/binance - Binance API
+### os
+- `ByteSize.String` — `os/bytesize.go`
+- `ByteSize.ToGB` — `os/bytesize.go`
+- `ByteSize.ToKB` — `os/bytesize.go`
+- `ByteSize.ToMB` — `os/bytesize.go`
 
-| Function | Description |
-|----------|-------------|
-| `GetApi(query string) interface{}` | Generic GET with fallback |
+### os/console
+- `C.Black` — `os/console/color.go`
+- `C.BlackBold` — `os/console/color.go`
+- `C.Blue` — `os/console/color.go`
+- `C.BlueBold` — `os/console/color.go`
+- `C.Bluef` — `os/console/color.go`
+- `C.Box` — `os/console/color.go`
+- `C.Clear` — `os/console/color.go`
+- `C.Cyan` — `os/console/color.go`
+- `C.CyanBold` — `os/console/color.go`
+- `C.Cyanf` — `os/console/color.go`
+- `C.DashedLine` — `os/console/color.go`
+- `C.DoubleLine` — `os/console/color.go`
+- `C.Error` — `os/console/color.go`
+- `C.Gray` — `os/console/color.go`
+- `C.GrayBold` — `os/console/color.go`
+- `C.Grayf` — `os/console/color.go`
+- `C.Green` — `os/console/color.go`
+- `C.GreenBold` — `os/console/color.go`
+- `C.Greenf` — `os/console/color.go`
+- `C.Info` — `os/console/color.go`
+- `C.Italic` — `os/console/color.go`
+- `C.KeyValue` — `os/console/color.go`
+- `C.Line` — `os/console/color.go`
+- `C.List` — `os/console/color.go`
+- `C.Magenta` — `os/console/color.go`
+- `C.MagentaBold` — `os/console/color.go`
+- `C.Magentaf` — `os/console/color.go`
+- `C.NewLine` — `os/console/color.go`
+- `C.NumberedList` — `os/console/color.go`
+- `C.Print` — `os/console/color.go`
+- `C.Printf` — `os/console/color.go`
+- `C.Println` — `os/console/color.go`
+- `C.Progress` — `os/console/color.go`
+- `C.Red` — `os/console/color.go`
+- `C.RedBold` — `os/console/color.go`
+- `C.Redf` — `os/console/color.go`
+- `C.Section` — `os/console/color.go`
+- `C.Spinner` — `os/console/color.go`
+- `C.Success` — `os/console/color.go`
+- `C.Title` — `os/console/color.go`
+- `C.Underline` — `os/console/color.go`
+- `C.Warning` — `os/console/color.go`
+- `C.White` — `os/console/color.go`
+- `C.WhiteBold` — `os/console/color.go`
+- `C.Whitef` — `os/console/color.go`
+- `C.WithWriter` — `os/console/color.go`
+- `C.Yellow` — `os/console/color.go`
+- `C.YellowBold` — `os/console/color.go`
+- `C.Yellowf` — `os/console/color.go`
+- `Console` — `os/console/color.go`
+- `ConsoleErr` — `os/console/color.go`
 
-### cloudservice/wasabi - S3 Storage
+### os/em
+- `GetFileByPath` — `os/em/embed.go`
+- `GetFileList` — `os/em/embed.go`
 
-| Function | Description |
-|----------|-------------|
-| `NewWasabiHandler(bucketName, region, endpoint, accessKey, secretKey string) *StorageHandler` | Creates handler |
+### os/fs
+- `ComputeFileSHA256` — `os/fs/file_darwin.go`, `os/fs/file_linux.go`
+- `CreateDir` — `os/fs/file_darwin.go`, `os/fs/file_linux.go`
+- `CreateDirIfNotExist` — `os/fs/file_darwin.go`, `os/fs/file_linux.go`
+- `Delete` — `os/fs/file_darwin.go`, `os/fs/file_linux.go`
+- `DetectFileType` — `os/fs/file_darwin.go`, `os/fs/file_linux.go`
+- `GetAllFilesByExt` — `os/fs/file_darwin.go`, `os/fs/file_linux.go`
+- `GetBigFileMd5` — `os/fs/file_darwin.go`, `os/fs/file_linux.go`
+- `GetCurExeDir` — `os/fs/file_darwin.go`, `os/fs/file_linux.go`
+- `GetFileCreationTime` — `os/fs/file_darwin.go`, `os/fs/file_linux.go`
+- `GetFileMd5` — `os/fs/file_linux.go`
+- `GetFileMd5Stream` — `os/fs/file_linux.go`
+- `GetFileNameMd5` — `os/fs/file_darwin.go`, `os/fs/file_linux.go`
+- `GetSmallFileMd5` — `os/fs/file_darwin.go`
+- `IsDirAndHasFiles` — `os/fs/file_darwin.go`, `os/fs/file_linux.go`
+- `IsFile` — `os/fs/file_darwin.go`, `os/fs/file_linux.go`
+- `StartsWithDot` — `os/fs/file_darwin.go`, `os/fs/file_linux.go`
 
-### os/console - Terminal Output
+### os/fsn
+- `NewFsnWatcher` — `os/fsn/fw_fsnotify.go`
+- `StartWatcher` — `os/fsn/fw_fsnotify.go`
+- `Watcher.AddDirRecursive` — `os/fsn/fw_fsnotify.go`
+- `Watcher.Close` — `os/fsn/fw_fsnotify.go`
+- `Watcher.Start` — `os/fsn/fw_fsnotify.go`
 
-| Function | Description |
-|----------|-------------|
-| `Console() *C` | Returns stdout console |
-| `ConsoleErr() *C` | Returns stderr console |
-| `Black/Red/Green/Yellow/Blue/Magenta/Cyan/White/Gray(txt string)` | Colored output |
-| `Success/Error/Warning/Info(txt string)` | Status messages |
-| `Progress(current, total, width int)` | Progress bar |
-| `Box/Title/Section(txt string)` | Formatted output |
-
-### os/fs - File System Operations
-
-| Function | Description |
-|----------|-------------|
-| `ComputeFileSHA256(filePath string) (string, error)` | SHA256 of file |
-| `GetFileCreationTime(filePath string) (string, time.Time, error)` | File creation time |
-| `GetFileNameMd5(filename string) (string, error)` | MD5 of filename |
-| `GetSmallFileMd5/GetBigFileMd5(filePath string) (string, error)` | File MD5 |
-| `GetCurExeDir() string` | Current executable directory |
-| `GetAllFilesByExt(dir, ext string) ([]string, error)` | Files by extension |
-| `IsDirAndHasFiles(dirPath string) (bool, bool, error)` | Directory validation |
-| `Delete(path string) error` | File/directory deletion |
-| `CreateDir/CreateDirIfNotExist(path string) error` | Directory creation |
-| `IsFile(path string) (bool, error)` | File type check |
-| `DetectFileType(file io.Reader) (string, error)` | MIME type detection |
-
-### conf - Configuration Management
-
-| Function | Description |
-|----------|-------------|
-| `New[T any](config *T) *Manager[T]` | Creates config manager |
-| `NewFromExecutable[T any](config *T, configName string) (*Manager[T], error)` | Auto-loads config |
-| `NewFromExecutableWithWatch[T any](config *T, configName string) (*Manager[T], error)` | With file watching |
-| `LoadFile(filePath string, watch bool) error` | Loads configuration |
-| `GetConfig() *T` | Thread-safe config access |
-| `UpdateConfig(updateFn func(*T))` | Atomic config updates |
+### os/io/logger
+- `DefaultConfig` — `os/io/logger/logger.go`
+- `Logger.Debug` — `os/io/logger/logger.go`
+- `Logger.Debugf` — `os/io/logger/logger.go`
+- `Logger.Error` — `os/io/logger/logger.go`
+- `Logger.Errorf` — `os/io/logger/logger.go`
+- `Logger.Fatal` — `os/io/logger/logger.go`
+- `Logger.Fatalf` — `os/io/logger/logger.go`
+- `Logger.Info` — `os/io/logger/logger.go`
+- `Logger.Infof` — `os/io/logger/logger.go`
+- `Logger.Panic` — `os/io/logger/logger.go`
+- `Logger.Panicf` — `os/io/logger/logger.go`
+- `Logger.Warn` — `os/io/logger/logger.go`
+- `Logger.Warnf` — `os/io/logger/logger.go`
+- `Logger.With` — `os/io/logger/logger.go`
+- `Logger.WithFields` — `os/io/logger/logger.go`
+- `LoggerMiddleware` — `os/io/logger/example.go`
+- `Manager.GetLogger` — `os/io/logger/logger.go`
+- `Manager.GetModuleLogger` — `os/io/logger/logger.go`
+- `Manager.GetServiceLogger` — `os/io/logger/logger.go`
+- `NewManager` — `os/io/logger/logger.go`
+- `NewUserService` — `os/io/logger/example.go`
+- `UserService.CreateUser` — `os/io/logger/example.go`
 
 ## ✨ Features
 
