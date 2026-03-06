@@ -138,7 +138,7 @@ tests/          # Centralized test directory
    - Modern error wrapping with `fmt.Errorf("%w: %w", ...)`
    - Structured error types with field information
 
-7. **Logger System** (`os/io/logger/`)
+7. **Logger System** (`os/io/gozlog/`)
    - Dependency injection design with `Manager` pattern
    - Daily log rotation with configurable retention (default 30 days)
    - Default log directory: `runtime/logs` (configurable)
@@ -153,7 +153,7 @@ tests/          # Centralized test directory
 
 ## Recent Updates
 
-### Logger Refactoring (os/io/logger)
+### Logger Refactoring (os/io/gozlog)
 - **Removed init function**: 改为依赖注入模式，通过 `NewManager` 创建管理器
 - **Daily log rotation**: 使用 lumberjack 实现按天轮转，默认保留30天
 - **Configurable log directory**: 默认 `runtime/logs`，可通过配置自定义

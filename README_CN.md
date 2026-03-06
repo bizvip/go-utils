@@ -133,7 +133,7 @@ func main() {
 | **os/em** | Embed 工具 | 读取嵌入文件 |
 | **os/fs** | 文件系统操作 | 跨平台文件处理 |
 | **os/fsn** | 文件监听 | 基于 fsnotify |
-| **os/io/logger** | 日志系统 | Zerolog + 依赖注入 |
+| **os/io/gozlog** | 日志系统 | Zerolog + 依赖注入 |
 
 ### ⚙️ 配置
 
@@ -493,29 +493,29 @@ func main() {
 - `Watcher.Close` — `os/fsn/fw_fsnotify.go`
 - `Watcher.Start` — `os/fsn/fw_fsnotify.go`
 
-### os/io/logger
-- `DefaultConfig` — `os/io/logger/logger.go`
-- `Logger.Debug` — `os/io/logger/logger.go`
-- `Logger.Debugf` — `os/io/logger/logger.go`
-- `Logger.Error` — `os/io/logger/logger.go`
-- `Logger.Errorf` — `os/io/logger/logger.go`
-- `Logger.Fatal` — `os/io/logger/logger.go`
-- `Logger.Fatalf` — `os/io/logger/logger.go`
-- `Logger.Info` — `os/io/logger/logger.go`
-- `Logger.Infof` — `os/io/logger/logger.go`
-- `Logger.Panic` — `os/io/logger/logger.go`
-- `Logger.Panicf` — `os/io/logger/logger.go`
-- `Logger.Warn` — `os/io/logger/logger.go`
-- `Logger.Warnf` — `os/io/logger/logger.go`
-- `Logger.With` — `os/io/logger/logger.go`
-- `Logger.WithFields` — `os/io/logger/logger.go`
-- `LoggerMiddleware` — `os/io/logger/example.go`
-- `Manager.GetLogger` — `os/io/logger/logger.go`
-- `Manager.GetModuleLogger` — `os/io/logger/logger.go`
-- `Manager.GetServiceLogger` — `os/io/logger/logger.go`
-- `NewManager` — `os/io/logger/logger.go`
-- `NewUserService` — `os/io/logger/example.go`
-- `UserService.CreateUser` — `os/io/logger/example.go`
+### os/io/gozlog
+- `DefaultConfig` — `os/io/gozlog/logger.go`
+- `Logger.Debug` — `os/io/gozlog/logger.go`
+- `Logger.Debugf` — `os/io/gozlog/logger.go`
+- `Logger.Error` — `os/io/gozlog/logger.go`
+- `Logger.Errorf` — `os/io/gozlog/logger.go`
+- `Logger.Fatal` — `os/io/gozlog/logger.go`
+- `Logger.Fatalf` — `os/io/gozlog/logger.go`
+- `Logger.Info` — `os/io/gozlog/logger.go`
+- `Logger.Infof` — `os/io/gozlog/logger.go`
+- `Logger.Panic` — `os/io/gozlog/logger.go`
+- `Logger.Panicf` — `os/io/gozlog/logger.go`
+- `Logger.Warn` — `os/io/gozlog/logger.go`
+- `Logger.Warnf` — `os/io/gozlog/logger.go`
+- `Logger.With` — `os/io/gozlog/logger.go`
+- `Logger.WithFields` — `os/io/gozlog/logger.go`
+- `LoggerMiddleware` — `os/io/gozlog/example.go`
+- `Manager.GetLogger` — `os/io/gozlog/logger.go`
+- `Manager.GetModuleLogger` — `os/io/gozlog/logger.go`
+- `Manager.GetServiceLogger` — `os/io/gozlog/logger.go`
+- `NewManager` — `os/io/gozlog/logger.go`
+- `NewUserService` — `os/io/gozlog/example.go`
+- `UserService.CreateUser` — `os/io/gozlog/example.go`
 
 ## ✨ 功能特性
 
