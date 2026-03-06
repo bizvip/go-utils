@@ -99,8 +99,8 @@ os/             # System-level utilities
 └── io/
     └── logger/ # Structured logging with dependency injection
 
-conf/           # Configuration management
-└── config.go   # Generic configuration with file watching
+configer/       # Configuration engine
+└── configer.go   # Generic config loading, validation, and watching
 
 tests/          # Centralized test directory
 └── [mirrors source structure]
@@ -145,11 +145,11 @@ tests/          # Centralized test directory
    - Supports structured logging with zerolog
    - No global state or init functions
 
-8. **Configuration Management** (`conf/`)
-   - Generic configuration with type safety
-   - Viper integration for multiple format support
+8. **Configuration Management** (`configer/`)
+   - Generic typed configuration loading
+   - Explicit decoder and preprocessor pipeline
    - File watching for hot-reload capability
-   - Thread-safe configuration updates
+   - Validation-first configuration lifecycle
 
 ## Recent Updates
 

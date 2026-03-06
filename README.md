@@ -139,7 +139,7 @@ func main() {
 
 | Package | Description | Key Features |
 |---------|-------------|--------------|
-| **conf** | Generic configuration management | Go 1.24+ generics, Viper integration, file watching |
+| **configer** | Generic configuration engine | Typed loading, decoder hooks, validation, file watching |
 
 ## 📚 Complete Function Directory
 
@@ -281,11 +281,12 @@ func main() {
 - `s3Conf.GetSecretKey` — `cloudservice/wasabi/storage_interface.go`
 - `s3Conf.PutFile` — `cloudservice/wasabi/storage_interface.go`
 
-### conf
-- `AppConfig.SetDefaults` — `conf/example.go`
-- `Manager[T].GetConfig` — `conf/config.go`
-- `Manager[T].LoadFile` — `conf/config.go`
-- `Manager[T].UpdateConfig` — `conf/config.go`
+### configer
+- `Load[T]` — `configer/configer.go`
+- `MustLoad[T]` — `configer/configer.go`
+- `ResolvePath` — `configer/configer.go`
+- `Manager[T].Load` — `configer/manager.go`
+- `Manager[T].Watch` — `configer/manager.go`
 
 ### cryptocoin
 - `DetectAddress` — `cryptocoin/validate.go`
