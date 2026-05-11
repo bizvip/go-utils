@@ -1,80 +1,88 @@
 package img
 
 import (
-	"bytes"
 	"encoding/base64"
+	"errors"
 	"fmt"
-	"image"
-	"image/gif"
-	"image/jpeg"
-	"image/png"
+	"net/http"
 	"os"
 	"path/filepath"
-
-	"github.com/kolesa-team/go-webp/encoder"
-	"github.com/kolesa-team/go-webp/webp"
-	"golang.org/x/image/bmp"
-	"golang.org/x/image/draw"
+	"strings"
 )
 
-// ImageInfo represents information about an image
 type ImageInfo struct {
-	Width    int    `json:"width"`
-	Height   int    `json:"height"`
-	Format   string `json:"format"`
-	Ext      string `json:"ext"`
-	Size     int64  `json:"size"`
-	FileName string `json:"filename"`
-	FileMD5  string `json:"file_md5"`
+	Width     int    `json:"width"`
+	Height    int    `json:"height"`
+	Format    string `json:"format"`
+	Ext       string `json:"ext"`
+	Size      int64  `json:"size"`
+	FileName  string `json:"filename"`
+	FileMD5   string `json:"file_md5"`
+	Animated  bool   `json:"animated"`
+	FrameNum  int    `json:"frame_num"`
+	LoopCount int    `json:"loop_count"`
 }
 
-// ResizeOptions defines parameters for the Resize function
+type FitMode int
+
+const (
+	FitStretch FitMode = iota
+	FitContain
+	FitCover
+)
+
 type ResizeOptions struct {
 	Src      string
 	SavePath string
 	Width    int
 	Height   int
 	Quality  int
+	Fit      FitMode
+	// Format overrides the output format. Empty value reuses the source format.
+	// Supported: "jpeg", "png", "gif", "bmp", "webp".
+	Format string
 }
 
-// ImageToBase64 converts an image file to a base64 string
-func ImageToBase64(imgPath string) (string, error) {
-	// 打开图片文件
-	imgFile, err := os.Open(imgPath)
+var (
+	ErrEmptySource     = errors.New("img: source path must be provided")
+	ErrInvalidSize     = errors.New("img: width and height must both be zero (keep) or one/both positive")
+	ErrUnknownFormat   = errors.New("img: unknown image format")
+	ErrUnsupportedSink = errors.New("img: unsupported output format")
+)
+
+func ImageToBase64(imgPath string, withDataURI bool) (string, error) {
+	data, err := os.ReadFile(imgPath)
 	if err != nil {
 		return "", err
 	}
-	defer imgFile.Close()
-
-	// 解码图片文件
-	img, err := jpeg.Decode(imgFile)
-	if err != nil {
-		return "", err
+	encoded := base64.StdEncoding.EncodeToString(data)
+	if !withDataURI {
+		return encoded, nil
 	}
-
-	// 将图片编码为 JPEG 格式
-	var buf bytes.Buffer
-	err = jpeg.Encode(&buf, img, nil)
-	if err != nil {
-		return "", err
+	mime := http.DetectContentType(data)
+	if !strings.HasPrefix(mime, "image/") {
+		mime = "application/octet-stream"
 	}
-
-	// 将编码后的图片字节序列转换为 Base64 字符串
-	base64Str := base64.StdEncoding.EncodeToString(buf.Bytes())
-	return base64Str, nil
+	return "data:" + mime + ";base64," + encoded, nil
 }
 
-// Base64ToFile writes a base64 encoded image string to a file
 func Base64ToFile(base64Str, fullPath string, overwrite bool) error {
-	// 获取文件所在的目录路径
-	dir := filepath.Dir(fullPath)
-
-	// 确保目录存在，如果不存在则创建
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if strings.HasPrefix(base64Str, "data:") {
+		if comma := strings.IndexByte(base64Str, ','); comma >= 0 {
+			base64Str = base64Str[comma+1:]
+		}
+	}
+	data, err := base64.StdEncoding.DecodeString(strings.TrimSpace(base64Str))
+	if err != nil {
 		return err
 	}
-
-	// 检查文件是否存在
+	if mime := http.DetectContentType(data); !strings.HasPrefix(mime, "image/") {
+		return fmt.Errorf("img: decoded base64 is not an image (%s)", mime)
+	}
+	dir := filepath.Dir(fullPath)
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return err
+	}
 	if _, err := os.Stat(fullPath); err == nil {
 		if !overwrite {
 			return os.ErrExist
@@ -82,78 +90,107 @@ func Base64ToFile(base64Str, fullPath string, overwrite bool) error {
 	} else if !os.IsNotExist(err) {
 		return err
 	}
-
-	// 解码Base64字符串
-	data, err := base64.StdEncoding.DecodeString(base64Str)
-	if err != nil {
-		return err
-	}
-
-	// 写入文件
-	return os.WriteFile(fullPath, data, 0644)
+	return os.WriteFile(fullPath, data, 0o644)
 }
 
-// ResizeImage resizes an image according to the provided options
-func ResizeImage(options ResizeOptions) error {
-	if options.Src == "" {
-		return fmt.Errorf("source image path must be provided")
+func detectFormatByBytes(data []byte) string {
+	mime := http.DetectContentType(data)
+	switch mime {
+	case "image/jpeg":
+		return "jpeg"
+	case "image/png":
+		return "png"
+	case "image/gif":
+		return "gif"
+	case "image/bmp":
+		return "bmp"
+	case "image/webp":
+		return "webp"
 	}
-	if options.SavePath == "" {
-		options.SavePath = options.Src
-	}
-	if options.Width == 0 || options.Height == 0 {
-		return fmt.Errorf("both width and height must be non-zero")
-	}
-	if options.Quality == 0 {
-		options.Quality = 75
-	}
+	return ""
+}
 
-	// 打开源图像文件
-	file, err := os.Open(options.Src)
+func detectFormatByHead(path string) (string, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return "", err
+	}
+	defer func() { _ = f.Close() }()
+	head := make([]byte, 512)
+	n, _ := f.Read(head)
+	if n == 0 {
+		return "", ErrUnknownFormat
+	}
+	format := detectFormatByBytes(head[:n])
+	if format == "" {
+		return "", ErrUnknownFormat
+	}
+	return format, nil
+}
+
+func computeTargetSize(srcW, srcH, dstW, dstH int, fit FitMode) (int, int) {
+	if dstW <= 0 && dstH <= 0 {
+		return srcW, srcH
+	}
+	if dstW <= 0 {
+		ratio := float64(dstH) / float64(srcH)
+		return max1(int(float64(srcW)*ratio + 0.5)), dstH
+	}
+	if dstH <= 0 {
+		ratio := float64(dstW) / float64(srcW)
+		return dstW, max1(int(float64(srcH)*ratio + 0.5))
+	}
+	switch fit {
+	case FitStretch:
+		return dstW, dstH
+	case FitContain:
+		ratio := minF(float64(dstW)/float64(srcW), float64(dstH)/float64(srcH))
+		return max1(int(float64(srcW)*ratio + 0.5)), max1(int(float64(srcH)*ratio + 0.5))
+	case FitCover:
+		ratio := maxF(float64(dstW)/float64(srcW), float64(dstH)/float64(srcH))
+		return max1(int(float64(srcW)*ratio + 0.5)), max1(int(float64(srcH)*ratio + 0.5))
+	}
+	return dstW, dstH
+}
+
+func minF(a, b float64) float64 {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func maxF(a, b float64) float64 {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+func max1(v int) int {
+	if v < 1 {
+		return 1
+	}
+	return v
+}
+
+func writeFileAtomic(path string, data []byte) error {
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return err
+	}
+	tmp, err := os.CreateTemp(filepath.Dir(path), ".img-*")
 	if err != nil {
 		return err
 	}
-	defer file.Close()
-
-	// 解码图像，自动检测格式
-	img, format, err := image.Decode(file)
-	if err != nil {
+	tmpName := tmp.Name()
+	if _, err := tmp.Write(data); err != nil {
+		_ = tmp.Close()
+		_ = os.Remove(tmpName)
 		return err
 	}
-
-	// 创建一个新的目标图像
-	dstImage := image.NewRGBA(image.Rect(0, 0, options.Width, options.Height))
-
-	draw.CatmullRom.Scale(dstImage, dstImage.Bounds(), img, img.Bounds(), draw.Over, nil)
-
-	outputFile, err := os.Create(options.SavePath)
-	if err != nil {
+	if err := tmp.Close(); err != nil {
+		_ = os.Remove(tmpName)
 		return err
 	}
-	defer outputFile.Close()
-
-	switch format {
-	case "jpeg":
-		err = jpeg.Encode(outputFile, dstImage, &jpeg.Options{Quality: options.Quality})
-	case "png":
-		err = png.Encode(outputFile, dstImage)
-	case "gif":
-		err = gif.Encode(outputFile, dstImage, nil)
-	case "bmp":
-		err = bmp.Encode(outputFile, dstImage)
-	case "webp":
-		webpOptions, err := encoder.NewLossyEncoderOptions(encoder.PresetDefault, float32(options.Quality))
-		if err != nil {
-			return fmt.Errorf("error creating WebP encoder options: %v", err)
-		}
-		err = webp.Encode(outputFile, dstImage, webpOptions)
-	default:
-		err = jpeg.Encode(outputFile, dstImage, &jpeg.Options{Quality: options.Quality})
-	}
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return os.Rename(tmpName, path)
 }

@@ -3,62 +3,77 @@
 package img
 
 import (
-	"image"
 	"os"
 	"path/filepath"
+	"strings"
+	"sync"
 
 	"github.com/davidbyttow/govips/v2/vips"
 
 	"github.com/bizvip/go-utils/os/fs"
 )
 
-func GetImageInfo(path string, withMd5 bool) (*ImageInfo, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
+var vipsOnce sync.Once
 
-	img, format, err := image.Decode(file)
-	if err != nil {
+// StartupVips initializes libvips. Safe to call multiple times; only first call takes effect.
+// Library users may call this explicitly at process startup; otherwise GetImageInfo
+// will call it lazily on first use.
+func StartupVips() {
+	vipsOnce.Do(func() {
 		vips.Startup(nil)
-		defer vips.Shutdown()
+	})
+}
 
-		ref, err := vips.NewImageFromFile(path)
-		if err != nil {
-			return nil, err
-		}
-		defer ref.Close()
+// ShutdownVips releases libvips resources. Call once at process exit if you want
+// a clean teardown. Repeated calls are safe but only the first has effect when
+// paired with StartupVips.
+func ShutdownVips() {
+	vips.Shutdown()
+}
 
-		width := ref.Width()
-		height := ref.Height()
-		format = vips.ImageTypes[ref.Format()]
+func GetImageInfo(path string, withMd5 bool) (*ImageInfo, error) {
+	StartupVips()
 
-		img = &image.RGBA{Rect: image.Rect(0, 0, width, height)}
-	}
-
-	ext := filepath.Ext(path)
-	fileInfo, err := file.Stat()
+	stat, err := os.Stat(path)
 	if err != nil {
 		return nil, err
 	}
 
-	fileMd5 := ""
-	if withMd5 {
-		fileMd5, err = fs.GetBigFileMd5(path)
-		if err != nil {
-			return nil, err
-		}
+	ref, err := vips.NewImageFromFile(path)
+	if err != nil {
+		return nil, err
 	}
+	defer ref.Close()
+
+	width := ref.Width()
+	height := ref.Height()
+	pages := ref.Pages()
+	if pages <= 0 {
+		pages = 1
+	}
+	pageHeight := ref.PageHeight()
+	if pages > 1 && pageHeight > 0 {
+		height = pageHeight
+	}
+	format := vips.ImageTypes[ref.Format()]
 
 	info := &ImageInfo{
-		Width:    img.Bounds().Dx(),
-		Height:   img.Bounds().Dy(),
+		Width:    width,
+		Height:   height,
 		Format:   format,
-		Ext:      ext,
-		Size:     fileInfo.Size(),
+		Ext:      strings.ToLower(strings.TrimPrefix(filepath.Ext(path), ".")),
+		Size:     stat.Size(),
 		FileName: filepath.Base(path),
-		FileMD5:  fileMd5,
+		FrameNum: pages,
+		Animated: pages > 1,
+	}
+
+	if withMd5 {
+		md5sum, err := fs.GetBigFileMd5(path)
+		if err != nil {
+			return nil, err
+		}
+		info.FileMD5 = md5sum
 	}
 
 	return info, nil
