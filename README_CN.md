@@ -1,6 +1,6 @@
 # 🛠️ Go Utils
 
-[![Go 版本](https://img.shields.io/badge/Go-%3E%3D%201.21-blue.svg)](https://golang.org/)
+[![Go 版本](https://img.shields.io/badge/Go-%3E%3D%201.26.2-blue.svg)](https://golang.org/)
 [![许可证](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![构建状态](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/bizvip/go-utils)
 
@@ -13,6 +13,7 @@
 ## 📋 目录
 
 - [安装](#-安装)
+- [构建 Tag 与可选依赖](#-构建-tag-与可选依赖)
 - [快速开始](#-快速开始)
 - [包概览](#-包概览)
 - [功能函数目录](#-功能函数目录)
@@ -23,9 +24,114 @@
 
 ## 🚀 安装
 
+需要 **Go 1.26.2+**。
+
 ```bash
 go get github.com/bizvip/go-utils
 ```
+
+默认构建是**纯 Go**，零系统依赖——`img` 包会走 stdlib 实现。若要启用 libvips 加速路径，看下一节。
+
+## 🧩 构建 Tag 与可选依赖
+
+部分包提供了高性能后端，通过构建 tag 启用。**不启用 tag 时不需要任何系统库**。
+
+### `libvips` —— 用 [govips](https://github.com/davidbyttow/govips) 提供高速图像元信息
+
+`img` 包提供 `GetImageInfo` 的两种实现：
+
+| 构建方式 | 后端 | 系统依赖 | 速度 |
+|---|---|---|---|
+| 默认（不带 tag） | Go 标准库（`image.DecodeConfig` + `golang.org/x/image`） | 无 | 良好 |
+| `-tags libvips` | govips → libvips | **libvips ≥ 8.13**（推荐 8.15+） | 快 5–10 倍，支持更多格式 |
+
+启用 libvips 后还可以用 `img.StartupVips()` / `img.ShutdownVips()` 做显式生命周期管理（进程级，内部用 `sync.Once` 保证只初始化一次）。
+
+#### 何时启用
+
+如果你要**高吞吐处理图片**、需要 **HEIC / AVIF / TIFF / SVG / 动画 WebP** 的元信息、或者想在处理 4K+ 大图时降低内存峰值，就开 `-tags libvips`。普通业务用默认纯 Go 路径完全够用。
+
+#### libvips 安装
+
+**Debian / Ubuntu**
+```bash
+sudo apt-get update
+sudo apt-get install -y libvips-dev
+# 验证
+pkg-config --modversion vips
+```
+
+**RHEL / Rocky / Fedora**
+```bash
+sudo dnf install -y vips-devel
+# 老版本发行版：
+sudo yum install -y vips-devel
+```
+
+**Alpine**（常见于 Docker 镜像）
+```bash
+apk add --no-cache vips-dev build-base pkgconfig
+```
+
+**Arch Linux**
+```bash
+sudo pacman -S libvips
+```
+
+**macOS（Homebrew）**
+```bash
+brew install vips pkg-config
+```
+
+**Windows**
+
+推荐通过 [MSYS2](https://www.msys2.org/) 安装：
+```bash
+pacman -S mingw-w64-x86_64-libvips mingw-w64-x86_64-pkg-config
+```
+然后确保 `CGO_ENABLED=1`，且 MinGW 工具链已加入 `PATH`。
+
+#### 构建 / 运行
+
+```bash
+# 用 libvips 后端构建库或你的二进制
+go build -tags libvips ./...
+
+# 用 libvips 后端跑测试
+go test -tags libvips ./tests/img/...
+```
+
+如果 `pkg-config` 找不到 `vips.pc`，指定一下路径：
+```bash
+export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH
+```
+
+#### Docker 示例
+
+```dockerfile
+# 构建阶段
+FROM golang:1.26.2-bookworm AS builder
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        libvips-dev pkg-config build-essential && \
+    rm -rf /var/lib/apt/lists/*
+WORKDIR /src
+COPY . .
+RUN CGO_ENABLED=1 go build -tags libvips -o /out/app ./...
+
+# 运行阶段
+FROM debian:bookworm-slim
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        libvips42 ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+COPY --from=builder /out/app /usr/local/bin/app
+ENTRYPOINT ["/usr/local/bin/app"]
+```
+
+#### 常见坑
+
+- **`Package vips was not found in the pkg-config search path`** —— 系统没装 libvips 开发头文件，或者 `PKG_CONFIG_PATH` 不对。按上面的命令装 `-dev` / `-devel` 包。
+- **`undefined reference` 链接错误** —— 不仅需要 `vips-dev`（编译头文件），运行时机器还要有 `libvips42`（运行库）。
+- **CGO 未开启** —— `-tags libvips` 要求 `CGO_ENABLED=1`。跨平台编译时如果目标平台没有 libvips 工具链，会失败。
 
 ## 🎯 快速开始
 
@@ -94,7 +200,7 @@ func main() {
 
 | 包名 | 描述 | 核心功能 |
 |------|------|----------|
-| **img** | 图像处理工具包 | 调整大小、格式转换、优化 |
+| **img** | 图像处理工具包 | Base64 互转（可选 data URI）、缩放含 Fit 模式（Stretch/Contain/Cover）、**动画 GIF 缩放保留帧时序与循环次数**、`image.DecodeConfig` 快速读元信息、可选 libvips 后端（构建 tag `libvips`） |
 
 ### 🈯 国际化
 
@@ -335,10 +441,11 @@ func main() {
 - `WarmUp` — `i18n/opencc/opencc.go`
 
 ### img
-- `Base64ToFile` — `img/img_toolkit.go`
-- `GetImageInfo` — `img/image_info.go`, `img/image_info_vips.go`
-- `ImageToBase64` — `img/img_toolkit.go`
-- `ResizeImage` — `img/img_toolkit.go`
+- `Base64ToFile` — `img/img_toolkit.go`（带 magic byte 校验，自动剥离 data URI 前缀）
+- `GetImageInfo` — `img/image_info.go`（默认）、`img/image_info_vips.go`（构建 tag `libvips`）
+- `ImageToBase64` — `img/img_toolkit.go`（可选输出 data URI）
+- `ResizeImage` — `img/resize.go`（静态图 + 动画 GIF，含完整 disposal 处理）
+- `StartupVips` / `ShutdownVips` — `img/image_info_vips.go`（仅构建 tag `libvips` 下可用）
 
 ### lock
 - `AdaptiveLock.GetActiveLockCount` — `lock/lock.go`

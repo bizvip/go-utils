@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/hex"
 	"fmt"
+	"hash"
 	"io"
 	"os"
 
@@ -75,6 +76,13 @@ func SumBytes(b []byte) string {
 	dst := make([]byte, hex.EncodedLen(len(sum)))
 	hex.Encode(dst, sum)
 	return string(dst)
+}
+
+// New returns a streaming BLAKE3-256 hasher implementing hash.Hash. Use it
+// when you need to compute a digest while concurrently writing the source
+// bytes elsewhere (io.TeeReader, io.MultiWriter, etc.).
+func New() hash.Hash {
+	return blake3.New()
 }
 
 // Must is a helper function: use it when you are certain that no error will

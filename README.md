@@ -1,6 +1,6 @@
 # 🛠️ Go Utils
 
-[![Go Version](https://img.shields.io/badge/Go-%3E%3D%201.21-blue.svg)](https://golang.org/)
+[![Go Version](https://img.shields.io/badge/Go-%3E%3D%201.26.2-blue.svg)](https://golang.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/bizvip/go-utils)
 
@@ -13,6 +13,7 @@ This package continuously adopts the latest Go versions and cutting-edge technol
 ## 📋 Table of Contents
 
 - [Installation](#-installation)
+- [Build Tags & Optional Dependencies](#-build-tags--optional-dependencies)
 - [Quick Start](#-quick-start)
 - [Package Overview](#-package-overview)
 - [Complete Function Directory](#-complete-function-directory)
@@ -23,9 +24,114 @@ This package continuously adopts the latest Go versions and cutting-edge technol
 
 ## 🚀 Installation
 
+Requires **Go 1.26.2+**.
+
 ```bash
 go get github.com/bizvip/go-utils
 ```
+
+By default the library is **pure Go** and requires no system libraries — the `img` package falls back to a stdlib-based implementation. Read the next section if you want the accelerated libvips path.
+
+## 🧩 Build Tags & Optional Dependencies
+
+Some packages expose an optional high-performance backend behind a build tag. You do **not** need any of these unless you opt in.
+
+### `libvips` — accelerated image metadata via [govips](https://github.com/davidbyttow/govips)
+
+The `img` package ships two implementations of `GetImageInfo`:
+
+| Build mode | Backend | System library required | Speed |
+|---|---|---|---|
+| default (no tag) | Go stdlib (`image.DecodeConfig` + `golang.org/x/image`) | none | good |
+| `-tags libvips` | govips → libvips | **libvips ≥ 8.13** (recommended 8.15+) | 5–10× faster, supports more formats |
+
+The libvips path also exposes `img.StartupVips()` / `img.ShutdownVips()` for explicit lifecycle control (process-wide, idempotent via `sync.Once`).
+
+#### When to enable
+
+Turn on `-tags libvips` if you process **many images per second**, need **HEIC / AVIF / TIFF / SVG / animated WebP** metadata, or want lower memory peaks on 4K+ images. The default pure-Go path is fine for most apps.
+
+#### Installing libvips
+
+**Debian / Ubuntu**
+```bash
+sudo apt-get update
+sudo apt-get install -y libvips-dev
+# verify
+pkg-config --modversion vips
+```
+
+**RHEL / Rocky / Fedora**
+```bash
+sudo dnf install -y vips-devel
+# or on older distros:
+sudo yum install -y vips-devel
+```
+
+**Alpine** (e.g. inside a Docker image)
+```bash
+apk add --no-cache vips-dev build-base pkgconfig
+```
+
+**Arch Linux**
+```bash
+sudo pacman -S libvips
+```
+
+**macOS (Homebrew)**
+```bash
+brew install vips pkg-config
+```
+
+**Windows**
+
+Recommended via [MSYS2](https://www.msys2.org/):
+```bash
+pacman -S mingw-w64-x86_64-libvips mingw-w64-x86_64-pkg-config
+```
+Then build with `CGO_ENABLED=1` and a working MinGW toolchain on `PATH`.
+
+#### Building / running
+
+```bash
+# build the library or your binary with the libvips backend
+go build -tags libvips ./...
+
+# run tests against the libvips backend
+go test -tags libvips ./tests/img/...
+```
+
+If `pkg-config` cannot find `vips.pc`, point it at the right directory:
+```bash
+export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH
+```
+
+#### Docker example
+
+```dockerfile
+# builder
+FROM golang:1.26.2-bookworm AS builder
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        libvips-dev pkg-config build-essential && \
+    rm -rf /var/lib/apt/lists/*
+WORKDIR /src
+COPY . .
+RUN CGO_ENABLED=1 go build -tags libvips -o /out/app ./...
+
+# runtime
+FROM debian:bookworm-slim
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        libvips42 ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+COPY --from=builder /out/app /usr/local/bin/app
+ENTRYPOINT ["/usr/local/bin/app"]
+```
+
+#### Common pitfalls
+
+- **`Package vips was not found in the pkg-config search path`** — libvips development headers are not installed, or `PKG_CONFIG_PATH` is wrong. Install the `-dev` / `-devel` package (see above).
+- **`undefined reference` linker errors** — you need both `vips-dev` (headers) **and** the runtime library `libvips42` on the host that runs the binary.
+- **CGO disabled** — `-tags libvips` requires `CGO_ENABLED=1`. Cross-compiling without a matching libvips toolchain will not work.
 
 ## 🎯 Quick Start
 
@@ -63,7 +169,7 @@ func main() {
 | **base/blake3hash** | BLAKE3 hashing | Stream/file hashing helpers |
 | **base/dt** | Date and time utilities | Timezone offset calculations, timestamp manipulation, time comparisons |
 | **base/pwd** | Password utilities | Argon2 hashing, security password validation with pattern checks |
-| **base/collections** | Generic collections (Go 1.24+) | Filter, Map, Reduce, GroupBy, Chunk with type safety |
+| **base/collections** | Generic collections (Go 1.26+) | Filter, Map, Reduce, GroupBy, Chunk with type safety |
 | **base/validator** | Validation framework | Generic validators, email/phone/ID card validation |
 | **base/id/sqids** | ID generation | Sqids library integration for hash IDs |
 | **base/snowflake** | Snowflake IDs | Yitter ID Generator, custom base time support |
@@ -94,7 +200,7 @@ func main() {
 
 | Package | Description | Key Features |
 |---------|-------------|--------------|
-| **img** | Image utilities | Base64 conversion, resize, image info (optional libvips) |
+| **img** | Image utilities | Base64 conversion (with data URI), resize with Fit modes (Stretch/Contain/Cover), **animated GIF resize preserving frame timing & loop count**, fast metadata via `image.DecodeConfig`, optional libvips backend (build tag `libvips`) |
 
 ### 🈯 I18n & Localization
 
@@ -334,10 +440,11 @@ func main() {
 - `WarmUp` — `i18n/opencc/opencc.go`
 
 ### img
-- `Base64ToFile` — `img/img_toolkit.go`
-- `GetImageInfo` — `img/image_info.go`, `img/image_info_vips.go`
-- `ImageToBase64` — `img/img_toolkit.go`
-- `ResizeImage` — `img/img_toolkit.go`
+- `Base64ToFile` — `img/img_toolkit.go` (validates magic bytes, strips data URI prefix)
+- `GetImageInfo` — `img/image_info.go` (default), `img/image_info_vips.go` (build tag `libvips`)
+- `ImageToBase64` — `img/img_toolkit.go` (optional data URI output)
+- `ResizeImage` — `img/resize.go` (static + animated GIF with full disposal handling)
+- `StartupVips` / `ShutdownVips` — `img/image_info_vips.go` (build tag `libvips` only)
 
 ### lock
 - `AdaptiveLock.GetActiveLockCount` — `lock/lock.go`
