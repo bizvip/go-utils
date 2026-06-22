@@ -1,6 +1,6 @@
 # 🛠️ Go Utils
 
-[![Go 版本](https://img.shields.io/badge/Go-%3E%3D%201.26.2-blue.svg)](https://golang.org/)
+[![Go 版本](https://img.shields.io/badge/Go-%3E%3D%201.26.4-blue.svg)](https://golang.org/)
 [![许可证](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![构建状态](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/bizvip/go-utils)
 
@@ -24,7 +24,7 @@
 
 ## 🚀 安装
 
-需要 **Go 1.26.2+**。
+需要 **Go 1.26.4+**。
 
 ```bash
 go get github.com/bizvip/go-utils
@@ -110,7 +110,7 @@ export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH
 
 ```dockerfile
 # 构建阶段
-FROM golang:1.26.2-bookworm AS builder
+FROM golang:1.26.4-bookworm AS builder
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libvips-dev pkg-config build-essential && \
     rm -rf /var/lib/apt/lists/*

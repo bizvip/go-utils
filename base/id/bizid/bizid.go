@@ -4,14 +4,14 @@
 //
 //   - <prefix>      业务前缀（2 个大写字母，如 RG=充值、WD=提款、DP=存款 ...）
 //   - base26        把当前 UTC 时间的「年月日时分」拼成 10 位十进制数字后用 A-Z 编码，
-//                   得到长度 ≤ 8 的字母串。该段同一分钟内所有 ID 一致，便于"看一眼时间"。
+//     得到长度 ≤ 8 的字母串。该段同一分钟内所有 ID 一致，便于"看一眼时间"。
 //   - <snowflakeID> 由本包持有的 ShortIdGenerator 单例生成，与裸 snowflake 取自同一实例。
 //
 // 使用流程：
 //
 //	import "github.com/bizvip/go-utils/base/id/bizid"
 //
-//	// 程序启动时调用一次（每个 app 分配独立 workerId，范围 0-15）
+//	// 程序启动时调用一次（每个 app 分配独立 workerId，范围 0-31）
 //	if err := bizid.Init(5); err != nil { ... }
 //
 //	// 业务 ID
@@ -42,7 +42,7 @@ const base26Alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 var ErrNotInitialized = errors.New("bizid: Init(workerId) must be called before use")
 
 // Init 创建并保存进程级 ShortIdGenerator 单例。每个 app（adminapi / clientapi / ...）
-// 必须在启动入口调用一次，传入该 app 独占的 workerId（0-15，由部署规约分配）。
+// 必须在启动入口调用一次，传入该 app 独占的 workerId（0-31，由部署规约分配）。
 //
 // 重复调用会替换旧实例。已经基于旧实例发出的 ID 不受影响，新调用走新实例。
 // **不要**在同一进程外再独立创建 ShortIdGenerator——否则不同实例同 workerId 同毫秒
@@ -64,7 +64,7 @@ func currentGen() *snowflake.ShortIdGenerator {
 	return gen
 }
 
-// GetSnowflakeID 返回 int64 雪花 ID。本项目 snowflake 总位数 47（time 39 + worker 4 + seq 4），
+// GetSnowflakeID 返回 int64 雪花 ID。本项目 snowflake 总位数 48（time 39 + worker 5 + seq 4），
 // 远小于 int63，转换 int64 安全。
 func GetSnowflakeID() (int64, error) {
 	g := currentGen()

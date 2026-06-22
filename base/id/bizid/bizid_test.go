@@ -75,8 +75,11 @@ func TestNewBeforeInitPanics(t *testing.T) {
 
 func TestInitRejectsBadWorkerID(t *testing.T) {
 	resetForTest()
-	if err := Init(99); err == nil {
-		t.Fatalf("expected error for workerId out of range (max 15)")
+	if err := Init(31); err != nil {
+		t.Fatalf("expected max workerId to be accepted: %v", err)
+	}
+	if err := Init(32); err == nil {
+		t.Fatalf("expected error for workerId out of range (max 31)")
 	}
 }
 

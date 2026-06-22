@@ -1,6 +1,6 @@
 # 🛠️ Go Utils
 
-[![Go Version](https://img.shields.io/badge/Go-%3E%3D%201.26.2-blue.svg)](https://golang.org/)
+[![Go Version](https://img.shields.io/badge/Go-%3E%3D%201.26.4-blue.svg)](https://golang.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/bizvip/go-utils)
 
@@ -24,7 +24,7 @@ This package continuously adopts the latest Go versions and cutting-edge technol
 
 ## 🚀 Installation
 
-Requires **Go 1.26.2+**.
+Requires **Go 1.26.4+**.
 
 ```bash
 go get github.com/bizvip/go-utils
@@ -110,7 +110,7 @@ export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH
 
 ```dockerfile
 # builder
-FROM golang:1.26.2-bookworm AS builder
+FROM golang:1.26.4-bookworm AS builder
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libvips-dev pkg-config build-essential && \
     rm -rf /var/lib/apt/lists/*

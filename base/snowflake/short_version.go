@@ -12,7 +12,7 @@ const (
 
 	// Bit allocation
 	timeBits     uint = 39 // ~17.4 years
-	workerIdBits uint = 4  // up to 16 nodes (0-15)
+	workerIdBits uint = 5  // up to 32 nodes (0-31)
 	sequenceBits uint = 4  // ~ 16000/s
 )
 
