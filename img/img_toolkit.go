@@ -48,6 +48,16 @@ var (
 	ErrInvalidSize     = errors.New("img: width and height must both be zero (keep) or one/both positive")
 	ErrUnknownFormat   = errors.New("img: unknown image format")
 	ErrUnsupportedSink = errors.New("img: unsupported output format")
+	// ErrImageDecode 图像解码失败（损坏 / 不支持的格式）。
+	ErrImageDecode = errors.New("img: decode image failed")
+	// ErrImageTooLarge 源图像素数超过预算（纯 Go 后端全解码前的护栏；libvips 后端靠 shrink-on-load）。
+	ErrImageTooLarge = errors.New("img: image exceeds max pixel budget")
+)
+
+// 预览/缩略图默认参数（MakeWebpPreview 入参为 0/越界时回退）。
+const (
+	defaultPreviewMaxSide = 320
+	defaultPreviewQuality = 80
 )
 
 func ImageToBase64(imgPath string, withDataURI bool) (string, error) {

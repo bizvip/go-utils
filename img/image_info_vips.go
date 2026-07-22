@@ -20,6 +20,9 @@ var vipsOnce sync.Once
 // will call it lazily on first use.
 func StartupVips() {
 	vipsOnce.Do(func() {
+		// govips 默认把 info 级日志刷到 stderr（每次 thumbnail 一行），生产噪音大——收敛到 warning+。
+		// 库使用方如需自定义处理器/级别，可在首次调用前自行覆盖 vips.LoggingSettings。
+		vips.LoggingSettings(nil, vips.LogLevelWarning)
 		vips.Startup(nil)
 	})
 }
