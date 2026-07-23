@@ -70,6 +70,7 @@ func GetImageInfo(path string, withMd5 bool) (*ImageInfo, error) {
 		FrameNum: pages,
 		Animated: pages > 1,
 	}
+	info.ColorSpace, info.HasAlpha, info.BitDepth = classifyVipsImage(ref)
 
 	if withMd5 {
 		md5sum, err := fs.GetBigFileMd5(path)
@@ -80,4 +81,31 @@ func GetImageInfo(path string, withMd5 bool) (*ImageInfo, error) {
 	}
 
 	return info, nil
+}
+
+// classifyVipsImage 把 vips interpretation/band format 归类为描述性
+// ColorSpace/HasAlpha/BitDepth（见 ImageInfo 字段注释）。libvips 只见解码后的
+// interpretation，无法区分 NRGBA/YCbCr 等源 color model，标签集与纯 Go 后端不同。
+func classifyVipsImage(ref *vips.ImageRef) (colorSpace string, hasAlpha bool, bitDepth int) {
+	colorSpace = "RGB"
+	switch ref.Interpretation() {
+	case vips.InterpretationBW:
+		colorSpace = "Gray"
+	case vips.InterpretationGrey16:
+		colorSpace = "Gray16"
+	case vips.InterpretationCMYK:
+		colorSpace = "CMYK"
+	case vips.InterpretationRGB16:
+		colorSpace = "RGB16"
+	case vips.InterpretationLAB, vips.InterpretationLABQ, vips.InterpretationLABS:
+		colorSpace = "LAB"
+	}
+	bitDepth = 8
+	switch ref.BandFormat() {
+	case vips.BandFormatUshort, vips.BandFormatShort:
+		bitDepth = 16
+	case vips.BandFormatUint, vips.BandFormatInt, vips.BandFormatFloat:
+		bitDepth = 32
+	}
+	return colorSpace, ref.HasAlpha(), bitDepth
 }

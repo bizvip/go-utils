@@ -21,6 +21,12 @@ type ImageInfo struct {
 	Animated  bool   `json:"animated"`
 	FrameNum  int    `json:"frame_num"`
 	LoopCount int    `json:"loop_count"`
+	// ColorSpace/HasAlpha/BitDepth 为描述性元数据，标签集因后端而异：纯 Go 后端可区分
+	// NRGBA/YCbCr 等精确 color model；libvips 后端只见解码后的 interpretation（如 jpeg → RGB）。
+	// 仅供展示/记录，不要用于业务判断。
+	ColorSpace string `json:"color_space,omitempty"`
+	HasAlpha   bool   `json:"has_alpha,omitempty"`
+	BitDepth   int    `json:"bit_depth,omitempty"`
 }
 
 type FitMode int
